@@ -23,7 +23,7 @@ export default async function DashboardLayout({
 
     return (
         <div className="flex h-screen bg-ios-gray6">
-            <Sidebar />
+            <Sidebar userEmail={user.email} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Mobile Header */}
                 <header className="flex h-14 items-center justify-between border-b bg-white px-4 md:hidden">
