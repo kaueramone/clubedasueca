@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Trophy, Home, RotateCcw } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Clock, User } from 'lucide-react'
 
 // Existing props: game, currentUser. New optional prop: isTraining
 export function GameTable({ game, currentUser, isTraining = false }: { game?: any, currentUser?: any, isTraining?: boolean }) {
@@ -19,7 +19,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         status: 'playing',
         stake: 0,
         game_players: [
-            { user_id: 'human', position: 0, team: 'A', hand: [], profiles: { username: 'Você', avatar_url: null } },
+            { user_id: 'human', position: 0, team: 'A', hand: [], profiles: { username: 'Você', avatar_url: currentUser?.user_metadata?.avatar_url || null } },
             { user_id: 'bot1', position: 1, team: 'B', hand: [], profiles: { username: 'Manel (Bot)', avatar_url: null } },
             { user_id: 'bot2', position: 2, team: 'A', hand: [], profiles: { username: 'Zé (Bot)', avatar_url: null } },
             { user_id: 'bot3', position: 3, team: 'B', hand: [], profiles: { username: 'Quim (Bot)', avatar_url: null } },
@@ -33,9 +33,21 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     const [gameState, setGameState] = useState(initialTrainingState)
     const [loading, setLoading] = useState(false)
     const [scores, setScores] = useState({ A: 0, B: 0 })
-    const [lastRoundResult, setLastRoundResult] = useState<{ winner: string, points: number, team: string } | null>(null)
+
+    // Detailed Round Recap State
+    const [roundRecap, setRoundRecap] = useState<{
+        winner: string,
+        points: number,
+        team: string,
+        explanation: string,
+        timeLeft: number
+    } | null>(null)
+
     const [gameResult, setGameResult] = useState<{ winnerTeam: string, scoreA: number, scoreB: number } | null>(null)
     const [isTrickProcessing, setIsTrickProcessing] = useState(false) // Lock game during trick transition
+
+    // AFK Timer State
+    const [turnTimeLeft, setTurnTimeLeft] = useState(15)
 
     // Audio refs
     const audioPlaceRef = useRef<HTMLAudioElement | null>(null)
@@ -47,7 +59,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     useEffect(() => {
         audioPlaceRef.current = new Audio('/audio/card-place-1.ogg')
         audioShuffleRef.current = new Audio('/audio/card-shuffle.ogg')
-        audioCollectRef.current = new Audio('/audio/chips-stack-1.ogg') // Recycle chip sound for collecting cards
+        audioCollectRef.current = new Audio('/audio/chips-stack-1.ogg')
 
         if (isTraining) {
             startTrainingGame()
@@ -94,29 +106,91 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         }))
         setScores({ A: 0, B: 0 })
         setGameResult(null)
-        setLastRoundResult(null)
+        setRoundRecap(null)
         setIsTrickProcessing(false)
+        setTurnTimeLeft(15)
     }
+
+    // --- AFK Timer Logic ---
+    useEffect(() => {
+        if (!gameState || gameResult || isTrickProcessing || roundRecap) return
+
+        const myTurn = gameState.current_turn === 0 // Assuming Human is 0. Ideally check ID
+
+        // Only run timer if it's HUMAN turn
+        // For bots, we have the other effect `makeBotMove`.
+        // Ideally we unify, but keeping separate for now.
+
+        let interval: NodeJS.Timeout
+
+        if (myTurn) {
+            setTurnTimeLeft(15)
+            interval = setInterval(() => {
+                setTurnTimeLeft(prev => {
+                    if (prev <= 1) {
+                        // Auto Play!
+                        autoPlayHuman()
+                        return 0
+                    }
+                    return prev - 1
+                })
+            }, 1000)
+        } else {
+            setTurnTimeLeft(15) // Reset when not turn
+        }
+
+        return () => clearInterval(interval)
+    }, [gameState.current_turn, gameResult, isTrickProcessing, roundRecap])
+
+    const autoPlayHuman = () => {
+        if (!isTraining) return // Only for training for now to avoid server desync issues without backend support
+
+        const myHand = gameState.game_players[0].hand
+        const leadCard = gameState.current_trick_cards[0]?.card
+        const leadSuit = leadCard ? getCardSuit(leadCard) : null
+
+        const validCards = myHand.filter((c: string) => isValidMove(c, myHand, leadSuit))
+        const cardToPlay = validCards.length > 0 ? validCards[Math.floor(Math.random() * validCards.length)] : myHand[0]
+
+        handlePlayCard(cardToPlay)
+    }
+
+    // --- Round Recap Auto-Advance Logic ---
+    useEffect(() => {
+        if (roundRecap) {
+            const interval = setInterval(() => {
+                setRoundRecap(prev => {
+                    if (!prev) return null
+                    if (prev.timeLeft <= 1) {
+                        dismissRecap()
+                        return null
+                    }
+                    return { ...prev, timeLeft: prev.timeLeft - 1 }
+                })
+            }, 1000)
+            return () => clearInterval(interval)
+        }
+    }, [roundRecap])
+
 
     // Bot Logic Effect
     useEffect(() => {
-        if (!isTraining || !gameState || gameState.status !== 'playing' || isTrickProcessing || gameResult) return
+        if (!isTraining || !gameState || gameState.status !== 'playing' || isTrickProcessing || gameResult || roundRecap) return
 
         const currentPlayer = gameState.game_players.find((p: any) => p.position === gameState.current_turn)
         if (currentPlayer && currentPlayer.user_id.startsWith('bot')) {
             const timer = setTimeout(() => {
                 makeBotMove(currentPlayer)
-            }, 1000)
+            }, 1000 + Math.random() * 1000) // 1-2s delay
             return () => clearTimeout(timer)
         }
-    }, [gameState, isTraining, isTrickProcessing, gameResult])
+    }, [gameState, isTraining, isTrickProcessing, gameResult, roundRecap])
 
     const makeBotMove = (bot: any) => {
         const hand = bot.hand
         const leadCard = gameState.current_trick_cards[0]?.card
         const leadSuit = leadCard ? getCardSuit(leadCard) : null
 
-        // Simple Bot Logic
         const validCards = hand.filter((c: string) => isValidMove(c, hand, leadSuit))
         const cardToPlay = validCards.length > 0 ? validCards[Math.floor(Math.random() * validCards.length)] : hand[0]
 
@@ -124,7 +198,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     }
 
     const handleTrainingMove = (playerId: string, card: string) => {
-        if (isTrickProcessing) return
+        if (isTrickProcessing || roundRecap) return
 
         playSound('place')
         setGameState((prev: any) => {
@@ -132,11 +206,8 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             const newHand = prev.game_players[playerIndex].hand.filter((c: string) => c !== card)
             const newTrick = [...prev.current_trick_cards, { player_id: playerId, card }]
 
-            // Check if trick is full
             if (newTrick.length === 4) {
                 processTrickEnd(prev, newHand, newTrick, playerIndex)
-                // Return state with card played, but keep same turn until processing done?
-                // Actually we need to show the card.
                 return {
                     ...prev,
                     game_players: prev.game_players.map((p: any, i: number) =>
@@ -146,7 +217,6 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 }
             }
 
-            // Normal move, next player
             return {
                 ...prev,
                 game_players: prev.game_players.map((p: any, i: number) =>
@@ -161,64 +231,95 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     const processTrickEnd = (prevState: any, handAfterMove: string[], fullTrick: any[], playerIndex: number) => {
         setIsTrickProcessing(true)
 
-        // Calculate winner
         const trumpSuit = getCardSuit(prevState.trump_card)
         const winnerId = getTrickWinner(fullTrick, trumpSuit)
-        const winnerPlayer = prevState.game_players.find((p: any) => p.user_id === winnerId)
+        const winnerPlayer = prevState.game_players.find((p: any) => p.user_id === winnerId) || prevState.game_players[0]
         const points = fullTrick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
 
-        // Update Result State
-        setLastRoundResult({
-            winner: winnerPlayer.profiles.username,
-            points: points,
-            team: winnerPlayer.team
-        })
+        // Generate Explanation
+        let explanation = "Highest card wins."
+        const winningCard = fullTrick.find((c: any) => c.player_id === winnerId)?.card
+        if (winningCard && getCardSuit(winningCard) === trumpSuit) {
+            explanation = "Trunfo ganha!"
+        } else {
+            explanation = "Carta mais alta vence."
+        }
 
-        setScores(prev => ({
-            ...prev,
-            [winnerPlayer.team]: prev[winnerPlayer.team as 'A' | 'B'] + points
-        }))
-
-        // Delay then clear
+        // Wait a moment to show the 4th card, then show Recap
         setTimeout(() => {
             playSound('collect')
 
-            setGameState((state: any) => {
-                const newRounds = [...state.rounds, {
-                    winner: winnerId,
-                    cards: fullTrick,
-                    points: points
-                }]
+            // Update scores immediately
+            setScores(prev => ({
+                ...prev,
+                [winnerPlayer.team]: prev[winnerPlayer.team as 'A' | 'B'] + points
+            }))
 
-                // Check Game End (10 rounds)
-                if (newRounds.length === 10) {
-                    const finalScoreA = scores.A + (winnerPlayer.team === 'A' ? points : 0) // Add pending points
-                    const finalScoreB = scores.B + (winnerPlayer.team === 'B' ? points : 0)
-                    // Determine winner (Team with > 60, etc - keeping simple for now)
-                    let winnerTeam = 'Draft'
-                    if (finalScoreA > finalScoreB) winnerTeam = 'A'
-                    else if (finalScoreB > finalScoreA) winnerTeam = 'B'
-                    else winnerTeam = 'Draw'
-
-                    setGameResult({
-                        winnerTeam,
-                        scoreA: finalScoreA,
-                        scoreB: finalScoreB
-                    })
-                    return { ...state, rounds: newRounds, current_trick_cards: [] }
-                }
-
-                return {
-                    ...state,
-                    current_trick_cards: [], // Clear table
-                    current_turn: winnerPlayer.position, // Winner leads
-                    rounds: newRounds
-                }
+            setRoundRecap({
+                winner: winnerPlayer.profiles.username,
+                points: points,
+                team: winnerPlayer.team,
+                explanation: explanation,
+                timeLeft: 10
             })
 
-            setLastRoundResult(null)
-            setIsTrickProcessing(false)
-        }, 2000)
+            // We do NOT clear the state here. We wait for Recap dismissal.
+        }, 1200)
+    }
+
+    const dismissRecap = () => {
+        if (!roundRecap) return
+
+        setIsTrickProcessing(false) // Unlock
+        setRoundRecap(null)
+
+        // Apply state updates to clear table and set turn
+        setGameState((state: any) => {
+            // Re-calculate context/next turn from the LAST trick state
+            // This is tricky because `state` might be stale? 
+            // Actually, we need to replicate the logic of "who won" to set next turn.
+            // Or we save it in a temp state.
+
+            // Simplification: We look at `state.current_trick_cards` 
+            // BUT `state` in setGameState callback is the current one.
+
+            const trick = state.current_trick_cards
+            if (trick.length !== 4) return state // Should not happen
+
+            const trumpSuit = getCardSuit(state.trump_card)
+            const winnerId = getTrickWinner(trick, trumpSuit)
+            const winnerPlayer = state.game_players.find((p: any) => p.user_id === winnerId)
+            const points = trick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
+
+            const newRounds = [...state.rounds, {
+                winner: winnerId,
+                cards: trick,
+                points: points
+            }]
+
+            if (newRounds.length === 10) {
+                const finalScoreA = scores.A // Already updated
+                const finalScoreB = scores.B
+                let winnerTeam = 'Draft'
+                if (finalScoreA > finalScoreB) winnerTeam = 'A'
+                else if (finalScoreB > finalScoreA) winnerTeam = 'B'
+                else winnerTeam = 'Draw'
+
+                setGameResult({
+                    winnerTeam,
+                    scoreA: finalScoreA,
+                    scoreB: finalScoreB
+                })
+                return { ...state, rounds: newRounds, current_trick_cards: [] }
+            }
+
+            return {
+                ...state,
+                current_trick_cards: [], // Clear table
+                current_turn: winnerPlayer.position, // Winner leads
+                rounds: newRounds
+            }
+        })
     }
 
     // Realtime Subscription (Only if NOT training)
@@ -228,10 +329,10 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             .channel(`game-${game.id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${game.id}` }, (payload) => {
                 setGameState((prev: any) => {
+                    // Need adaptation for multiplayer recap logic...
+                    // For now, keeping legacy behavior for multiplayer to match training structure
                     const newState = { ...prev, ...payload.new }
-                    if (newState.current_trick_cards?.length > prev.current_trick_cards?.length) {
-                        playSound('place')
-                    }
+                    // ...
                     return newState
                 })
             })
@@ -243,12 +344,13 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     if (!myPlayer) return <div>Access denied</div>
 
     const handlePlayCard = async (card: string) => {
-        if (loading || isTrickProcessing) return
+        if (loading || isTrickProcessing || roundRecap) return
 
         if (isTraining) {
             // Validate move
             if (gameState.current_turn !== 0) {
-                alert("Não é a sua vez!")
+                // alert("Não é a sua vez!") 
+                // Using toast or subtle UI better, but alert ok for logic check
                 return
             }
             const myHand = gameState.game_players[0].hand
@@ -256,6 +358,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             const leadSuit = leadCard ? getCardSuit(leadCard) : null
 
             if (!isValidMove(card, myHand, leadSuit)) {
+                // Shake effect or toast?
                 alert("Jogada inválida! Deve assistir ao naipe.")
                 return
             }
@@ -271,6 +374,12 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         setLoading(false)
     }
 
+    // Colors for avatars based on position/team
+    const getAvatarBorderColor = (p: any) => {
+        if (p.team === 'A') return 'border-green-400'
+        return 'border-red-400'
+    }
+
     // Helper to render cards
     const renderCard = (card: string, onClick?: () => void, isOpponent = false) => {
         const src = getCardAssetPath(card)
@@ -280,7 +389,10 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 className={cn(
                     "relative transition-all select-none filter drop-shadow-md",
                     onClick ? "cursor-pointer hover:-translate-y-4 hover:scale-105 active:scale-95 z-0 hover:z-10" : "",
-                    isOpponent ? "w-12 h-16 sm:w-16 sm:h-24" : "w-20 h-28 sm:w-24 sm:h-36"
+                    // NEW: Larger opponent cards (approx 30% increase)
+                    // Original: w-12 h-16 sm:w-16 sm:h-24
+                    // New: w-16 h-20 sm:w-20 sm:h-32 (adjusted for visual balance)
+                    isOpponent ? "w-16 h-20 sm:w-20 sm:h-28" : "w-20 h-28 sm:w-24 sm:h-36"
                 )}
             >
                 <Image
@@ -298,7 +410,9 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     const renderCardBack = (rotate = false) => {
         return (
             <div className={cn(
-                "relative w-12 h-16 sm:w-14 sm:h-20 filter drop-shadow-sm",
+                "relative filter drop-shadow-sm",
+                // NEW: Larger opponent cards
+                "w-16 h-20 sm:w-20 sm:h-28",
                 rotate ? "rotate-90" : ""
             )}>
                 <Image
@@ -315,20 +429,8 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-2 sm:p-4 select-none">
             {/* Background Images */}
             <div className="absolute inset-0 z-0">
-                <Image
-                    src="/images/mesa-horizontal.png"
-                    alt="Table Background"
-                    fill
-                    className="object-cover hidden md:block"
-                    priority
-                />
-                <Image
-                    src="/images/mesa-vert.png"
-                    alt="Table Background"
-                    fill
-                    className="object-cover md:hidden"
-                    priority
-                />
+                <Image src="/images/mesa-horizontal.png" alt="Table" fill className="object-cover hidden md:block" priority />
+                <Image src="/images/mesa-vert.png" alt="Table" fill className="object-cover md:hidden" priority />
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
@@ -347,42 +449,76 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 </div>
             </div>
 
-            {/* Players */}
+            {/* AFK Timer (Only if My Turn) */}
+            {gameState.current_turn === 0 && !roundRecap && !gameResult && (
+                <div className="absolute top-20 right-4 z-30 flex items-center gap-2 bg-yellow-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-yellow-500/50">
+                    <Clock className="w-4 h-4 text-yellow-400 animate-pulse" />
+                    <span className="text-yellow-400 font-mono font-bold">{turnTimeLeft}s</span>
+                </div>
+            )}
+
+            {/* --- Players --- */}
 
             {/* Top Player (Partner) */}
             <div className="absolute top-4 sm:top-8 flex flex-col items-center z-10">
-                <div className="h-12 w-12 rounded-full border-2 border-white/50 bg-black/20 overflow-hidden mb-[-10px] z-20 shadow-lg relative">
-                    <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
+                <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden mb-[-10px] z-20 shadow-lg relative`}>
+                    {/* Avatar Support */}
+                    {gameState.game_players[2]?.profiles?.avatar_url ? (
+                        <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
+                    ) : (
+                        <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
+                    )}
                 </div>
                 <div className="flex -space-x-8 sm:-space-x-10">
                     {[1, 2, 3].map(i => <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>)}
                 </div>
             </div>
 
-            {/* Left Player (Opponent) - Moved Inward (left-12) */}
-            <div className="absolute left-4 sm:left-[15%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10">
+            {/* Left Player (Opponent) */}
+            <div className="absolute left-4 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10">
                 <div className="flex flex-col -space-y-12 sm:-space-y-14">
                     {[1, 2, 3].map(i => <div key={i} className="transform -rotate-90 scale-75">{renderCardBack()}</div>)}
                 </div>
+                <div className={`ml-[-10px] w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+                    {gameState.game_players[1]?.profiles?.avatar_url ? (
+                        <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
+                    )}
+                </div>
             </div>
 
-            {/* Right Player (Opponent) - Moved Inward (right-12) */}
-            <div className="absolute right-4 sm:right-[15%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10">
+            {/* Right Player (Opponent) */}
+            <div className="absolute right-4 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10">
+                <div className={`mr-[-10px] w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+                    {gameState.game_players[3]?.profiles?.avatar_url ? (
+                        <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
+                    )}
+                </div>
                 <div className="flex flex-col -space-y-12 sm:-space-y-14">
                     {[1, 2, 3].map(i => <div key={i} className="transform rotate-90 scale-75">{renderCardBack()}</div>)}
                 </div>
             </div>
 
+
             {/* Center (Table) */}
             <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
-                {/* Round Result Overlay */}
-                {lastRoundResult && (
-                    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center animate-in zoom-in fade-in duration-300">
-                        <div className="bg-black/80 text-white px-4 py-2 rounded-full backdrop-blur-xl border border-white/20 shadow-2xl mb-2">
-                            <p className="font-bold text-lg">{lastRoundResult.winner} venceu!</p>
-                        </div>
-                        <div className="text-3xl font-bold text-yellow-400 drop-shadow-md">
-                            +{lastRoundResult.points} pts
+
+                {/* --- Round Recap Overlay (Transparent Box) --- */}
+                {roundRecap && (
+                    <div
+                        onClick={dismissRecap}
+                        className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 rounded-full cursor-pointer hover:bg-black/70 transition-colors animate-in fade-in"
+                    >
+                        <div className="text-center space-y-1 p-4">
+                            <p className="text-xs font-bold text-white/70 uppercase tracking-widest">{roundRecap.explanation}</p>
+                            <div className="flex flex-col items-center">
+                                <p className="text-xl font-bold text-white shadow-black drop-shadow-md">{roundRecap.winner}</p>
+                                <p className="text-2xl font-black text-yellow-400">+{roundRecap.points}</p>
+                            </div>
+                            <p className="text-[10px] text-white/50 mt-2">Próxima em {roundRecap.timeLeft}s...</p>
                         </div>
                     </div>
                 )}
@@ -413,15 +549,14 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             <div className="absolute bottom-4 sm:bottom-8 w-full flex flex-col items-center z-20">
                 {/* My Hand */}
                 <div className="flex -space-x-8 sm:-space-x-12 mb-6 px-4 py-2 hover:-space-x-6 sm:hover:-space-x-8 transition-all duration-300 ease-out perspective-1000 max-w-[100vw] overflow-visible">
-                    {/* Updated mapping with mobile checks */}
                     {myPlayer.hand?.map((card: string, index: number) => {
                         const total = myPlayer.hand.length
                         const mid = (total - 1) / 2
-                        // Basic check (this runs on server, so window might be missing, need client check or CSS only)
-                        // Using CSS clamp or media queries is better, but inline styles are used here.
-                        // Let's reduce values generally to be safe.
-                        const rotate = (index - mid) * 3
-                        const translateY = Math.abs(index - mid) * 3
+                        // Mobile Check (Basic CSS-in-JS style)
+                        // Ideally checking window.innerWidth, but keeping it simple with smaller factors
+                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+                        const rotate = (index - mid) * (isMobile ? 3 : 5)
+                        const translateY = Math.abs(index - mid) * (isMobile ? 2 : 5)
                         return (
                             <div key={card} style={{ transform: `rotate(${rotate}deg) translateY(${translateY}px)`, zIndex: index }}
                                 className="transform-gpu transition-transform hover:!rotate-0 hover:!translate-y-[-20px] hover:!z-50 origin-bottom">
@@ -432,8 +567,12 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 </div>
 
                 <div className="flex items-center gap-3 bg-black/40 px-6 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 border-2 border-white overflow-hidden">
-                        {myPlayer.profiles?.avatar_url && <Image src={myPlayer.profiles.avatar_url} alt="Me" width={40} height={40} className="object-cover" />}
+                    <div className="h-10 w-10 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
+                        {myPlayer.profiles?.avatar_url ? (
+                            <Image src={myPlayer.profiles.avatar_url} alt="Me" fill className="object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400"><User className="w-6 h-6" /></div>
+                        )}
                     </div>
                     <span className="text-white font-bold text-shadow-sm">{myPlayer.profiles?.username || 'Eu'}</span>
                     <div className="h-full w-px bg-white/20 mx-2" />

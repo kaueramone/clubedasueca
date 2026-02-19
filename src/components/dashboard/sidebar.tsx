@@ -50,7 +50,16 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
                 )}
             </nav>
             <div className="border-t p-4">
-                {/* User profile summary or logout could go here */}
+                <Link href="/dashboard/profile" className="flex items-center gap-3 w-full p-2 hover:bg-ios-gray6 rounded-lg transition-colors group">
+                    <div className="h-10 w-10 text-xs rounded-full bg-gray-200 flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:shadow-sm transition-all overflow-hidden">
+                        {/* We would need to fetch the avatar here or pass it down. For now, static or placeholder */}
+                        <span className="font-bold">Eu</span>
+                    </div>
+                    <div className="text-left">
+                        <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Minha Conta</p>
+                        <p className="text-xs text-gray-500">Editar Perfil</p>
+                    </div>
+                </Link>
             </div>
         </div>
     );
