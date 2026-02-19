@@ -9,11 +9,14 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Trophy, Home, RotateCcw, Clock, User } from 'lucide-react'
 
-// Existing props: game, currentUser. New optional prop: isTraining
+// Portuguese Colors Constants
+const PT_RED = '#CE1126'
+const PT_GREEN = '#006600'
+const PT_YELLOW = '#FFD700' // Gold-ish
+
 export function GameTable({ game, currentUser, isTraining = false }: { game?: any, currentUser?: any, isTraining?: boolean }) {
     const router = useRouter()
 
-    // Mock initial state for training
     const initialTrainingState = isTraining ? {
         id: 'training',
         status: 'playing',
@@ -25,7 +28,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             { user_id: 'bot3', position: 3, team: 'B', hand: [], profiles: { username: 'Quim (Bot)', avatar_url: null } },
         ],
         current_trick_cards: [],
-        current_turn: 0, // Human starts or random
+        current_turn: 0,
         trump_card: null,
         rounds: [],
     } : game
@@ -44,9 +47,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     } | null>(null)
 
     const [gameResult, setGameResult] = useState<{ winnerTeam: string, scoreA: number, scoreB: number } | null>(null)
-    const [isTrickProcessing, setIsTrickProcessing] = useState(false) // Lock game during trick transition
-
-    // AFK Timer State
+    const [isTrickProcessing, setIsTrickProcessing] = useState(false)
     const [turnTimeLeft, setTurnTimeLeft] = useState(15)
 
     // Audio refs
@@ -86,9 +87,8 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     const startTrainingGame = () => {
         playSound('shuffle')
         const deck = shuffleDeck(generateDeck())
-        const trump = deck[deck.length - 1] // Last card is trump
+        const trump = deck[deck.length - 1]
 
-        // Deal 10 cards to each of 4 players
         const hands = [
             deck.slice(0, 10),
             deck.slice(10, 20),
@@ -115,11 +115,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
     useEffect(() => {
         if (!gameState || gameResult || isTrickProcessing || roundRecap) return
 
-        const myTurn = gameState.current_turn === 0 // Assuming Human is 0. Ideally check ID
-
-        // Only run timer if it's HUMAN turn
-        // For bots, we have the other effect `makeBotMove`.
-        // Ideally we unify, but keeping separate for now.
+        const myTurn = gameState.current_turn === 0
 
         let interval: NodeJS.Timeout
 
@@ -128,7 +124,6 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             interval = setInterval(() => {
                 setTurnTimeLeft(prev => {
                     if (prev <= 1) {
-                        // Auto Play!
                         autoPlayHuman()
                         return 0
                     }
@@ -136,14 +131,14 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 })
             }, 1000)
         } else {
-            setTurnTimeLeft(15) // Reset when not turn
+            setTurnTimeLeft(15)
         }
 
         return () => clearInterval(interval)
     }, [gameState.current_turn, gameResult, isTrickProcessing, roundRecap])
 
     const autoPlayHuman = () => {
-        if (!isTraining) return // Only for training for now to avoid server desync issues without backend support
+        if (!isTraining) return
 
         const myHand = gameState.game_players[0].hand
         const leadCard = gameState.current_trick_cards[0]?.card
@@ -181,7 +176,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         if (currentPlayer && currentPlayer.user_id.startsWith('bot')) {
             const timer = setTimeout(() => {
                 makeBotMove(currentPlayer)
-            }, 1000 + Math.random() * 1000) // 1-2s delay
+            }, 1000 + Math.random() * 1000)
             return () => clearTimeout(timer)
         }
     }, [gameState, isTraining, isTrickProcessing, gameResult, roundRecap])
@@ -237,19 +232,15 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         const points = fullTrick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
 
         // Generate Explanation
-        let explanation = "Highest card wins."
+        let explanation = "Carta mais alta vence."
         const winningCard = fullTrick.find((c: any) => c.player_id === winnerId)?.card
         if (winningCard && getCardSuit(winningCard) === trumpSuit) {
             explanation = "Trunfo ganha!"
-        } else {
-            explanation = "Carta mais alta vence."
         }
 
-        // Wait a moment to show the 4th card, then show Recap
         setTimeout(() => {
             playSound('collect')
 
-            // Update scores immediately
             setScores(prev => ({
                 ...prev,
                 [winnerPlayer.team]: prev[winnerPlayer.team as 'A' | 'B'] + points
@@ -263,28 +254,18 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 timeLeft: 10
             })
 
-            // We do NOT clear the state here. We wait for Recap dismissal.
         }, 1200)
     }
 
     const dismissRecap = () => {
         if (!roundRecap) return
 
-        setIsTrickProcessing(false) // Unlock
+        setIsTrickProcessing(false)
         setRoundRecap(null)
 
-        // Apply state updates to clear table and set turn
         setGameState((state: any) => {
-            // Re-calculate context/next turn from the LAST trick state
-            // This is tricky because `state` might be stale? 
-            // Actually, we need to replicate the logic of "who won" to set next turn.
-            // Or we save it in a temp state.
-
-            // Simplification: We look at `state.current_trick_cards` 
-            // BUT `state` in setGameState callback is the current one.
-
             const trick = state.current_trick_cards
-            if (trick.length !== 4) return state // Should not happen
+            if (trick.length !== 4) return state
 
             const trumpSuit = getCardSuit(state.trump_card)
             const winnerId = getTrickWinner(trick, trumpSuit)
@@ -298,7 +279,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             }]
 
             if (newRounds.length === 10) {
-                const finalScoreA = scores.A // Already updated
+                const finalScoreA = scores.A
                 const finalScoreB = scores.B
                 let winnerTeam = 'Draft'
                 if (finalScoreA > finalScoreB) winnerTeam = 'A'
@@ -315,24 +296,21 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
 
             return {
                 ...state,
-                current_trick_cards: [], // Clear table
-                current_turn: winnerPlayer.position, // Winner leads
+                current_trick_cards: [],
+                current_turn: winnerPlayer.position,
                 rounds: newRounds
             }
         })
     }
 
-    // Realtime Subscription (Only if NOT training)
+    // Realtime Subscription
     useEffect(() => {
         if (isTraining) return
         const channel = supabase
             .channel(`game-${game.id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${game.id}` }, (payload) => {
                 setGameState((prev: any) => {
-                    // Need adaptation for multiplayer recap logic...
-                    // For now, keeping legacy behavior for multiplayer to match training structure
                     const newState = { ...prev, ...payload.new }
-                    // ...
                     return newState
                 })
             })
@@ -347,26 +325,18 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         if (loading || isTrickProcessing || roundRecap) return
 
         if (isTraining) {
-            // Validate move
-            if (gameState.current_turn !== 0) {
-                // alert("Não é a sua vez!") 
-                // Using toast or subtle UI better, but alert ok for logic check
-                return
-            }
+            if (gameState.current_turn !== 0) return
             const myHand = gameState.game_players[0].hand
             const leadCard = gameState.current_trick_cards[0]?.card
             const leadSuit = leadCard ? getCardSuit(leadCard) : null
 
             if (!isValidMove(card, myHand, leadSuit)) {
-                // Shake effect or toast?
-                alert("Jogada inválida! Deve assistir ao naipe.")
                 return
             }
             handleTrainingMove('human', card)
             return
         }
 
-        // Multiplayer logic
         setLoading(true)
         playSound('place')
         const res = await playCard(game.id, card)
@@ -374,13 +344,13 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         setLoading(false)
     }
 
-    // Colors for avatars based on position/team
+    // --- New Color Logic for Avatars in Portuguese Theme ---
     const getAvatarBorderColor = (p: any) => {
-        if (p.team === 'A') return 'border-green-400'
-        return 'border-red-400'
+        // Team A = Green (Portugal Green), Team B = Red (Portugal Red)
+        if (p.team === 'A') return 'border-[#006600]'
+        return 'border-[#CE1126]'
     }
 
-    // Helper to render cards
     const renderCard = (card: string, onClick?: () => void, isOpponent = false) => {
         const src = getCardAssetPath(card)
         return (
@@ -389,9 +359,6 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 className={cn(
                     "relative transition-all select-none filter drop-shadow-md",
                     onClick ? "cursor-pointer hover:-translate-y-4 hover:scale-105 active:scale-95 z-0 hover:z-10" : "",
-                    // NEW: Larger opponent cards (approx 30% increase)
-                    // Original: w-12 h-16 sm:w-16 sm:h-24
-                    // New: w-16 h-20 sm:w-20 sm:h-32 (adjusted for visual balance)
                     isOpponent ? "w-16 h-20 sm:w-20 sm:h-28" : "w-20 h-28 sm:w-24 sm:h-36"
                 )}
             >
@@ -411,7 +378,6 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         return (
             <div className={cn(
                 "relative filter drop-shadow-sm",
-                // NEW: Larger opponent cards
                 "w-16 h-20 sm:w-20 sm:h-28",
                 rotate ? "rotate-90" : ""
             )}>
@@ -425,6 +391,12 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
         )
     }
 
+    // Helper to generate precise number of cards for opponents
+    const getOpponentCards = (player: any) => {
+        const count = player.hand?.length || 0;
+        return Array(count).fill(0).map((_, i) => i);
+    }
+
     return (
         <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-2 sm:p-4 select-none">
             {/* Background Images */}
@@ -434,22 +406,22 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
-            {/* Scoreboard */}
+            {/* Scoreboard - Updated Colors */}
             <div className="absolute top-4 right-4 z-30 bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl text-white">
                 <div className="flex items-center gap-4 text-sm sm:text-base">
                     <div className="flex flex-col items-center">
                         <span className="text-white/60 text-xs uppercase font-bold">Nós (A)</span>
-                        <span className="text-xl font-mono font-bold text-green-400">{scores.A}</span>
+                        <span className="text-xl font-mono font-bold text-[#4ade80]">{scores.A}</span>
                     </div>
                     <div className="h-8 w-px bg-white/20" />
                     <div className="flex flex-col items-center">
                         <span className="text-white/60 text-xs uppercase font-bold">Eles (B)</span>
-                        <span className="text-xl font-mono font-bold text-red-400">{scores.B}</span>
+                        <span className="text-xl font-mono font-bold text-[#f87171]">{scores.B}</span>
                     </div>
                 </div>
             </div>
 
-            {/* AFK Timer (Only if My Turn) */}
+            {/* AFK Timer */}
             {gameState.current_turn === 0 && !roundRecap && !gameResult && (
                 <div className="absolute top-20 right-4 z-30 flex items-center gap-2 bg-yellow-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-yellow-500/50">
                     <Clock className="w-4 h-4 text-yellow-400 animate-pulse" />
@@ -460,53 +432,57 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             {/* --- Players --- */}
 
             {/* Top Player (Partner) */}
-            <div className="absolute top-4 sm:top-8 flex flex-col items-center z-10">
+            <div className="absolute top-4 sm:top-8 flex flex-col items-center z-10 w-full">
                 <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden mb-[-10px] z-20 shadow-lg relative`}>
-                    {/* Avatar Support */}
                     {gameState.game_players[2]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
                     ) : (
                         <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
                     )}
                 </div>
-                <div className="flex -space-x-8 sm:-space-x-10">
-                    {[1, 2, 3].map(i => <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>)}
+                {/* Fixed Hand Count */}
+                <div className="flex -space-x-8 sm:-space-x-10 h-20 items-start">
+                    {getOpponentCards(gameState.game_players[2]).map(i => (
+                        <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>
+                    ))}
                 </div>
             </div>
 
-            {/* Left Player (Opponent) */}
-            <div className="absolute left-4 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10">
-                <div className="flex flex-col -space-y-12 sm:-space-y-14">
-                    {[1, 2, 3].map(i => <div key={i} className="transform -rotate-90 scale-75">{renderCardBack()}</div>)}
-                </div>
-                <div className={`ml-[-10px] w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+            {/* Left Player (Opponent) - CORRECTED LAYOUT: Avatar on Left (Edge), Cards on Right (Center) */}
+            <div className="absolute left-4 sm:left-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2">
+                <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
                     {gameState.game_players[1]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
                     )}
                 </div>
+                <div className="flex flex-col -space-y-12 sm:-space-y-14">
+                    {getOpponentCards(gameState.game_players[1]).map(i => (
+                        <div key={i} className="transform -rotate-90 scale-75">{renderCardBack()}</div>
+                    ))}
+                </div>
             </div>
 
-            {/* Right Player (Opponent) */}
-            <div className="absolute right-4 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10">
-                <div className={`mr-[-10px] w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+            {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
+            <div className="absolute right-4 sm:right-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2">
+                <div className="flex flex-col -space-y-12 sm:-space-y-14">
+                    {getOpponentCards(gameState.game_players[3]).map(i => (
+                        <div key={i} className="transform rotate-90 scale-75">{renderCardBack()}</div>
+                    ))}
+                </div>
+                <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
                     {gameState.game_players[3]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
                     )}
                 </div>
-                <div className="flex flex-col -space-y-12 sm:-space-y-14">
-                    {[1, 2, 3].map(i => <div key={i} className="transform rotate-90 scale-75">{renderCardBack()}</div>)}
-                </div>
             </div>
 
-
             {/* Center (Table) */}
+            {/* Same as before */}
             <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
-
-                {/* --- Round Recap Overlay (Transparent Box) --- */}
                 {roundRecap && (
                     <div
                         onClick={dismissRecap}
@@ -516,7 +492,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                             <p className="text-xs font-bold text-white/70 uppercase tracking-widest">{roundRecap.explanation}</p>
                             <div className="flex flex-col items-center">
                                 <p className="text-xl font-bold text-white shadow-black drop-shadow-md">{roundRecap.winner}</p>
-                                <p className="text-2xl font-black text-yellow-400">+{roundRecap.points}</p>
+                                <p className="text-2xl font-black text-[#FFD700]">+{roundRecap.points}</p>
                             </div>
                             <p className="text-[10px] text-white/50 mt-2">Próxima em {roundRecap.timeLeft}s...</p>
                         </div>
@@ -547,13 +523,10 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
 
             {/* Bottom Player (Me) */}
             <div className="absolute bottom-4 sm:bottom-8 w-full flex flex-col items-center z-20">
-                {/* My Hand */}
                 <div className="flex -space-x-8 sm:-space-x-12 mb-6 px-4 py-2 hover:-space-x-6 sm:hover:-space-x-8 transition-all duration-300 ease-out perspective-1000 max-w-[100vw] overflow-visible">
                     {myPlayer.hand?.map((card: string, index: number) => {
                         const total = myPlayer.hand.length
                         const mid = (total - 1) / 2
-                        // Mobile Check (Basic CSS-in-JS style)
-                        // Ideally checking window.innerWidth, but keeping it simple with smaller factors
                         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
                         const rotate = (index - mid) * (isMobile ? 3 : 5)
                         const translateY = Math.abs(index - mid) * (isMobile ? 2 : 5)
