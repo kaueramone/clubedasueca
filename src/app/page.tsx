@@ -9,6 +9,10 @@ export default async function Home() {
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
+    if (session) {
+        redirect("/dashboard");
+    }
+
     // Fetch CMS Pages for Footer Links
     const pagesResponse = await getAllPages();
     const cmsPages = pagesResponse.pages || [];
@@ -56,7 +60,7 @@ export default async function Home() {
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="mx-auto max-w-3xl text-center flex flex-col items-center">
 
-                            <div className="relative w-24 h-24 mb-6 drop-shadow-2xl">
+                            <div className="relative w-32 h-32 mb-6 drop-shadow-2xl">
                                 <Image src="/images/clubedasueca-fundoclaro-perfil.png" alt="Logo Clube da Sueca" fill className="object-contain dark:hidden" priority />
                                 <Image src="/images/clubedasueca-fundoescuro-perfil.png" alt="Logo Clube da Sueca" fill className="object-contain hidden dark:block" priority />
                             </div>
@@ -66,11 +70,11 @@ export default async function Home() {
                                 O Clube Tradicional Português
                             </div>
                             <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground sm:text-7xl mb-6">
-                                Jogue Sueca com <br className="hidden sm:block" />
-                                <span className="text-accent">Elegância e Tradição</span>
+                                O Clube Oficial da <br className="hidden sm:block" />
+                                <span className="text-accent">Sueca Online</span>
                             </h1>
                             <p className="text-lg leading-8 text-muted-foreground mb-10 max-w-2xl mx-auto">
-                                Junte-se à mesa de feltro verde mais exclusiva de Portugal. Prove a sua mestria contra jogadores reais num ambiente premium, seguro e onde a estratégia dita as regras.
+                                Joga Sueca como sempre foi — agora com competição, ranking e prémios reais.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <Link href="/register" className="w-full sm:w-auto">
@@ -79,7 +83,7 @@ export default async function Home() {
                                     </Button>
                                 </Link>
                                 <Link href="/demo" className="w-full sm:w-auto">
-                                    <Button variant="outline" size="lg" className="w-full text-lg h-14 px-8 border-accent/20 hover:border-accent hover:bg-accent/10 text-foreground">
+                                    <Button variant="outline" size="lg" className="w-full text-lg h-14 px-8 border-accent/20 hover:border-accent hover:bg-accent/10 text-foreground hover:text-accent transition-colors">
                                         Jogar Partida de Demonstração
                                     </Button>
                                 </Link>
@@ -126,30 +130,74 @@ export default async function Home() {
 
             </main>
 
+            {/* FAQ Section */}
+            <section className="py-24 bg-background">
+                <div className="container mx-auto px-4">
+                    <div className="mx-auto max-w-3xl text-center mb-16">
+                        <h2 className="text-3xl font-serif font-bold text-foreground sm:text-4xl text-accent">FAQ Estratégico</h2>
+                        <p className="mt-4 text-lg text-muted-foreground">Tudo o que precisa saber para entrar no jogo.</p>
+                    </div>
+                    <div className="max-w-3xl mx-auto space-y-6">
+                        <div className="bg-card p-6 rounded-2xl border border-border">
+                            <h3 className="text-lg font-bold text-foreground mb-2">Posso jogar grátis?</h3>
+                            <p className="text-muted-foreground">Sim. Você pode abrir uma conta e experimentar o modo de Treino contra bots totalmente de graça para se acostumar com a interface e com as regras clássicas da sueca.</p>
+                        </div>
+                        <div className="bg-card p-6 rounded-2xl border border-border">
+                            <h3 className="text-lg font-bold text-foreground mb-2">Como funcionam os prémios?</h3>
+                            <p className="text-muted-foreground">As mesas funcionam à base de prémios por partida. O vencedor (ou a equipa vencedora) recebe o pote final da mesa (deduzido de uma pequena taxa da plataforma), creditado automaticamente em saldo real na conta.</p>
+                        </div>
+                        <div className="bg-card p-6 rounded-2xl border border-border">
+                            <h3 className="text-lg font-bold text-foreground mb-2">É seguro?</h3>
+                            <p className="text-muted-foreground">O Clube da Sueca garante um jogo justo (Fair Play). Usamos tecnologia de embaralhamento criptográfico RNG e algoritmos de deteção de conluio para manter a integridade total do jogo.</p>
+                        </div>
+                        <div className="bg-card p-6 rounded-2xl border border-border">
+                            <h3 className="text-lg font-bold text-foreground mb-2">Existe taxa?</h3>
+                            <p className="text-muted-foreground">A plataforma retém apenas um "Rake" (pequena percentagem) sobre as mesas a dinheiro real para manutenção do servidor, prize pools de torneios e desenvolvimento contínuo.</p>
+                        </div>
+                        <div className="bg-card p-6 rounded-2xl border border-border">
+                            <h3 className="text-lg font-bold text-foreground mb-2">Posso jogar no telemóvel?</h3>
+                            <p className="text-muted-foreground">Totalmente. O Clube da Sueca foi desenhado do zero para funcionar com 100% de fluidez em qualquer smartphone (iOS ou Android) diretamente pelo navegador, sem instalar nada.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* CTA Final */}
+            <section className="py-24 bg-card border-t border-border relative overflow-hidden">
+                <div className="absolute inset-0 z-0">
+                    <Image src="/images/hero-banner.png" alt="Banner CTA" fill className="object-cover opacity-10" />
+                </div>
+                <div className="container mx-auto px-4 relative z-10 text-center">
+                    <h2 className="text-4xl font-serif font-bold text-foreground sm:text-5xl mb-6">
+                        A tradição continua. <span className="text-accent text-nowrap">Agora online.</span>
+                    </h2>
+                    <Link href="/register">
+                        <Button variant="primary" size="lg" className="text-lg h-14 px-10 shadow-xl">
+                            Entrar no Clube Hoje
+                        </Button>
+                    </Link>
+                </div>
+            </section>
+
             {/* Footer */}
             <footer className="border-t border-border bg-background py-12">
                 <div className="container mx-auto px-4">
                     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <div className="relative w-40 h-10 mb-4 block">
+                            <div className="relative w-52 h-14 mb-4 block">
                                 <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" />
                                 <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" />
                             </div>
                             <p className="text-sm text-muted-foreground">
-                                O ecossistema premium de jogos de cartas tradicionais portugueses.
+                                Jogue a sueca portuguesa com seus amigos e coloque suas moedas na mesa.
                             </p>
                         </div>
 
                         <div>
-                            <h3 className="font-bold text-foreground mb-4">Institucional</h3>
+                            <h3 className="font-bold text-foreground mb-4">Sobre</h3>
                             <ul className="space-y-2 text-sm text-muted-foreground">
-                                {cmsPages.filter((p: any) => p.is_published).slice(0, 4).map((page: any) => (
-                                    <li key={page.id}>
-                                        <Link href={`/p/${page.slug}`} className="hover:text-accent transition-colors">
-                                            {page.title}
-                                        </Link>
-                                    </li>
-                                ))}
+                                <li><Link href="/p/como-funciona" className="hover:text-accent transition-colors">Como funciona?</Link></li>
+                                <li><Link href="/p/deposito-saque" className="hover:text-accent transition-colors">Deposito e Saque</Link></li>
                             </ul>
                         </div>
 

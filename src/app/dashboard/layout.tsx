@@ -25,6 +25,15 @@ export default async function DashboardLayout({
         redirect("/login");
     }
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url, username')
+        .eq('id', user.id)
+        .single();
+
+    const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url;
+    const initial = profile?.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'E';
+
     return (
         <div className="flex h-screen bg-ios-gray6">
             <UserPresence userId={user.id} email={user.email || ''} />
@@ -57,7 +66,11 @@ export default async function DashboardLayout({
                             <Link href="/dashboard/profile" className="flex items-center gap-2 group">
                                 <span className="hidden md:block text-sm font-medium text-foreground group-hover:text-accent transition-colors">Minha Conta</span>
                                 <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary group-hover:border-accent transition-colors overflow-hidden">
-                                    EU
+                                    {avatarUrl ? (
+                                        <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                                    ) : (
+                                        initial
+                                    )}
                                 </div>
                             </Link>
                             <form action={signout}>

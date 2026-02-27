@@ -77,11 +77,11 @@ export default function AdminBannersPage() {
                         <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-                                <input name="title" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Ex: Mega Torneio Fim de Semana" />
+                                <input name="title" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Ex: Mega Torneio Fim de Semana" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Posição</label>
-                                <select name="position" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                <select name="position" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500">
                                     <option value="dashboard_top">Dashboard (Topo)</option>
                                     <option value="hero">Hero (Landing Page)</option>
                                     <option value="sidebar">Sidebar</option>
@@ -90,19 +90,19 @@ export default function AdminBannersPage() {
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                                <input name="description" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Participe já e ganhe 500€ em bónus..." />
+                                <input name="description" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Participe já e ganhe 500€ em bónus..." />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">URL da Imagem (opcional)</label>
-                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="https://exemplo.com/banner.png" />
+                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner.png" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Link de Destino</label>
-                                <input name="link_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="https://..." />
+                                <input name="link_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://..." />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Segmento Alvo</label>
-                                <select name="target_segment" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                                <select name="target_segment" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500">
                                     <option value="all">Todos os Utilizadores</option>
                                     <option value="new">Novos (S/ Depósito)</option>
                                     <option value="vip">Apenas VIPs</option>
@@ -110,15 +110,15 @@ export default function AdminBannersPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade (Maior = Antes)</label>
-                                <input name="priority" type="number" defaultValue="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                                <input name="priority" type="number" defaultValue="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
-                                <input name="start_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                                <input name="start_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Fim (opcional)</label>
-                                <input name="end_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+                                <input name="end_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
                             </div>
                             <div className="md:col-span-2 flex justify-end gap-2 mt-4">
                                 <button type="button" onClick={() => setShowCreate(false)}

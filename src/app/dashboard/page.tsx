@@ -58,13 +58,10 @@ export default async function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center">
                 <h1 className="text-2xl font-bold text-foreground">
                     Olá, {profile?.username ? profile.username.split(" ")[0] : "Jogador"}!
                 </h1>
-                <div className="h-10 w-10 overflow-hidden rounded-full bg-ios-gray4">
-                    {profile?.avatar_url && <img src={profile.avatar_url} alt="Profile" className="h-full w-full object-cover" />}
-                </div>
             </div>
 
             {/* Banners Widget */}

@@ -64,7 +64,7 @@ export default function DepositPage() {
                                 required
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-accent focus:outline-none focus:ring-accent"
+                                className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-accent focus:outline-none focus:ring-accent placeholder:text-gray-500"
                                 placeholder="10.00"
                             />
                         </div>
@@ -73,7 +73,7 @@ export default function DepositPage() {
 
                     <button
                         type="submit"
-                        className="w-full rounded-xl bg-accent py-3 font-semibold text-white shadow-md active:scale-[0.98] transition-transform"
+                        className="w-full rounded-xl bg-accent py-3 font-semibold text-white shadow-md active:scale-[0.98] hover:brightness-110 transition-all"
                     >
                         Gerar Referência MB Way
                     </button>

@@ -106,16 +106,16 @@ export default function AdminCmsPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                                            <input name="title" required defaultValue={editingPage.title} className="w-full rounded-lg border border-gray-300 px-3 py-2" placeholder="Termos e Condições" />
+                                            <input name="title" required defaultValue={editingPage.title} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 font-medium placeholder:text-gray-500" placeholder="Termos e Condições" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
-                                            <input name="slug" required defaultValue={editingPage.slug} className="w-full rounded-lg border border-gray-300 px-3 py-2" placeholder="termos-e-condicoes" />
+                                            <input name="slug" required defaultValue={editingPage.slug} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 font-medium placeholder:text-gray-500" placeholder="termos-e-condicoes" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Conteúdo (Markdown)</label>
-                                        <textarea name="content" required defaultValue={editingPage.content} rows={15} className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm" placeholder="# Bem-vindo..." />
+                                        <textarea name="content" required defaultValue={editingPage.content} rows={15} className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="# Bem-vindo..." />
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input type="checkbox" name="is_published" id="is_published" defaultChecked={editingPage.is_published} className="rounded border-gray-300" />

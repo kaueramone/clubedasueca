@@ -89,14 +89,14 @@ export default function AdminChatPage() {
             <div className="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col h-full shrink-0">
                 <div className="p-4 border-b border-gray-200">
                     <Link href="/admin" className="text-sm text-accent hover:underline mb-2 inline-block">← Admin Hub</Link>
-                    <h1 className="text-xl font-bold flex items-center gap-2">
+                    <h1 className="text-xl font-bold flex items-center gap-2 text-primary">
                         <MessageSquare className="w-5 h-5 text-primary" /> Support Desk
                     </h1>
 
                     <select
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
-                        className="mt-4 w-full rounded-xl border border-gray-300 p-2 text-sm"
+                        className="mt-4 w-full rounded-xl border border-gray-300 p-2 text-sm text-gray-700 font-medium"
                     >
                         <option value="all">Todas as conversas</option>
                         <option value="waiting_agent">A aguardar Agente ⚠️</option>
@@ -128,9 +128,9 @@ export default function AdminChatPage() {
                                     <div className="text-xs text-gray-600 mb-2 truncate">Assunto: {conv.subject}</div>
                                     <div className="flex items-center gap-2">
                                         <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${conv.status === 'waiting_agent' ? 'bg-red-100 text-red-700' :
-                                                conv.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                    conv.status === 'resolved' ? 'bg-gray-100 text-gray-600' :
-                                                        'bg-yellow-100 text-yellow-800'
+                                            conv.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                conv.status === 'resolved' ? 'bg-gray-100 text-gray-600' :
+                                                    'bg-yellow-100 text-yellow-800'
                                             }`}>{conv.status.replace('_', ' ')}</span>
                                         {conv.agent && <span className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">{(conv.agent as any).username}</span>}
                                     </div>
@@ -181,8 +181,8 @@ export default function AdminChatPage() {
                                 return (
                                     <div key={msg.id || i} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[75%] rounded-2xl px-5 py-3 text-sm shadow-sm ${isAdmin ? 'bg-primary text-white rounded-br-sm' :
-                                                isBot ? 'bg-white border border-yellow-200 text-gray-800 rounded-bl-sm relative' :
-                                                    'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                                            isBot ? 'bg-white border border-yellow-200 text-gray-800 rounded-bl-sm relative' :
+                                                'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
                                             }`}>
                                             {isBot && <div className="text-[10px] font-bold text-yellow-600 mb-1 uppercase tracking-wider">Bot Automatizado</div>}
                                             <p className="whitespace-pre-wrap leading-relaxed">{msg.message}</p>

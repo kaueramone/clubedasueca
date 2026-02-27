@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { joinGame } from "./actions"; // Need to wrap joinGame in client component or form?
-import { PlusCircle, Search } from "lucide-react";
+import { PlusCircle, Search, User } from "lucide-react";
 import { CreateGameForm } from "./create-game-form";
 import { SubmitButton } from "@/components/submit-button"; // Can reuse or create specific
 import Link from "next/link"; // Changed from 'lucide-react' to 'next/link'
+import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
 
@@ -71,8 +72,13 @@ export default async function LobbyPage() {
                                 const playerCount = game.isDummy ? 4 : game.game_players[0]?.count || 0;
 
                                 return (
-                                    <div key={game.id} className={`flex flex-col overflow-hidden rounded-xl border transition-all ${game.isDummy ? 'bg-muted/5 border-border/50 grayscale-[20%]' : 'bg-card border-border shadow-sm hover:shadow-md hover:border-accent/30'}`}>
-                                        <div className="p-4 flex-1 space-y-3">
+                                    <div key={game.id} className={`relative flex flex-col overflow-hidden rounded-xl border transition-all ${game.isDummy ? 'bg-muted/5 border-border/50 grayscale-[20%]' : 'bg-card border-border shadow-sm hover:shadow-md hover:border-accent/30'}`}>
+                                        <div className="absolute inset-0 z-0">
+                                            <Image src="/images/hero-banner.png" alt="Card Background" fill className="object-cover opacity-10 mix-blend-luminosity" />
+                                            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+                                        </div>
+
+                                        <div className="relative z-10 p-4 flex-1 space-y-3">
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <h3 className="font-bold text-lg text-foreground line-clamp-1">Mesa de {game.profiles?.username || "Anónimo"}</h3>
@@ -99,31 +105,31 @@ export default async function LobbyPage() {
 
                                                 <div className="flex gap-1 z-10">
                                                     {/* Seat 1 (Host/Player) */}
-                                                    <div className="h-10 w-10 text-xs rounded-full bg-background flex items-center justify-center overflow-hidden border border-primary/20 shadow-sm">
-                                                        {game.profiles?.avatar_url ? <img src={game.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-primary">{game.profiles?.username?.charAt(0) || 'A'}</span>}
+                                                    <div className="h-10 w-10 text-xs rounded-full bg-primary flex items-center justify-center overflow-hidden border border-primary/50 shadow-sm text-white">
+                                                        {game.profiles?.avatar_url ? <img src={game.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-white">{game.profiles?.username?.charAt(0) || 'A'}</span>}
                                                     </div>
 
                                                     {/* Seat 2 */}
-                                                    <div className="h-10 w-10 text-xs rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border/50 shadow-sm">
-                                                        {playerCount > 1 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30">+</span>}
+                                                    <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${playerCount > 1 ? 'bg-primary border-primary/50' : 'bg-muted border-border/50'}`}>
+                                                        {playerCount > 1 ? <User className="h-5 w-5 text-white" /> : <span className="text-muted-foreground/30">+</span>}
                                                     </div>
                                                 </div>
 
                                                 <div className="flex gap-1 z-10">
                                                     {/* Seat 3 */}
-                                                    <div className="h-10 w-10 text-xs rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border/50 shadow-sm">
-                                                        {playerCount > 2 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30">+</span>}
+                                                    <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${playerCount > 2 ? 'bg-primary border-primary/50' : 'bg-muted border-border/50'}`}>
+                                                        {playerCount > 2 ? <User className="h-5 w-5 text-white" /> : <span className="text-muted-foreground/30">+</span>}
                                                     </div>
 
                                                     {/* Seat 4 */}
-                                                    <div className="h-10 w-10 text-xs rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border/50 shadow-sm">
-                                                        {playerCount > 3 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30">+</span>}
+                                                    <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${playerCount > 3 ? 'bg-primary border-primary/50' : 'bg-muted border-border/50'}`}>
+                                                        {playerCount > 3 ? <User className="h-5 w-5 text-white" /> : <span className="text-muted-foreground/30">+</span>}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-3 bg-muted/30 border-t border-border mt-auto">
+                                        <div className="relative z-10 p-3 bg-card/80 backdrop-blur-sm border-t border-border mt-auto">
                                             {game.isDummy ? (
                                                 <button disabled className="w-full rounded-lg bg-muted py-2 text-sm font-semibold text-muted-foreground border border-border cursor-not-allowed">
                                                     Mesa Preenchida

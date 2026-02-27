@@ -39,7 +39,7 @@ export default function AffiliateDashboardPage() {
     if (!data?.affiliate) {
         return (
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-gray-900">🤝 Programa de Afiliados</h1>
+                <h1 className="text-2xl font-bold text-white">🤝 Programa de Afiliados</h1>
                 <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/90 p-8 text-white text-center">
                     <Users className="mx-auto h-12 w-12 mb-4 opacity-80" />
                     <h2 className="text-xl font-bold mb-2">Ganhe dinheiro a referir jogadores!</h2>
@@ -62,7 +62,7 @@ export default function AffiliateDashboardPage() {
     if (affiliate.status === 'pending') {
         return (
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-gray-900">🤝 Programa de Afiliados</h1>
+                <h1 className="text-2xl font-bold text-white">🤝 Programa de Afiliados</h1>
                 <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-8 text-center">
                     <Clock className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
                     <h2 className="text-lg font-bold text-yellow-800 mb-2">Candidatura em análise</h2>
@@ -74,7 +74,7 @@ export default function AffiliateDashboardPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">🤝 Painel de Afiliado</h1>
+            <h1 className="text-2xl font-bold text-white">🤝 Painel de Afiliado</h1>
 
             {message && (
                 <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
@@ -177,8 +177,8 @@ export default function AffiliateDashboardPage() {
                                 <span className="ml-2 text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('pt-PT')}</span>
                             </div>
                             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${c.status === 'paid' ? 'bg-green-100 text-green-700' :
-                                    c.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-gray-100 text-gray-700'
+                                c.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-gray-100 text-gray-700'
                                 }`}>{c.status === 'paid' ? 'Pago' : c.status === 'pending' ? 'Pendente' : c.status}</span>
                         </div>
                     ))}

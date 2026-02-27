@@ -18,8 +18,8 @@ export default function SupportPage() {
                     <MessageSquare className="h-8 w-8" />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Suporte</h1>
-                    <p className="text-gray-500">Precisa de ajuda? Abra um ticket.</p>
+                    <h1 className="text-3xl font-bold text-white">Suporte</h1>
+                    <p className="text-white/70">Precisa de ajuda? Abra um ticket.</p>
                 </div>
             </div>
 
