@@ -6,37 +6,40 @@ const config: Config = {
         "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
         "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     ],
+    darkMode: 'class', // Ativado suporte explícito para classes .dark
     theme: {
         extend: {
             colors: {
-                ios: {
-                    blue: "#007AFF",
-                    green: "#34C759",
-                    indigo: "#5856D6",
-                    orange: "#FF9500",
-                    pink: "#FF2D55",
-                    purple: "#AF52DE",
-                    red: "#FF3B30",
-                    teal: "#5AC8FA",
-                    yellow: "#FFCC00",
-                    gray: "#8E8E93",
-                    gray2: "#AEAEB2",
-                    gray3: "#C7C7CC",
-                    gray4: "#D1D1D6",
-                    gray5: "#E5E5EA",
-                    gray6: "#F2F2F7",
-                },
-                background: "var(--background)",
-                foreground: "var(--foreground)",
+                // Extended generic values if needed
+                clube: {
+                    green: {
+                        600: '#185C49',
+                        700: '#123F33',
+                        800: '#0F3D2E',
+                        900: '#0B1F1A',
+                    },
+                    gold: {
+                        500: '#D4AF37',
+                        600: '#C9A227',
+                        700: '#B8962E',
+                    },
+                    offwhite: '#F5F2E8',
+                    red: '#8B1E1E',
+                    graphite: '#1E1E1E',
+                }
             },
             fontFamily: {
                 sans: ["var(--font-inter)"],
+                serif: ["var(--font-playfair)"],
             },
-            backgroundImage: {
-                "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
-                "gradient-conic":
-                    "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+            borderRadius: {
+                md: "12px",
+                lg: "16px",
             },
+            boxShadow: {
+                'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                'premium': '0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+            }
         },
     },
     plugins: [],

@@ -16,7 +16,7 @@ export default function LoginPage() {
                     Não tem conta?{" "}
                     <Link
                         href="/register"
-                        className="font-semibold text-ios-blue hover:text-ios-blue/80"
+                        className="font-semibold text-accent hover:text-accent/80"
                     >
                         Registar
                     </Link>

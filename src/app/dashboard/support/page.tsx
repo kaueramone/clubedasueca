@@ -14,7 +14,7 @@ export default function SupportPage() {
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
+                <div className="p-3 bg-blue-100 rounded-xl text-accent">
                     <MessageSquare className="h-8 w-8" />
                 </div>
                 <div>
@@ -61,7 +61,7 @@ export default function SupportPage() {
 
                         <button
                             type="submit"
-                            className="w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3px-6 rounded-lg text-lg h-12 transition shadow-md"
+                            className="w-full flex items-center justify-center bg-accent/90 hover:bg-blue-700 text-white font-bold py-3px-6 rounded-lg text-lg h-12 transition shadow-md"
                         >
                             <Send className="mr-2 h-5 w-5" />
                             Abrir Ticket

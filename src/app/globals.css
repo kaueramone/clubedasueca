@@ -5,93 +5,100 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-radius: 0.75rem;
 
-  /* Custom iOS Colors */
-  --color-ios-blue: #007AFF;
-  --color-ios-green: #34C759;
-  --color-ios-indigo: #5856D6;
-  --color-ios-orange: #FF9500;
-  --color-ios-pink: #FF2D55;
-  --color-ios-purple: #AF52DE;
-  --color-ios-red: #FF3B30;
-  --color-ios-teal: #5AC8FA;
-  --color-ios-yellow: #FFCC00;
-  --color-ios-gray: #8E8E93;
-  --color-ios-gray2: #AEAEB2;
-  --color-ios-gray3: #C7C7CC;
-  --color-ios-gray4: #D1D1D6;
-  --color-ios-gray5: #E5E5EA;
-  --color-ios-gray6: #F2F2F7;
-}
+  --color-vip-bronze: var(--vip-bronze);
+  --color-vip-silver: var(--vip-silver);
+  --color-vip-gold: var(--vip-gold);
+  --color-vip-platinum: var(--vip-platinum);
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
-  --primary: 240 5.9% 10%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
-  --ring: 240 5.9% 10%;
-  --radius: 0.75rem;
-}
-
-.dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 5.9% 10%;
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 240 4.9% 83.9%;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
 }
 
 @layer base {
+  :root {
+    --background: #F5F2E8; /* Off White */
+    --foreground: #1E1E1E; /* Grafite */
+
+    --card: #FFFFFF;
+    --card-foreground: #1E1E1E;
+
+    --popover: #FFFFFF;
+    --popover-foreground: #1E1E1E;
+
+    --primary: #0F3D2E; /* Verde Mesa 800 */
+    --primary-foreground: #F5F2E8;
+
+    --accent: #D4AF37; /* Dourado Premium 500 */
+    --accent-foreground: #0B1F1A;
+
+    --muted: #EBE8DE;
+    --muted-foreground: #6B7280;
+
+    --danger: #8B1E1E; /* Vermelho Controlado */
+    --danger-foreground: #F5F2E8;
+
+    --success: #34C759;
+    --warning: #FF9500;
+
+    --border: #D1D1D6;
+    --input: #FFFFFF;
+    --ring: #D4AF37;
+
+    /* VIP Tiers */
+    --vip-bronze: #CD7F32;
+    --vip-silver: #C0C0C0;
+    --vip-gold: #D4AF37;
+    --vip-platinum: #E5E4E2;
+  }
+
+  .dark {
+    --background: #0B1F1A; /* Verde Mesa 900 */
+    --foreground: #F5F2E8; /* Off White */
+
+    --card: #132A24; /* Cards slightly lighter than background */
+    --card-foreground: #F5F2E8;
+
+    --popover: #132A24;
+    --popover-foreground: #F5F2E8;
+
+    --primary: #D4AF37; /* Dourado Premium */
+    --primary-foreground: #0B1F1A;
+
+    --accent: #C9A227; /* Dourado 600 */
+    --accent-foreground: #0B1F1A;
+
+    --muted: #185C49; /* Verde Mesa 600 */
+    --muted-foreground: #A0B2AC;
+
+    --danger: #8B1E1E;
+    --danger-foreground: #F5F2E8;
+
+    --border: #123F33; /* Verde Mesa 700 */
+    --input: #132A24;
+    --ring: #D4AF37;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    @apply bg-background text-foreground antialiased font-sans selection:bg-accent/30 selection:text-foreground;
   }
 }

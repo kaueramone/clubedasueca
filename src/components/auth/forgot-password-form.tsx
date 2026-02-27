@@ -26,7 +26,7 @@ export function ForgotPasswordForm() {
                     name="email"
                     type="email"
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-ios-blue focus:outline-none focus:ring-ios-blue sm:text-sm transition-all"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     placeholder="seu@email.com"
                 />
             </div>
@@ -44,7 +44,7 @@ export function ForgotPasswordForm() {
                 </div>
             )}
 
-            <SubmitButton className="flex w-full justify-center rounded-xl bg-ios-blue px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-ios-blue/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ios-blue transition-all active:scale-[0.98]">
+            <SubmitButton className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
                 Enviar Email de Recuperação
             </SubmitButton>
         </form>

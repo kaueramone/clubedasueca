@@ -87,7 +87,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                            <Shield className="h-8 w-8 text-ios-blue" />
+                            <Shield className="h-8 w-8 text-accent" />
                             Painel Administrativo
                         </h1>
                         <p className="text-gray-500">Monitorização em tempo real.</p>
@@ -107,19 +107,19 @@ export default function AdminDashboard() {
                 <div className="flex border-b border-gray-200">
                     <button
                         onClick={() => setActiveTab('overview')}
-                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'overview' ? 'border-ios-blue text-ios-blue' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'overview' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Visão Geral
                     </button>
                     <button
                         onClick={() => setActiveTab('users')}
-                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'users' ? 'border-ios-blue text-ios-blue' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'users' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Gerir Utilizadores
                     </button>
                     <button
                         onClick={() => setActiveTab('transactions')}
-                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'transactions' ? 'border-ios-blue text-ios-blue' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+                        className={`px-6 py-3 font-medium text-sm transition-colors border-b-2 ${activeTab === 'transactions' ? 'border-accent text-accent' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
                     >
                         Transações
                     </button>
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
                                         placeholder="Pesquisar por nome..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ios-blue/50 transition-shadow"
+                                        className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-accent/50 transition-shadow"
                                     />
                                 </div>
                                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
                                                         <span className="font-medium text-gray-900">{user.username || 'Sem Nome'}</span>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'}`}>
                                                             {user.role || 'user'}
                                                         </span>
                                                     </td>
@@ -182,7 +182,7 @@ export default function AdminDashboard() {
                                                         {user.role !== 'admin' && (
                                                             <button
                                                                 onClick={() => handlePromote(user.id)}
-                                                                className="text-purple-600 hover:text-purple-800 font-medium text-xs"
+                                                                className="text-primary hover:text-primary font-medium text-xs"
                                                             >
                                                                 Promover
                                                             </button>

@@ -6,6 +6,7 @@ import { signout } from "../auth/actions";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { UserPresence } from "@/components/dashboard/user-presence";
+import ChatWidget from "@/components/chat/chat-widget";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +31,7 @@ export default async function DashboardLayout({
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Mobile Header */}
                 <header className="flex h-14 items-center justify-between border-b bg-white px-4 md:hidden">
-                    <span className="font-bold">ApostaNaSueca</span>
+                    <span className="font-bold">Clube da Sueca</span>
                     <div className="flex items-center gap-2">
                         <Link href="/dashboard/profile" className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-300 transition-colors">
                             EU
@@ -48,6 +49,7 @@ export default async function DashboardLayout({
                 </main>
             </div>
             <BottomNav />
+            <ChatWidget userId={user.id} />
         </div>
     );
 }

@@ -58,7 +58,7 @@ export default function WithdrawPage() {
                             required
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-ios-blue focus:outline-none focus:ring-ios-blue"
+                            className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-accent focus:outline-none focus:ring-accent"
                             placeholder="0.00"
                         />
                     </div>
@@ -72,7 +72,7 @@ export default function WithdrawPage() {
                         required
                         value={pixKey}
                         onChange={(e) => setPixKey(e.target.value)}
-                        className="mt-1 block w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 focus:border-ios-blue focus:outline-none focus:ring-ios-blue"
+                        className="mt-1 block w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent"
                         placeholder="PT50..."
                     />
                 </div>
@@ -80,7 +80,7 @@ export default function WithdrawPage() {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full rounded-xl bg-ios-blue py-3 font-semibold text-white shadow-md active:scale-[0.98] transition-transform disabled:opacity-70"
+                    className="w-full rounded-xl bg-accent py-3 font-semibold text-white shadow-md active:scale-[0.98] transition-transform disabled:opacity-70"
                 >
                     {loading ? 'A processar...' : 'Confirmar Saque'}
                 </button>

@@ -7,7 +7,7 @@ export default function RegisterPage() {
             <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
                 <div className="mb-8 text-center">
                     <h1 className="text-2xl font-bold text-gray-900">Criar Conta</h1>
-                    <p className="text-ios-gray">Junte-se ao ApostaNaSueca</p>
+                    <p className="text-ios-gray">Junte-se ao Clube da Sueca</p>
                 </div>
 
                 <RegisterForm />
@@ -16,7 +16,7 @@ export default function RegisterPage() {
                     Já tem conta?{" "}
                     <Link
                         href="/login"
-                        className="font-semibold text-ios-blue hover:text-ios-blue/80"
+                        className="font-semibold text-accent hover:text-accent/80"
                     >
                         Entrar
                     </Link>

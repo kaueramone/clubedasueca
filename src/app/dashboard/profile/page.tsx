@@ -171,7 +171,7 @@ export default function ProfilePage() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="w-full flex items-center justify-center bg-ios-blue hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]"
+                        className="w-full flex items-center justify-center bg-accent hover:bg-accent/90 text-white font-bold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]"
                     >
                         {saving ? (
                             <>

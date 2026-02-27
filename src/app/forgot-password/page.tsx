@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
                 <div className="mt-8 text-center">
                     <Link
                         href="/login"
-                        className="text-sm font-medium text-ios-blue hover:text-ios-blue/80"
+                        className="text-sm font-medium text-accent hover:text-accent/80"
                     >
                         Voltar ao Login
                     </Link>

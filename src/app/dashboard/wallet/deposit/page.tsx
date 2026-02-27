@@ -64,7 +64,7 @@ export default function DepositPage() {
                                 required
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-ios-blue focus:outline-none focus:ring-ios-blue"
+                                className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-accent focus:outline-none focus:ring-accent"
                                 placeholder="10.00"
                             />
                         </div>
@@ -73,7 +73,7 @@ export default function DepositPage() {
 
                     <button
                         type="submit"
-                        className="w-full rounded-xl bg-ios-blue py-3 font-semibold text-white shadow-md active:scale-[0.98] transition-transform"
+                        className="w-full rounded-xl bg-accent py-3 font-semibold text-white shadow-md active:scale-[0.98] transition-transform"
                     >
                         Gerar Referência MB Way
                     </button>
@@ -82,7 +82,7 @@ export default function DepositPage() {
 
             {step === 2 && (
                 <div className="space-y-6 text-center">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-ios-blue">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
                         <Smartphone className="h-8 w-8" />
                     </div>
                     <div>
@@ -101,7 +101,7 @@ export default function DepositPage() {
                         </div>
                         <div className="flex justify-between border-t border-gray-200 pt-2">
                             <span className="text-gray-500">Valor</span>
-                            <span className="font-bold text-ios-blue">€{parseFloat(amount).toFixed(2)}</span>
+                            <span className="font-bold text-accent">€{parseFloat(amount).toFixed(2)}</span>
                         </div>
                     </div>
 

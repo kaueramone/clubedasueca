@@ -34,7 +34,7 @@ export default async function LobbyPage() {
                     <h2 className="font-semibold text-gray-700">Mesas Disponíveis</h2>
                     <div className="relative hidden sm:block">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                        <input type="text" placeholder="Procurar mesa..." className="h-9 w-64 rounded-full border border-gray-300 pl-9 pr-4 text-sm focus:border-ios-blue focus:outline-none" />
+                        <input type="text" placeholder="Procurar mesa..." className="h-9 w-64 rounded-full border border-gray-300 pl-9 pr-4 text-sm focus:border-accent focus:outline-none" />
                     </div>
                 </div>
 

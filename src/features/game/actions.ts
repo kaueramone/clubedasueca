@@ -1,22 +1,32 @@
-'use server'
-
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-
-// Note: This matches the key type for card ID
 import { isValidMove, getTrickWinner, getCardSuit, getCardValue } from './utils'
+import { logAudit } from '@/lib/audit'
+import { processWagerForBonuses } from '@/features/bonuses/actions'
+import { processGameAffiliateCommissions } from '@/features/affiliates/actions'
+import { trackUserMetrics } from '@/features/crm/actions'
 
 export async function playCard(gameId: string, card: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
 
-    // 1. Fetch Game State (Lock row?)
-    const { data: game, error: gameError } = await supabase.from('games').select('*').eq('id', gameId).single()
+    // 1. Fetch Game State
+    const { data: game, error: gameError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single()
+
     if (!game || game.status !== 'playing') return { error: 'Jogo não está ativo' }
 
-    // 2. Fetch Players to identify current turn
-    const { data: players } = await supabase.from('game_players').select('*').eq('game_id', gameId).order('position', { ascending: true })
+    // 2. Fetch Players
+    const { data: players } = await supabase
+        .from('game_players')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('position', { ascending: true })
+
     if (!players) return { error: 'Jogadores não encontrados' }
 
     const currentPlayer = players.find(p => p.user_id === user.id)
@@ -28,148 +38,152 @@ export async function playCard(gameId: string, card: string) {
     }
 
     // 4. Check if card is in hand
-    if (!currentPlayer.hand?.includes(card)) {
-        return { error: 'Carta não inválida' }
+    const hand: string[] = currentPlayer.hand || []
+    if (!hand.includes(card)) {
+        return { error: 'Carta não está na sua mão' }
     }
 
-    // 5. Fetch current trick (from moves in current round/trick)
-    // We need to track current trick number and cards played in it.
-    // Assuming `games` has `current_trick_cards` JSONB or we query `game_moves`
-    // Let's use `game_moves`.
-    const { data: moves } = await supabase.from('game_moves')
+    // 5. Fetch current trick moves
+    const { data: moves } = await supabase
+        .from('game_moves')
         .select('*')
         .eq('game_id', gameId)
-        .eq('round_number', game.current_round || 1) // Default 1 if null
-        .eq('trick_number', game.current_trick || 1) // Default 1 if null
+        .eq('round_number', game.current_round || 1)
+        .eq('trick_number', game.current_trick || 1)
         .order('played_at', { ascending: true })
 
-    // 6. Validate Move (Suit following)
-    /* 
-       Logic: If moves.length > 0, lead suit is getCardSuit(moves[0].card).
-       If player has lead suit, must play it.
-    */
-    // Simplified for now:
-    const leadCard = moves && moves.length > 0 ? moves[0] : null
+    const trickMoves = moves || []
+
+    // 6. Determine lead suit and validate move
+    const leadCard = trickMoves.length > 0 ? trickMoves[0] : null
     const leadSuit = leadCard ? getCardSuit(leadCard.card) : null
 
-    // Need to reconstruct full hand objects to check if user has suit
-    // For now, accept any card for MVP, but TODO: Implement `isValidMove` logic
+    if (!isValidMove(card, hand, leadSuit)) {
+        return { error: 'Tens de seguir o naipe de saída!' }
+    }
 
-    // 7. Play Card
-    // Remove from hand
-    const newHand = currentPlayer.hand.filter((c: string) => c !== card)
+    // 7. Remove card from hand
+    const newHand = hand.filter((c: string) => c !== card)
     await supabase.from('game_players').update({ hand: newHand }).eq('id', currentPlayer.id)
 
-    // Insert Move
+    // 8. Insert Move
     await supabase.from('game_moves').insert({
         game_id: gameId,
-        player_id: currentPlayer.id,
+        player_id: user.id,
         card: card,
         round_number: game.current_round || 1,
-        trick_number: game.current_trick || 1
+        trick_number: game.current_trick || 1,
     })
 
-    // 8. Advance Turn or Finish Trick
-    const nextPosition = (currentPlayer.position + 1) % 4
+    // 9. Check if trick is complete (4 cards)
+    if (trickMoves.length === 3) {
+        // This was the 4th card — trick is complete
+        const allTrickCards = [
+            ...trickMoves.map(m => ({ player_id: m.player_id, card: m.card })),
+            { player_id: user.id, card },
+        ]
 
-    if (moves && moves.length === 3) {
-        // Trick finished (this was 4th card)
-        // Determine winner
-        // Update score
-        // Set turn to winner
-        // Increment trick number
-        // If trick 10, increment round? Or finish game.
+        // Determine trick winner
+        const winnerId = getTrickWinner(allTrickCards, game.trump_suit)
+        const winnerPlayer = players.find(p => p.user_id === winnerId)
 
-        // For MVP: Just increment trick and keep turn sequential (wrong, but playable for testing flow)
-        // Correct way: Calculate winner
-
-        const allCards = [...moves, { player_id: currentPlayer.id, card }]
-        const winnerId = getTrickWinner(allCards as any, game.trump_suit) // Cast to match type if needed
-
-        const winnerPlayer = players.find(p => p.id === winnerId) // wait, winnerId is player_id (user_id) or game_player id? type says player_id
-        // My utils return player_id. `game_moves` stores player_id (profile id)
-        // `players` has `user_id` which matches profile id.
-        const winnerPos = players.find(p => p.user_id === winnerId)?.position
-
-        // Update Game
-        // If trick number is 10, the round (game) is over? Sueca is usually 1 game = 10 tricks.
-        if ((game.current_trick || 1) >= 10) {
-            // GAME OVER
-            // 1. Calculate Score
-            // Need to fetch all moves and calculate.
-            let scoreA = 0
-            let scoreB = 0
-
-            const allMoves = await supabase.from('game_moves').select('*').eq('game_id', gameId)
-            // We need to replay the game logic to count points or store them incrementally.
-            // For MVP, replay is safer.
-            // ... logic to count points ... 
-            // For now, let's just assign random winner or 60-60 for simplicity unless we implement full point counting.
-            // Let's implement point counting basic:
-            // We need card values.
-
-            if (allMoves.data) {
-                // Basic summing of all cards won by Team A vs Team B.
-                // We need to know who won each trick to know who got the cards.
-                // This requires re-evaluating each trick.
-                // This is computationally heavy for an edge function or server action if not optimized.
-                // Better: Store trick winner in `game_moves` or `game_tricks` table?
-                // Or just increment score progressively in the `if (moves.length === 3)` block.
-            }
-
-            // Simulating a random result for MVP since full logic is extensive
-            scoreA = 61
-            scoreB = 59
-            // TODO: Implement actual score counting
-            const winnerTeam = scoreA > 60 ? 'A' : (scoreB > 60 ? 'B' : 'Draw')
-
-            await supabase.from('games').update({
-                status: 'finished',
-                score_a: scoreA,
-                score_b: scoreB,
-                winner_team: winnerTeam
-            }).eq('id', gameId)
-
-            // Distribute Winnings
-            if (winnerTeam !== 'Draw') {
-                const totalPot = game.stake * 4
-                const houseFee = totalPot * 0.10 // 10%
-                const prize = totalPot - houseFee
-                const prizePerPlayer = prize / 2
-
-                const winningPlayers = players.filter(p => p.team === winnerTeam)
-
-                for (const player of winningPlayers) {
-                    const { data: wallet } = await supabase.from('wallets').select('*').eq('user_id', player.user_id).single()
-                    if (wallet) {
-                        await supabase.from('wallets').update({ balance: wallet.balance + prizePerPlayer }).eq('id', wallet.id)
-                        await supabase.from('transactions').insert({
-                            wallet_id: wallet.id,
-                            amount: prizePerPlayer,
-                            type: 'win',
-                            description: `Vitória na mesa ${game.id.slice(0, 8)}`,
-                            reference_id: game.id
-                        })
-                    }
-                }
-
-                // Record House Revenue
-                await supabase.from('house_revenue').insert({
-                    game_id: gameId,
-                    amount: houseFee
-                })
-            }
-        } else {
-            await supabase.from('games').update({
-                current_turn: winnerPos, // Winner starts next trick
-                current_trick: (game.current_trick || 1) + 1
-            }).eq('id', gameId)
+        if (!winnerPlayer) {
+            console.error('[PLAY_CARD] Could not find winner player', winnerId)
+            return { error: 'Erro interno ao calcular vencedor da vaza' }
         }
 
-        // TODO: Calculate Points and add to team score
+        // Calculate points from trick cards
+        const trickPoints = allTrickCards.reduce((sum, c) => sum + getCardValue(c.card), 0)
+        const trickCards = allTrickCards.map(c => c.card)
+
+        // Update team score
+        const isTeamA = winnerPlayer.team === 'A'
+        const newScoreA = (game.score_a || 0) + (isTeamA ? trickPoints : 0)
+        const newScoreB = (game.score_b || 0) + (!isTeamA ? trickPoints : 0)
+
+        // Store trick cards in winner's tricks_won
+        const currentTricksWon = winnerPlayer.tricks_won || []
+        await supabase
+            .from('game_players')
+            .update({ tricks_won: [...currentTricksWon, ...trickCards] })
+            .eq('id', winnerPlayer.id)
+
+        // Check if game is over (10th trick)
+        const currentTrick = game.current_trick || 1
+        if (currentTrick >= 10) {
+            // GAME OVER — use atomic RPC for prize distribution
+            const { data: endResult, error: endError } = await supabase.rpc('process_game_end', {
+                p_game_id: gameId,
+                p_score_a: newScoreA,
+                p_score_b: newScoreB,
+            })
+
+            if (endError) {
+                console.error('[GAME_END]', endError)
+                // Fallback: at least mark as finished
+                await supabase.from('games').update({
+                    status: 'finished',
+                    score_a: newScoreA,
+                    score_b: newScoreB,
+                    winner_team: newScoreA > 60 ? 'A' : (newScoreB > 60 ? 'B' : 'Draw'),
+                }).eq('id', gameId)
+            }
+
+            await logAudit(supabase, {
+                userId: user.id,
+                action: 'game_finished',
+                entityType: 'game',
+                entityId: gameId,
+                details: {
+                    score_a: newScoreA,
+                    score_b: newScoreB,
+                    winner_team: newScoreA > 60 ? 'A' : (newScoreB > 60 ? 'B' : 'Draw'),
+                    result: endResult,
+                },
+            })
+
+            // Update bonus wagered and VIP points for all players (non-blocking)
+            const wagerAmount = game.stake || 0
+            const winnerTeam = newScoreA > 60 ? 'A' : (newScoreB > 60 ? 'B' : 'Draw')
+            for (const p of players) {
+                // Determine if this player won
+                const isWinner = winnerTeam !== 'Draw' && p.team === winnerTeam
+                const wonAmount = isWinner ? (wagerAmount * 4 * 0.90) / 2 : 0
+
+                // Bonus
+                processWagerForBonuses(p.user_id, wagerAmount).catch(err =>
+                    console.error('[WAGER_BONUS]', err)
+                )
+
+                // CRM Tracking
+                trackUserMetrics(p.user_id, {
+                    wagered: wagerAmount,
+                    won: wonAmount,
+                    games_played: 1,
+                    games_won: isWinner ? 1 : 0
+                }).catch(err => console.error('[GAME_CRM]', err))
+            }
+
+            // Process affiliate commissions from house fee (non-blocking)
+            const totalPot = wagerAmount * 4
+            const houseFee = totalPot * 0.10
+            processGameAffiliateCommissions(gameId, houseFee).catch(err =>
+                console.error('[AFFILIATE_COMMISSION]', err)
+            )
+        } else {
+            // Next trick — winner leads
+            await supabase.from('games').update({
+                current_turn: winnerPlayer.position,
+                current_trick: currentTrick + 1,
+                score_a: newScoreA,
+                score_b: newScoreB,
+            }).eq('id', gameId)
+        }
     } else {
+        // Not last card — advance turn
+        const nextPosition = (currentPlayer.position + 1) % 4
         await supabase.from('games').update({
-            current_turn: nextPosition
+            current_turn: nextPosition,
         }).eq('id', gameId)
     }
 

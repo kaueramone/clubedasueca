@@ -1,4 +1,4 @@
-import { Home, Wallet, Gamepad2, User, Settings, HelpCircle, History } from "lucide-react";
+import { Home, Wallet, Gamepad2, User, Settings, HelpCircle, History, Gift, Users } from "lucide-react";
 
 export const navItems = [
     {
@@ -15,6 +15,16 @@ export const navItems = [
         name: "Carteira",
         href: "/dashboard/wallet",
         icon: Wallet,
+    },
+    {
+        name: "Bónus",
+        href: "/dashboard/bonuses",
+        icon: Gift,
+    },
+    {
+        name: "Afiliados",
+        href: "/dashboard/affiliates",
+        icon: Users,
     },
     {
         name: "Histórico",

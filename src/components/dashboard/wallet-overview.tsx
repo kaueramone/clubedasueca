@@ -47,7 +47,7 @@ export function WalletOverview({
     }, [userId, supabase])
 
     return (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ios-blue to-ios-indigo p-6 text-white shadow-xl shadow-ios-blue/20">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/90 p-6 text-white shadow-xl shadow-accent/20">
             <div className="relative z-10">
                 <p className="text-sm font-medium opacity-80">Saldo Disponível</p>
                 <p className="mt-2 text-4xl font-bold tracking-tight">

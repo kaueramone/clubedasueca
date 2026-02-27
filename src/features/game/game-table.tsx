@@ -14,7 +14,7 @@ const PT_RED = '#CE1126'
 const PT_GREEN = '#006600'
 const PT_YELLOW = '#FFD700' // Gold-ish
 
-export function GameTable({ game, currentUser, isTraining = false }: { game?: any, currentUser?: any, isTraining?: boolean }) {
+export function GameTable({ game, currentUser, isTraining = false, isDemoGuest = false }: { game?: any, currentUser?: any, isTraining?: boolean, isDemoGuest?: boolean }) {
     const router = useRouter()
 
     const initialTrainingState = isTraining ? {
@@ -458,7 +458,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                     )}
                 </div>
                 {/* Lateral stacking deck effect */}
-                <div className="flex flex-col -space-y-[60px] sm:-space-y-[80px]">
+                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
                     {getOpponentCards(gameState.game_players[1]).map(i => (
                         <div key={i} className="transform -rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
@@ -467,7 +467,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
 
             {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
             <div className="absolute right-4 sm:right-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2">
-                <div className="flex flex-col -space-y-[60px] sm:-space-y-[80px]">
+                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
                     {getOpponentCards(gameState.game_players[3]).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
@@ -562,7 +562,7 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
             {/* Game Result Overlay */}
             {gameResult && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-ios-blue/20">
+                    <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-accent/20">
                         <div className="mb-6 flex justify-center">
                             <div className={cn("p-4 rounded-full", gameResult.winnerTeam === 'A' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")}>
                                 <Trophy className="h-12 w-12" />
@@ -586,21 +586,33 @@ export function GameTable({ game, currentUser, isTraining = false }: { game?: an
                             </div>
                         </div>
 
-                        <div className="flex gap-3">
-                            <button
-                                onClick={() => router.push('/dashboard')}
-                                className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 rounded-xl transition-colors"
-                            >
-                                <Home className="h-5 w-5" />
-                                Sair
-                            </button>
-                            <button
-                                onClick={startTrainingGame}
-                                className="flex-1 flex items-center justify-center gap-2 bg-ios-blue hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-colors"
-                            >
-                                <RotateCcw className="h-5 w-5" />
-                                Jogar Novamente
-                            </button>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => router.push(isDemoGuest ? '/' : '/dashboard')}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 rounded-xl transition-colors"
+                                >
+                                    <Home className="h-5 w-5" />
+                                    Sair
+                                </button>
+                                <button
+                                    onClick={startTrainingGame}
+                                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-colors"
+                                >
+                                    <RotateCcw className="h-5 w-5" />
+                                    Nova Partida
+                                </button>
+                            </div>
+
+                            {isDemoGuest && (
+                                <button
+                                    onClick={() => router.push('/register')}
+                                    className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold py-3 rounded-xl transition-colors shadow-premium animate-pulse"
+                                >
+                                    <Trophy className="h-5 w-5" />
+                                    Gostou? Crie a sua Conta e Jogue a Dinheiro!
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

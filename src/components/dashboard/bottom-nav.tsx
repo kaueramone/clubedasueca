@@ -16,7 +16,7 @@ export function BottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center justify-center space-y-1 ${isActive ? "text-ios-blue" : "text-gray-400"
+                            className={`flex flex-col items-center justify-center space-y-1 ${isActive ? "text-accent" : "text-gray-400"
                                 }`}
                         >
                             <item.icon className="h-6 w-6" />

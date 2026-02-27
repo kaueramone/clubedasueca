@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
 import { createClient } from '@/lib/supabase/server'
+import { applyWelcomeBonus } from '@/features/bonuses/actions'
+import { registerReferral } from '@/features/affiliates/actions'
+import { trackUserMetrics } from '@/features/crm/actions'
 
 export async function login(prevState: any, formData: FormData) {
     const supabase = await createClient()
@@ -43,6 +46,25 @@ export async function signup(prevState: any, formData: FormData) {
 
     if (error) {
         return { error: error.message }
+    }
+
+    // Apply welcome bonus (non-blocking)
+    const { data: { user: newUser } } = await supabase.auth.getUser()
+    if (newUser) {
+        applyWelcomeBonus(newUser.id).catch(err =>
+            console.error('[WELCOME_BONUS]', err)
+        )
+
+        // Track affiliate referral if ref code exists
+        const refCode = formData.get('refCode') as string
+        if (refCode) {
+            registerReferral(newUser.id, refCode).catch(err =>
+                console.error('[REFERRAL]', err)
+            )
+        }
+
+        // Initialize CRM metrics (non-blocking)
+        trackUserMetrics(newUser.id, {}).catch(err => console.error('[CRM_INIT]', err))
     }
 
     revalidatePath('/', 'layout')

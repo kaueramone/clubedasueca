@@ -13,8 +13,8 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
     return (
         <div className="hidden h-full w-64 flex-col border-r bg-white md:flex">
             <div className="flex h-16 items-center px-6">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-ios-blue to-ios-purple bg-clip-text text-transparent">
-                    ApostaNaSueca
+                <h1 className="text-xl font-bold bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
+                    Clube da Sueca
                 </h1>
             </div>
             <nav className="flex-1 space-y-1 px-3 py-4">
@@ -25,7 +25,7 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
                             key={item.href}
                             href={item.href}
                             className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive
-                                ? "bg-ios-blue text-white shadow-md shadow-ios-blue/25"
+                                ? "bg-accent text-white shadow-md shadow-accent/25"
                                 : "text-gray-700 hover:bg-ios-gray6 hover:text-gray-900"
                                 }`}
                         >

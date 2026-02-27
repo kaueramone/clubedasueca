@@ -34,7 +34,7 @@ export default function TutorialPage() {
                     <ArrowLeft className="h-6 w-6 text-gray-600" />
                 </Link>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                    <BookOpen className="h-8 w-8 text-ios-blue" />
+                    <BookOpen className="h-8 w-8 text-accent" />
                     Como Jogar
                 </h1>
             </div>
@@ -51,7 +51,7 @@ export default function TutorialPage() {
                 {/* Explanation Area */}
                 <div className="flex flex-col justify-center space-y-6">
                     <div className="space-y-4">
-                        <span className="text-ios-blue font-bold tracking-widest uppercase text-sm">Passo {step + 1}/{steps.length}</span>
+                        <span className="text-accent font-bold tracking-widest uppercase text-sm">Passo {step + 1}/{steps.length}</span>
                         <h2 className="text-3xl font-bold text-gray-900">{steps[step].title}</h2>
                         <p className="text-lg text-gray-600 leading-relaxed">{steps[step].description}</p>
                     </div>
@@ -67,7 +67,7 @@ export default function TutorialPage() {
                         {step < steps.length - 1 ? (
                             <button
                                 onClick={() => setStep(step + 1)}
-                                className="flex-1 px-6 py-3 rounded-xl font-bold bg-ios-blue text-white hover:bg-blue-600 transition flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+                                className="flex-1 px-6 py-3 rounded-xl font-bold bg-accent text-white hover:bg-accent/90 transition flex items-center justify-center gap-2 shadow-lg shadow-accent/20"
                             >
                                 Próximo
                                 <ChevronRight className="h-5 w-5" />
@@ -85,7 +85,7 @@ export default function TutorialPage() {
                 </div>
             </div>
 
-            <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+            <div className="bg-accent/10 p-6 rounded-xl border border-blue-100">
                 <h3 className="font-bold text-blue-900 mb-2">Hierarquia das Cartas (Pontos)</h3>
                 <div className="grid grid-cols-5 md:grid-cols-10 gap-2 text-center text-sm">
                     <CardRank card="A" pts={11} />

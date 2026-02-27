@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Wallet, Joystick, BookOpen } from "lucide-react";
 import { WalletOverview } from "@/components/dashboard/wallet-overview";
+import { BannerDisplay } from "@/components/dashboard/banner-display";
 
 export const dynamic = 'force-dynamic';
 
@@ -66,6 +67,9 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
+            {/* Banners Widget */}
+            <BannerDisplay position="dashboard_top" />
+
             {/* Wallet Card */}
             <WalletOverview initialBalance={wallet?.balance || 0} userId={user.id} />
 
@@ -85,7 +89,7 @@ export default async function DashboardPage() {
 
                 <Link href="/dashboard/history" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-gray-100">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                             <Wallet className="h-6 w-6" />
                         </div>
                         <div>
@@ -109,7 +113,7 @@ export default async function DashboardPage() {
 
                 <Link href="/dashboard/tutorial" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-gray-100">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-accent group-hover:bg-accent/90 group-hover:text-white transition-colors">
                             <BookOpen className="h-6 w-6" />
                         </div>
                         <div>
