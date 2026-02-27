@@ -1,5 +1,6 @@
--- Migrar tabela profiles para incluir data de nascimento e nacionalidade
+-- Migrar tabela profiles para incluir full_name, data de nascimento e nacionalidade
 ALTER TABLE public.profiles
+ADD COLUMN IF NOT EXISTS full_name TEXT,
 ADD COLUMN IF NOT EXISTS birth_date DATE,
 ADD COLUMN IF NOT EXISTS nationality TEXT;
 
