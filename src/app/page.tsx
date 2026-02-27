@@ -9,10 +9,6 @@ export default async function Home() {
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
 
-    if (session) {
-        redirect('/dashboard');
-    }
-
     // Fetch CMS Pages for Footer Links
     const pagesResponse = await getAllPages();
     const cmsPages = pagesResponse.pages || [];
@@ -27,14 +23,25 @@ export default async function Home() {
                         <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
                     </Link>
                     <nav className="flex items-center gap-4">
-                        <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                            Entrar
-                        </Link>
-                        <Link href="/register">
-                            <Button variant="primary" size="sm" className="hidden sm:flex">
-                                Criar Conta
-                            </Button>
-                        </Link>
+                        {session ? (
+                            <Link href="/dashboard">
+                                <Button variant="primary" size="sm" className="flex items-center gap-2">
+                                    <span className="h-6 w-6 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-xs font-bold">EU</span>
+                                    A Minha Conta
+                                </Button>
+                            </Link>
+                        ) : (
+                            <>
+                                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                    Entrar
+                                </Link>
+                                <Link href="/register">
+                                    <Button variant="primary" size="sm" className="hidden sm:flex">
+                                        Criar Conta
+                                    </Button>
+                                </Link>
+                            </>
+                        )}
                     </nav>
                 </div>
             </header>
@@ -42,10 +49,19 @@ export default async function Home() {
             {/* Hero Section */}
             <main className="flex-1">
                 <section className="relative overflow-hidden py-24 sm:py-32 lg:pb-40">
-                    <div className="absolute inset-x-0 top-0 h-96 bg-gradient-to-b from-primary/10" />
-                    <div className="container mx-auto px-4 relative">
-                        <div className="mx-auto max-w-3xl text-center">
-                            <div className="mb-8 inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-sm font-medium text-accent">
+                    <div className="absolute inset-0 z-0">
+                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="object-cover opacity-30" priority />
+                        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+                    </div>
+                    <div className="container mx-auto px-4 relative z-10">
+                        <div className="mx-auto max-w-3xl text-center flex flex-col items-center">
+
+                            <div className="relative w-24 h-24 mb-6 drop-shadow-2xl">
+                                <Image src="/images/clubedasueca-fundoclaro-perfil.png" alt="Logo Clube da Sueca" fill className="object-contain dark:hidden" priority />
+                                <Image src="/images/clubedasueca-fundoescuro-perfil.png" alt="Logo Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                            </div>
+
+                            <div className="mb-8 inline-flex items-center rounded-full border border-accent/30 bg-background/50 backdrop-blur-md px-3 py-1 text-sm font-medium text-accent shadow-sm">
                                 <span className="flex h-2 w-2 rounded-full bg-accent mr-2 animate-pulse" />
                                 O Clube Tradicional Português
                             </div>
