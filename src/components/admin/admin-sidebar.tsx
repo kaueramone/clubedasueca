@@ -1,16 +1,17 @@
 import Link from 'next/link'
 import { Home, Users, BarChart2, MessageSquare, Image as ImageIcon, FileText, Gift, Award, Shield, DollarSign } from 'lucide-react'
 
+import Image from 'next/image'
+
 export function AdminSidebar() {
     return (
         <aside className="w-64 bg-card border-r border-border min-h-screen p-4 flex flex-col font-sans">
             <div className="mb-8 px-4">
                 <Link href="/admin">
-                    <span className="text-xl font-serif font-bold text-accent flex items-center gap-2">
-                        <Shield className="h-6 w-6" />
-                        Admin
-                    </span>
-                    <span className="text-xs text-muted-foreground block mt-1 uppercase tracking-wider">Clube da Sueca</span>
+                    <div className="relative w-full h-12">
+                        <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
+                        <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                    </div>
                 </Link>
             </div>
 

@@ -22,11 +22,10 @@ export default async function Home() {
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-2xl font-serif font-bold bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
-                            Clube da Sueca
-                        </span>
-                    </div>
+                    <Link href="/" className="relative w-40 h-10">
+                        <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
+                        <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                    </Link>
                     <nav className="flex items-center gap-4">
                         <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                             Entrar
@@ -116,7 +115,10 @@ export default async function Home() {
                 <div className="container mx-auto px-4">
                     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         <div>
-                            <span className="text-xl font-serif font-bold text-accent mb-4 block">Clube da Sueca</span>
+                            <div className="relative w-40 h-10 mb-4 block">
+                                <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" />
+                                <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" />
+                            </div>
                             <p className="text-sm text-muted-foreground">
                                 O ecossistema premium de jogos de cartas tradicionais portugueses.
                             </p>

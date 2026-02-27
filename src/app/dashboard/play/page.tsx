@@ -15,11 +15,32 @@ export default async function LobbyPage() {
         .eq("status", "waiting")
         .order("created_at", { ascending: false });
 
-    // Filter out full games or handle in UI
-    const availableGames = games?.filter((g) => {
+    const dbGames = games?.filter((g) => {
         const players: any = g.game_players
         return (players[0]?.count || 0) < 4
     }) || [];
+
+    // Tática de Growth Hacking: Simular mesas sempre cheias/em jogo para criar perceção de movimento
+    const dummyGames = [
+        {
+            id: 'dummy-1',
+            profiles: { username: 'RuiCosta89', avatar_url: null },
+            game_players: [{ count: 4 }],
+            stake: 5.0,
+            status: 'playing',
+            isDummy: true
+        },
+        {
+            id: 'dummy-2',
+            profiles: { username: 'Maria_PT', avatar_url: null },
+            game_players: [{ count: 4 }],
+            stake: 2.5,
+            status: 'playing',
+            isDummy: true
+        }
+    ];
+
+    const availableGames = [...dummyGames, ...dbGames];
 
     return (
         <div className="space-y-6">
@@ -44,25 +65,42 @@ export default async function LobbyPage() {
                             Não há mesas disponíveis no momento. Crie uma!
                         </div>
                     ) : (
-                        availableGames.map((game) => (
-                            <div key={game.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+                        availableGames.map((game: any) => (
+                            <div key={game.id} className={`flex items-center justify-between p-4 transition-colors ${game.isDummy ? 'bg-muted/10 opacity-75 grayscale-[20%]' : 'hover:bg-muted/30'}`}>
                                 <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-full bg-ios-gray4 overflow-hidden">
-                                        {game.profiles?.avatar_url && <img src={game.profiles.avatar_url} className="h-full w-full object-cover" />}
+                                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-border">
+                                        {game.profiles?.avatar_url ? <img src={game.profiles.avatar_url} className="h-full w-full object-cover" /> : <div className="font-bold text-primary">{game.profiles?.username?.charAt(0) || 'A'}</div>}
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-900">Mesa de {game.profiles?.username || "Anónimo"}</h3>
-                                        <p className="text-sm text-gray-500">{game.game_players[0].count}/4 Jogadores • Aposta: <span className="font-bold text-ios-green">€{game.stake}</span></p>
+                                        <h3 className="font-bold text-foreground">Mesa de {game.profiles?.username || "Anónimo"}</h3>
+                                        <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                            {game.isDummy ? (
+                                                <span className="flex items-center gap-1 text-danger font-bold text-xs">
+                                                    <span className="w-2 h-2 rounded-full bg-danger animate-pulse" />
+                                                    EM JOGO (4/4)
+                                                </span>
+                                            ) : (
+                                                <span>{game.game_players[0].count}/4 Jogadores</span>
+                                            )}
+                                            <span>• Aposta: <span className="font-bold text-success">€{game.stake.toFixed(2)}</span></span>
+                                        </p>
                                     </div>
                                 </div>
-                                <form action={async () => {
-                                    "use server"
-                                    await joinGame(game.id)
-                                }}>
-                                    <SubmitButton className="rounded-xl bg-ios-green px-6 py-2 text-sm font-semibold text-white hover:bg-ios-green/90 shadow-sm">
-                                        Entrar
-                                    </SubmitButton>
-                                </form>
+
+                                {game.isDummy ? (
+                                    <button disabled className="rounded-xl bg-muted px-6 py-2 text-sm font-semibold text-muted-foreground border border-border cursor-not-allowed">
+                                        Mesa Cheia
+                                    </button>
+                                ) : (
+                                    <form action={async () => {
+                                        "use server"
+                                        await joinGame(game.id)
+                                    }}>
+                                        <SubmitButton className="rounded-xl bg-accent px-6 py-2 text-sm font-semibold text-accent-foreground hover:bg-accent/90 shadow-sm transition-colors">
+                                            Entrar
+                                        </SubmitButton>
+                                    </form>
+                                )}
                             </div>
                         ))
                     )}

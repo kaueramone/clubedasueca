@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { signout } from "../auth/actions";
 import { LogOut } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { UserPresence } from "@/components/dashboard/user-presence";
 import ChatWidget from "@/components/chat/chat-widget";
 
@@ -30,8 +31,11 @@ export default async function DashboardLayout({
             <Sidebar userEmail={user.email} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Mobile Header */}
-                <header className="flex h-14 items-center justify-between border-b bg-white px-4 md:hidden">
-                    <span className="font-bold">Clube da Sueca</span>
+                <header className="flex h-14 items-center justify-between border-b bg-card px-4 md:hidden">
+                    <div className="relative w-32 h-8">
+                        <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
+                        <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                    </div>
                     <div className="flex items-center gap-2">
                         <Link href="/dashboard/profile" className="flex items-center justify-center h-8 w-8 rounded-full bg-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-300 transition-colors">
                             EU

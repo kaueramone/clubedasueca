@@ -7,15 +7,18 @@ import { cn } from "@/lib/utils"; // We need to create utils or just use templat
 
 import { ShieldAlert } from "lucide-react"; // Add import
 
+import Image from 'next/image'
+
 export function Sidebar({ userEmail }: { userEmail?: string }) {
     const pathname = usePathname();
 
     return (
         <div className="hidden h-full w-64 flex-col border-r bg-white md:flex">
-            <div className="flex h-16 items-center px-6">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
-                    Clube da Sueca
-                </h1>
+            <div className="flex h-20 items-center justify-center px-6 border-b border-border/50">
+                <Link href="/dashboard" className="relative w-full h-12">
+                    <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
+                    <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                </Link>
             </div>
             <nav className="flex-1 space-y-1 px-3 py-4">
                 {navItems.map((item) => {
