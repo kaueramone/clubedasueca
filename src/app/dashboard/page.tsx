@@ -59,7 +59,7 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-foreground">
                     Olá, {profile?.username ? profile.username.split(" ")[0] : "Jogador"}!
                 </h1>
                 <div className="h-10 w-10 overflow-hidden rounded-full bg-ios-gray4">
@@ -75,59 +75,60 @@ export default async function DashboardPage() {
 
             {/* Main Actions */}
             <div className="grid gap-4 md:grid-cols-2">
-                <Link href="/dashboard/play" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-gray-100">
+                <Link href="/dashboard/play" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                             <Joystick className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Jogar Sueca</h3>
-                            <p className="text-sm text-gray-500">Encontrar mesa ou criar</p>
+                            <h3 className="font-bold text-foreground">Jogar Sueca</h3>
+                            <p className="text-sm text-muted-foreground">Encontrar mesa ou criar</p>
                         </div>
                     </div>
                 </Link>
 
-                <Link href="/dashboard/history" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-gray-100">
+                <Link href="/dashboard/history" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                             <Wallet className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Histórico</h3>
-                            <p className="text-sm text-gray-500">Jogos e transações</p>
+                            <h3 className="font-bold text-foreground">Histórico</h3>
+                            <p className="text-sm text-muted-foreground">Jogos e transações</p>
                         </div>
                     </div>
                 </Link>
 
-                <Link href="/dashboard/training" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-gray-100">
+                <Link href="/dashboard/training" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 group-hover:bg-yellow-600 group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                             <Joystick className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Treino (Bots)</h3>
-                            <p className="text-sm text-gray-500">Praticar sem apostar</p>
+                            <h3 className="font-bold text-foreground">Treino (Bots)</h3>
+                            <p className="text-sm text-muted-foreground">Praticar sem apostar</p>
                         </div>
                     </div>
                 </Link>
 
-                <Link href="/dashboard/tutorial" className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-gray-100">
+                <Link href="/dashboard/tutorial" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-accent group-hover:bg-accent/90 group-hover:text-white transition-colors">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                             <BookOpen className="h-6 w-6" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-gray-900">Como Jogar</h3>
-                            <p className="text-sm text-gray-500">Regras e Dicas</p>
+                            <h3 className="font-bold text-foreground">Como Jogar</h3>
+                            <p className="text-sm text-muted-foreground">Regras e Dicas</p>
                         </div>
                     </div>
                 </Link>
             </div>
 
             {/* Recent Activity (Placeholder) */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-900">Atividade Recente</h3>
-                <div className="mt-4 flex flex-col items-center justify-center py-8 text-center text-gray-500">
+            {/* Recent Activity (Placeholder) */}
+            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border">
+                <h3 className="font-bold text-foreground">Atividade Recente</h3>
+                <div className="mt-4 flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
                     <p>Sem atividade recente.</p>
                 </div>
             </div>

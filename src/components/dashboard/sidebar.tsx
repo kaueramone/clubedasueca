@@ -11,11 +11,10 @@ import Image from 'next/image'
 
 export function Sidebar({ userEmail }: { userEmail?: string }) {
     const pathname = usePathname();
-
     return (
-        <div className="hidden h-full w-64 flex-col border-r border-border/10 bg-primary md:flex">
-            <div className="flex h-20 items-center justify-center px-6 border-b border-primary-foreground/10">
-                <Link href="/dashboard" className="relative w-full h-12">
+        <div className="hidden h-full w-64 flex-col border-r border-[#123F33] bg-[#0B1F1A] md:flex">
+            <div className="flex h-16 items-center justify-center px-6 border-b border-[#123F33] shrink-0">
+                <Link href="/dashboard" className="relative w-full h-8">
                     <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain" priority />
                 </Link>
             </div>
@@ -51,12 +50,6 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
                     </Link>
                 )}
             </nav>
-            <div className="border-t border-primary-foreground/10 p-4">
-                <div className="bg-accent/10 border border-accent/20 rounded-xl p-3 flex flex-col gap-1 text-center">
-                    <span className="text-xs font-semibold text-accent/80 uppercase tracking-widest">Saldo Atual</span>
-                    <span className="text-xl font-bold text-accent">€ 0.00</span>
-                </div>
-            </div>
         </div>
     );
 }

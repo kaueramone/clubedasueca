@@ -71,8 +71,8 @@ export default async function LobbyPage() {
                                 const playerCount = game.isDummy ? 4 : game.game_players[0]?.count || 0;
 
                                 return (
-                                    <div key={game.id} className={`flex flex-col overflow-hidden rounded-2xl border transition-all ${game.isDummy ? 'bg-muted/5 border-border/50 grayscale-[20%]' : 'bg-card border-border shadow-sm hover:shadow-md hover:border-accent/30'}`}>
-                                        <div className="p-5 flex-1 space-y-4">
+                                    <div key={game.id} className={`flex flex-col overflow-hidden rounded-xl border transition-all ${game.isDummy ? 'bg-muted/5 border-border/50 grayscale-[20%]' : 'bg-card border-border shadow-sm hover:shadow-md hover:border-accent/30'}`}>
+                                        <div className="p-4 flex-1 space-y-3">
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <h3 className="font-bold text-lg text-foreground line-clamp-1">Mesa de {game.profiles?.username || "Anónimo"}</h3>
@@ -90,48 +90,42 @@ export default async function LobbyPage() {
                                                 )}
                                             </div>
 
-                                            {/* 2x2 Avatar Grid representing the Table Seats */}
-                                            <div className="grid grid-cols-2 gap-2 aspect-square relative bg-primary/5 rounded-xl p-3 border border-primary/10">
+                                            {/* Avatar Row representing the Table Seats */}
+                                            <div className="flex items-center justify-between gap-1 bg-primary/5 rounded-lg p-2 border border-primary/10 relative">
                                                 {/* Center Table Decoration */}
-                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                                    <div className="w-16 h-16 rounded-full bg-primary border-4 border-primary-foreground/20 flex items-center justify-center shadow-inner">
-                                                        <span className="text-primary-foreground/50 font-serif font-bold text-xl">♣</span>
-                                                    </div>
+                                                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-inner z-0">
+                                                    <span className="text-primary-foreground/50 font-serif font-bold text-xs">VS</span>
                                                 </div>
 
-                                                {/* Seat 1 (Host/Player) */}
-                                                <div className="flex items-center justify-center">
-                                                    <div className="h-14 w-14 rounded-full bg-background flex items-center justify-center overflow-hidden border-2 border-primary/20 shadow-sm z-10">
+                                                <div className="flex gap-1 z-10">
+                                                    {/* Seat 1 (Host/Player) */}
+                                                    <div className="h-10 w-10 text-xs rounded-full bg-background flex items-center justify-center overflow-hidden border border-primary/20 shadow-sm">
                                                         {game.profiles?.avatar_url ? <img src={game.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-primary">{game.profiles?.username?.charAt(0) || 'A'}</span>}
                                                     </div>
-                                                </div>
 
-                                                {/* Seat 2 */}
-                                                <div className="flex items-center justify-center">
-                                                    <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border/50 shadow-sm z-10">
-                                                        {playerCount > 1 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30 text-xl">+</span>}
+                                                    {/* Seat 2 */}
+                                                    <div className="h-10 w-10 text-xs rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border/50 shadow-sm">
+                                                        {playerCount > 1 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30">+</span>}
                                                     </div>
                                                 </div>
 
-                                                {/* Seat 3 */}
-                                                <div className="flex items-center justify-center">
-                                                    <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border/50 shadow-sm z-10">
-                                                        {playerCount > 2 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30 text-xl">+</span>}
+                                                <div className="flex gap-1 z-10">
+                                                    {/* Seat 3 */}
+                                                    <div className="h-10 w-10 text-xs rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border/50 shadow-sm">
+                                                        {playerCount > 2 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30">+</span>}
                                                     </div>
-                                                </div>
 
-                                                {/* Seat 4 */}
-                                                <div className="flex items-center justify-center">
-                                                    <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-border/50 shadow-sm z-10">
-                                                        {playerCount > 3 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30 text-xl">+</span>}
+                                                    {/* Seat 4 */}
+                                                    <div className="h-10 w-10 text-xs rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border/50 shadow-sm">
+                                                        {playerCount > 3 ? <span className="text-muted-foreground">👤</span> : <span className="text-muted-foreground/30">+</span>}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="p-4 bg-muted/30 border-t border-border mt-auto">
+                                        <div className="p-3 bg-muted/30 border-t border-border mt-auto">
                                             {game.isDummy ? (
-                                                <button disabled className="w-full rounded-xl bg-muted py-3 text-sm font-semibold text-muted-foreground border border-border cursor-not-allowed">
+                                                <button disabled className="w-full rounded-lg bg-muted py-2 text-sm font-semibold text-muted-foreground border border-border cursor-not-allowed">
                                                     Mesa Preenchida
                                                 </button>
                                             ) : (
@@ -139,7 +133,7 @@ export default async function LobbyPage() {
                                                     "use server"
                                                     await joinGame(game.id)
                                                 }}>
-                                                    <SubmitButton className="w-full rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90 shadow-sm transition-all focus:ring-2 focus:ring-accent focus:ring-offset-2">
+                                                    <SubmitButton className="w-full rounded-lg bg-accent py-2 text-sm font-semibold text-accent-foreground hover:bg-accent/90 shadow-sm transition-all focus:ring-2 focus:ring-accent focus:ring-offset-2">
                                                         Sentar na Mesa
                                                     </SubmitButton>
                                                 </form>

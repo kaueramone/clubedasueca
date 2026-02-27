@@ -54,7 +54,7 @@ export default function UserBonusesPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">🎁 Promoções e Bónus</h1>
+            <h1 className="text-2xl font-bold text-foreground">🎁 Promoções e Bónus</h1>
 
             {/* VIP Status Card */}
             <div className="rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 p-6 text-white shadow-lg">
@@ -100,8 +100,8 @@ export default function UserBonusesPage() {
             </div>
 
             {/* Redeem Promo Code */}
-            <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-100">
-                <h3 className="font-bold text-gray-900 flex items-center gap-2 mb-4">
+            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border">
+                <h3 className="font-bold text-foreground flex items-center gap-2 mb-4">
                     <Ticket className="h-5 w-5 text-primary" /> Código Promocional
                 </h3>
                 <form onSubmit={handleRedeemCode} className="flex gap-2">
@@ -109,7 +109,7 @@ export default function UserBonusesPage() {
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
                         placeholder="Inserir código..."
-                        className="flex-1 rounded-xl border border-gray-300 px-4 py-2 text-sm uppercase focus:border-accent focus:outline-none"
+                        className="flex-1 rounded-xl border border-input bg-background/50 px-4 py-2 text-sm uppercase text-foreground placeholder:text-foreground/50 focus:border-accent focus:outline-none"
                     />
                     <button type="submit"
                         className="rounded-xl bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
@@ -147,9 +147,9 @@ export default function UserBonusesPage() {
                                         </p>
                                     </div>
                                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${ub.status === 'active' ? 'bg-green-100 text-green-700' :
-                                            ub.status === 'completed' ? 'bg-blue-100 text-blue-700' :
-                                                ub.status === 'expired' ? 'bg-gray-100 text-gray-700' :
-                                                    'bg-red-100 text-red-700'
+                                        ub.status === 'completed' ? 'bg-blue-100 text-blue-700' :
+                                            ub.status === 'expired' ? 'bg-gray-100 text-gray-700' :
+                                                'bg-red-100 text-red-700'
                                         }`}>
                                         {ub.status === 'active' ? 'Ativo' :
                                             ub.status === 'completed' ? 'Completo' :
