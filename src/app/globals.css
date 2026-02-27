@@ -32,8 +32,10 @@
 
 @layer base {
   :root {
-    --background: #F5F2E8; /* Off White */
-    --foreground: #1E1E1E; /* Grafite */
+    --background: #F5F2E8;
+    /* Off White */
+    --foreground: #1E1E1E;
+    /* Grafite */
 
     --card: #FFFFFF;
     --card-foreground: #1E1E1E;
@@ -41,16 +43,19 @@
     --popover: #FFFFFF;
     --popover-foreground: #1E1E1E;
 
-    --primary: #0F3D2E; /* Verde Mesa 800 */
+    --primary: #0F3D2E;
+    /* Verde Mesa 800 */
     --primary-foreground: #F5F2E8;
 
-    --accent: #D4AF37; /* Dourado Premium 500 */
+    --accent: #D4AF37;
+    /* Dourado Premium 500 */
     --accent-foreground: #0B1F1A;
 
     --muted: #EBE8DE;
     --muted-foreground: #6B7280;
 
-    --danger: #8B1E1E; /* Vermelho Controlado */
+    --danger: #8B1E1E;
+    /* Vermelho Controlado */
     --danger-foreground: #F5F2E8;
 
     --success: #34C759;
@@ -68,28 +73,36 @@
   }
 
   .dark {
-    --background: #0B1F1A; /* Verde Mesa 900 */
-    --foreground: #F5F2E8; /* Off White */
+    --background: #0B1F1A;
+    /* Verde Mesa 900 */
+    --foreground: #F5F2E8;
+    /* Off White */
 
-    --card: #132A24; /* Cards slightly lighter than background */
+    --card: #132A24;
+    /* Cards slightly lighter than background */
     --card-foreground: #F5F2E8;
 
     --popover: #132A24;
     --popover-foreground: #F5F2E8;
 
-    --primary: #D4AF37; /* Dourado Premium */
+    --primary: #D4AF37;
+    /* Dourado Premium */
     --primary-foreground: #0B1F1A;
 
-    --accent: #C9A227; /* Dourado 600 */
+    --accent: #C9A227;
+    /* Dourado 600 */
     --accent-foreground: #0B1F1A;
 
-    --muted: #185C49; /* Verde Mesa 600 */
-    --muted-foreground: #A0B2AC;
+    --muted: #185C49;
+    /* Verde Mesa 600 */
+    --muted-foreground: #B5C9C3;
+    /* Mais legível contra fundo escuro */
 
     --danger: #8B1E1E;
     --danger-foreground: #F5F2E8;
 
-    --border: #123F33; /* Verde Mesa 700 */
+    --border: #123F33;
+    /* Verde Mesa 700 */
     --input: #132A24;
     --ring: #D4AF37;
   }
