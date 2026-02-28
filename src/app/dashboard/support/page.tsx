@@ -14,8 +14,8 @@ export default function SupportPage() {
     return (
         <div className="max-w-2xl mx-auto space-y-6">
             <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-blue-100 rounded-xl text-accent">
-                    <MessageSquare className="h-8 w-8" />
+                <div className="p-1 text-accent">
+                    <MessageSquare className="h-10 w-10" />
                 </div>
                 <div>
                     <h1 className="text-3xl font-bold text-white">Suporte</h1>

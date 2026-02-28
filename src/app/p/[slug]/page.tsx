@@ -21,10 +21,23 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function StaticPage({ params }: { params: { slug: string } }) {
-    const page = await getPageBySlug(params.slug)
+    let page = await getPageBySlug(params.slug)
 
     if (!page) {
-        notFound()
+        // Fallback for static footer pages if DB is empty
+        const defaultPages: Record<string, any> = {
+            'como-funciona': { title: 'Como Funciona?', content: '## O Clube da Sueca\n\nBem-vindo ao único clube online focado na tradição da sueca portuguesa.\n\n### Regras Clássicas\nA nossa sueca segue a rigor as regras de renúncia com punições automáticas...' },
+            'deposito-saque': { title: 'Depósitos e Saques', content: '## Pagamentos Instantâneos\n\nTrabalhamos exclusivamente com referências geradas em tempo real.\n\n### MB Way e PIX\nPagamentos disponíveis 24/7. As retiradas levam até 1h útil.' },
+            'termos': { title: 'Termos de Utilização', content: '## Termos e Condições\n\nAo jogar no Clube da Sueca concorda com a retenção da taxa de 20% (Rake) nas mesas a dinheiro real.' },
+            'privacidade': { title: 'Política de Privacidade', content: '## Dados Seguros\n\nO seu e-mail e dados de transação estão encriptados e nunca são partilhados com terceiros.' },
+            'kyc': { title: 'Políticas KYC', content: '## Conheça o Cliente\n\nReservamo-nos o direito de pedir identificação para levantamentos acima de €1.000,00.' }
+        }
+
+        if (defaultPages[params.slug]) {
+            page = defaultPages[params.slug]
+        } else {
+            notFound()
+        }
     }
 
     return (

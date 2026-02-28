@@ -575,6 +575,13 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                             {gameResult.winnerTeam === 'A' ? 'Parabéns, a sua equipa venceu.' : 'Não foi desta vez.'}
                         </p>
 
+                        {!isTraining && gameState.stake > 0 && (
+                            <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-xl text-center shadow-sm">
+                                <p className="text-sm font-bold text-gray-800">Pote da Equipa Vencedora: <span className="text-green-600">€{(gameState.stake * 4 * 0.8).toFixed(2)}</span></p>
+                                <p className="text-xs text-gray-500 mt-1">Taxa de Mesa (Rake do Clube): 20%</p>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-4 mb-8 bg-gray-50 p-4 rounded-xl">
                             <div>
                                 <p className="text-xs font-bold text-gray-400 uppercase">Nós (Team A)</p>

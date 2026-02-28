@@ -36,12 +36,17 @@ export default async function Home() {
                             </Link>
                         ) : (
                             <>
-                                <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+                                <Link href="/login" className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
                                     Entrar
                                 </Link>
-                                <Link href="/register">
+                                <Link href="/register" className="hidden sm:block">
                                     <Button variant="primary" size="sm" className="hidden sm:flex">
                                         Criar Conta
+                                    </Button>
+                                </Link>
+                                <Link href="/login" className="sm:hidden">
+                                    <Button variant="primary" size="sm" className="font-bold text-xs h-8 px-4 rounded-xl shadow-lg">
+                                        Entrar
                                     </Button>
                                 </Link>
                             </>
@@ -53,8 +58,11 @@ export default async function Home() {
             {/* Hero Section */}
             <main className="flex-1">
                 <section className="relative overflow-hidden py-24 sm:py-32 lg:pb-40">
-                    <div className="absolute inset-0 z-0">
-                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="object-cover opacity-30" priority />
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="hidden sm:block object-cover opacity-30" priority />
+                        {/* Mobile Background: Rotated 90 degrees vertical */}
+                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="sm:hidden object-cover opacity-30 transform rotate-90 scale-150" priority />
+
                         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
                     </div>
                     <div className="container mx-auto px-4 relative z-10">

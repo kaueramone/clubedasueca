@@ -32,7 +32,14 @@ export async function signup(prevState: any, formData: FormData) {
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
+    const confirmPassword = formData.get('confirmPassword') as string
     const fullName = formData.get('fullName') as string
+    const birthDate = formData.get('birthDate') as string
+    const nationality = formData.get('nationality') as string
+
+    if (password !== confirmPassword) {
+        return { error: 'As passwords não coincidem. Tente novamente.' }
+    }
 
     const { error } = await supabase.auth.signUp({
         email,
@@ -40,6 +47,8 @@ export async function signup(prevState: any, formData: FormData) {
         options: {
             data: {
                 full_name: fullName,
+                birth_date: birthDate,
+                nationality: nationality
             },
         },
     })

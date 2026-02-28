@@ -7,7 +7,6 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { UserPresence } from "@/components/dashboard/user-presence";
-import ChatWidget from "@/components/chat/chat-widget";
 
 export const dynamic = 'force-dynamic';
 
@@ -87,7 +86,6 @@ export default async function DashboardLayout({
                 </main>
             </div>
             <BottomNav />
-            <ChatWidget userId={user.id} />
         </div>
     );
 }
