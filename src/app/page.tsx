@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getAllPages } from "@/features/cms/actions";
+
 
 export default async function Home() {
     const supabase = await createClient();
@@ -13,9 +13,7 @@ export default async function Home() {
         redirect("/dashboard");
     }
 
-    // Fetch CMS Pages for Footer Links
-    const pagesResponse = await getAllPages();
-    const cmsPages = pagesResponse.pages || [];
+
 
     return (
         <div className="min-h-screen bg-background flex flex-col font-sans">

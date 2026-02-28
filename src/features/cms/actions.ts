@@ -7,18 +7,7 @@ import { revalidatePath } from 'next/cache'
 // PUBLIC ACTIONS
 // ============================================
 
-export async function getPageBySlug(slug: string) {
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from('pages')
-        .select('*')
-        .eq('slug', slug)
-        .eq('is_published', true)
-        .single()
 
-    if (error) return null
-    return data
-}
 
 export async function getBlogPosts(limit = 10) {
     const supabase = await createClient()
@@ -74,43 +63,6 @@ export async function getSeoSettings(path: string) {
 // ============================================
 // ADMIN ACTIONS
 // ============================================
-
-export async function getAllPages() {
-    const supabase = await createClient()
-    const { data, error } = await supabase.from('pages').select('*').order('created_at', { ascending: false })
-    if (error) return { error: error.message }
-    return { pages: data }
-}
-
-export async function savePage(pageId: string | null, pageData: any) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Não autenticado' }
-
-    let error
-    if (pageId) {
-        const res = await supabase.from('pages').update({ ...pageData, updated_at: new Date().toISOString() }).eq('id', pageId)
-        error = res.error
-    } else {
-        const res = await supabase.from('pages').insert({ ...pageData, author_id: user.id })
-        error = res.error
-    }
-
-    if (error) return { error: error.message }
-
-    revalidatePath('/admin/cms')
-    if (pageData.slug) revalidatePath(`/${pageData.slug}`)
-
-    return { success: true }
-}
-
-export async function deletePage(pageId: string) {
-    const supabase = await createClient()
-    const { error } = await supabase.from('pages').delete().eq('id', pageId)
-    if (error) return { error: error.message }
-    revalidatePath('/admin/cms')
-    return { success: true }
-}
 
 // Add similar for blog posts and SEO (simplified for the scope of this migration)
 export async function getAllBlogPosts() {

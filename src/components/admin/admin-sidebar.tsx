@@ -52,8 +52,8 @@ export function AdminSidebar() {
                     Banners
                 </Link>
                 <Link href="/admin/cms" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-primary/5 hover:text-primary transition-colors">
-                    <FileText className="h-5 w-5" />
-                    Páginas & Blog
+                    <FileText className="h-5 w-5 text-muted-foreground" />
+                    Blog & SEO
                 </Link>
 
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-6 px-4">Suporte</div>

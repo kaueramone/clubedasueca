@@ -1,79 +1,147 @@
-import { getBlogPosts, getSeoSettings } from '@/features/cms/actions'
-import Link from 'next/link'
-import { Metadata } from 'next'
+import { getBlogPosts } from '@/features/cms/actions';
+import Link from 'next/link';
+import Image from 'next/image';
+import { Calendar, User, Eye } from 'lucide-react';
+import { Metadata } from 'next';
 
-export async function generateMetadata(): Promise<Metadata> {
-    const seo = await getSeoSettings('/blog')
-    return {
-        title: seo?.title || 'Blog Oficial | Clube da Sueca',
-        description: seo?.description || 'Dicas, novidades e torneios da melhor plataforma de Sueca online.',
-        openGraph: {
-            title: seo?.title || 'Blog Oficial | Clube da Sueca',
-            description: seo?.description,
-            images: seo?.og_image ? [seo.og_image] : [],
-        }
-    }
-}
+export const metadata: Metadata = {
+    title: 'O Blog da Tradição | Clube da Sueca',
+    description: 'Notícias, dicas, guias estratégicos e atualizações sobre o mundo da sueca portuguesa.',
+};
 
-export default async function BlogListingPage() {
-    const posts = await getBlogPosts(20)
+export default async function BlogIndexPage() {
+    const posts = await getBlogPosts(20);
+
+    const formatData = (dateStr: string) => {
+        return new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(dateStr));
+    };
+
+    const heroPost = posts.length > 0 ? posts[0] : null;
+    const regularPosts = posts.length > 1 ? posts.slice(1) : [];
 
     return (
-        <div className="min-h-screen bg-gray-50 py-12 md:py-20">
-            <div className="mx-auto max-w-5xl px-4 sm:px-6">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">Blog Clube da Sueca</h1>
-                    <p className="mt-4 text-xl text-gray-500">Estratégias avançadas, novidades e comunidade.</p>
+        <div className="min-h-screen bg-gray-50 dark:bg-background font-sans">
+            <header className="sticky top-0 z-50 w-full border-b border-border bg-white/95 dark:bg-background/95 backdrop-blur h-16 flex items-center justify-center">
+                <Link href="/" className="relative w-40 h-10">
+                    <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
+                    <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                </Link>
+            </header>
+
+            <main className="container mx-auto px-4 py-16 max-w-6xl">
+                <div className="mb-16 md:text-center md:mx-auto max-w-3xl">
+                    <h1 className="text-4xl md:text-6xl font-serif font-bold text-gray-900 dark:text-foreground tracking-tight mb-4">
+                        O Blog da Tradição
+                    </h1>
+                    <p className="text-xl text-gray-600 dark:text-muted-foreground leading-relaxed">
+                        Atualizações globais da plataforma, manuais para iniciantes e reportagens sobre a sueca digital.
+                    </p>
                 </div>
 
                 {posts.length === 0 ? (
-                    <div className="text-center py-20 text-gray-500 bg-white rounded-3xl shadow-sm border border-gray-100">
-                        Nenhum artigo publicado ainda. Volte em breve!
+                    <div className="text-center py-20 bg-white dark:bg-card border border-border rounded-3xl p-8">
+                        <p className="text-muted-foreground text-lg">Ainda não existem artigos publicados. Volta mais tarde!</p>
                     </div>
                 ) : (
-                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                        {posts.map(post => (
-                            <Link key={post.id} href={`/blog/${post.slug}`} className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-md transition-all hover:scale-[1.01]">
-                                <div className="h-48 w-full bg-gray-200 overflow-hidden relative">
-                                    {post.cover_image ? (
-                                        <img src={post.cover_image} alt={post.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-                                    ) : (
-                                        <div className="flex h-full items-center justify-center bg-primary/10 text-primary-foreground/70">
-                                            <span className="text-4xl font-bold">♠️♥️</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="flex flex-1 flex-col justify-between p-6">
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium text-primary">
-                                            {post.tags && post.tags.length > 0 ? (post.tags[0] as string) : 'Artigo'}
-                                        </p>
-                                        <h3 className="mt-2 text-xl font-bold text-gray-900 line-clamp-2">{post.title}</h3>
-                                        <p className="mt-3 text-base text-gray-500 line-clamp-3">{post.excerpt}</p>
-                                    </div>
-                                    <div className="mt-6 flex items-center">
-                                        <div className="flex-shrink-0">
-                                            <span className="sr-only">{(post.author as any)?.username}</span>
-                                            {/* Avatar placeholder */}
-                                            <div className="h-10 w-10 rounded-full bg-ios-gray4 flex items-center justify-center font-bold text-white">
-                                                {String((post.author as any)?.username || 'A').charAt(0).toUpperCase()}
+                    <>
+                        {/* HERO POST (Destaque) */}
+                        {heroPost && (
+                            <Link href={`/blog/${heroPost.slug}`} className="group block mb-12 bg-white dark:bg-card rounded-[2rem] overflow-hidden shadow-sm border border-border hover:shadow-xl transition-all duration-300">
+                                <div className="flex flex-col md:flex-row">
+                                    <div className="relative w-full md:w-3/5 aspect-video md:aspect-auto bg-gray-100 overflow-hidden border-r border-border">
+                                        {heroPost.cover_image ? (
+                                            <img src={heroPost.cover_image} alt={heroPost.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-10 bg-[radial-gradient(#10B981_1px,transparent_1px)] [background-size:16px_16px]">
+                                                <div className="text-primary font-serif font-bold text-6xl md:text-8xl rotate-12">CS</div>
                                             </div>
-                                        </div>
-                                        <div className="ml-3 text-sm">
-                                            <p className="font-medium text-gray-900">{(post.author as any)?.username || 'Equipa'}</p>
-                                            <div className="flex space-x-1 text-gray-500">
-                                                <time dateTime={post.created_at}>{new Date(post.created_at).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
-                                                <span aria-hidden="true">&middot;</span>
-                                                <span>{post.views || 0} leituras</span>
+                                        )}
+                                    </div>
+                                    <div className="p-8 md:p-12 md:w-2/5 flex flex-col justify-center">
+                                        {heroPost.tags && heroPost.tags.length > 0 && (
+                                            <div className="mb-4">
+                                                <span className="inline-block text-xs font-bold uppercase tracking-wider text-accent bg-accent/10 px-3 py-1 rounded-full">
+                                                    {heroPost.tags[0]}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-foreground mb-4 group-hover:text-primary transition-colors">
+                                            {heroPost.title}
+                                        </h2>
+                                        <p className="text-gray-600 dark:text-muted-foreground text-lg mb-8 line-clamp-3">
+                                            {heroPost.excerpt || 'Leia a notícia na íntegra no nosso portal...'}
+                                        </p>
+                                        <div className="flex items-center justify-between text-sm text-gray-500 mt-auto">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                                                    {(heroPost.author as any)?.avatar_url ? (
+                                                        <img src={(heroPost.author as any).avatar_url} alt="autor" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-primary/20 flex items-center justify-center font-bold text-primary">
+                                                            {String((heroPost.author as any)?.username || 'C').charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-900 dark:text-gray-200">{(heroPost.author as any)?.username || 'Equipa CS'}</p>
+                                                    <time className="text-xs">{formatData(heroPost.created_at)}</time>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs">
+                                                <Eye className="w-4 h-4" /> {heroPost.views || 0}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </Link>
-                        ))}
-                    </div>
+                        )}
+
+                        {/* GRID POSTS SECUNDÁRIOS */}
+                        {regularPosts.length > 0 && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {regularPosts.map((post) => (
+                                    <Link href={`/blog/${post.slug}`} key={post.id} className="group flex flex-col bg-white dark:bg-card rounded-3xl overflow-hidden shadow-sm border border-border hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                                        <div className="relative w-full h-48 bg-primary/5 overflow-hidden border-b border-border">
+                                            {post.cover_image ? (
+                                                <img src={post.cover_image} alt={post.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center opacity-10 bg-[radial-gradient(#10B981_1px,transparent_1px)] [background-size:16px_16px]">
+                                                    <div className="text-primary font-serif font-bold text-6xl rotate-12">CS</div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="p-6 flex-1 flex flex-col">
+                                            {post.tags && post.tags.length > 0 && (
+                                                <div className="mb-3">
+                                                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2.5 py-1 rounded-full">
+                                                        {post.tags[0]}
+                                                    </span>
+                                                </div>
+                                            )}
+
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-foreground group-hover:text-primary transition-colors mb-2 line-clamp-2">
+                                                {post.title}
+                                            </h3>
+
+                                            <p className="text-gray-600 dark:text-muted-foreground text-sm line-clamp-3 mb-6 flex-1">
+                                                {post.excerpt || 'Ver detalhes...'}
+                                            </p>
+
+                                            <div className="flex items-center justify-between text-xs text-gray-500 mt-auto pt-4 border-t border-border">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-gray-700 dark:text-gray-300">{(post.author as any)?.username || 'Equipa CS'}</span>
+                                                </div>
+                                                <time className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatData(post.created_at)}</time>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        )}
+                    </>
                 )}
-            </div>
+            </main>
         </div>
-    )
+    );
 }
