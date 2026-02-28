@@ -141,7 +141,7 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                             placeholder="Procurar amigos (mín. 3 letras)"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-secondary border border-transparent focus:border-accent rounded-full text-sm outline-none transition-colors"
+                            className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-secondary border border-transparent focus:border-accent rounded-full text-base font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400 outline-none transition-colors"
                         />
                     </div>
                 </div>
@@ -309,10 +309,10 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
 
                                 <input
                                     type="text"
-                                    placeholder={activeContact.isSupport ? "Escreva a sua dúvida para o suporte..." : "Escreva uma mensagem..."}
+                                    placeholder={activeContact.isSupport ? "Escreva a sua dúvida para o suporte..." : "Escreva a sua mensagem..."}
                                     value={newMessage}
                                     onChange={e => setNewMessage(e.target.value)}
-                                    className="flex-1 bg-gray-100 dark:bg-secondary border border-transparent focus:border-accent rounded-xl px-4 py-3 outline-none text-sm transition-colors"
+                                    className="flex-1 bg-gray-100 dark:bg-secondary border border-transparent focus:border-accent rounded-xl px-4 py-3 outline-none text-base font-semibold text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400 transition-colors"
                                 />
 
                                 <button type="submit" disabled={isSending || !newMessage.trim()} className="p-3 bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 transition-colors shrink-0 shadow-sm">

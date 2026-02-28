@@ -21,16 +21,16 @@ export default function AffiliateDashboardPage() {
 
     async function handleApply() {
         const result = await applyForAffiliate()
-        if (result.error) setMessage(`âŒ ${result.error}`)
-        else { setMessage('âœ… Candidatura enviada!'); loadData() }
+        if (result.error) setMessage(`❌ ${result.error}`)
+        else { setMessage('✅ Candidatura enviada!'); loadData() }
     }
 
     async function handleCreateLink(e: React.FormEvent) {
         e.preventDefault()
         if (!newLinkCode.trim()) return
         const result = await createAffiliateLink(newLinkCode)
-        if (result.error) setMessage(`âŒ ${result.error}`)
-        else { setMessage('âœ… Link criado!'); setNewLinkCode(''); loadData() }
+        if (result.error) setMessage(`❌ ${result.error}`)
+        else { setMessage('✅ Link criado!'); setNewLinkCode(''); loadData() }
     }
 
     if (loading) return <div className="flex items-center justify-center py-20 text-gray-500">A carregar...</div>
@@ -39,12 +39,12 @@ export default function AffiliateDashboardPage() {
     if (!data?.affiliate) {
         return (
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-white">ðŸ¤ Programa de Afiliados</h1>
+                <h1 className="text-2xl font-bold text-white">🤝 Programa de Afiliados</h1>
                 <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/90 p-8 text-white text-center">
                     <Users className="mx-auto h-12 w-12 mb-4 opacity-80" />
                     <h2 className="text-xl font-bold mb-2">Ganhe dinheiro a referir jogadores!</h2>
                     <p className="text-primary-foreground/90 mb-6 max-w-md mx-auto">
-                        Receba atÃ© 25% de comissÃ£o sobre o rake gerado pelos jogadores que referir.
+                        Receba até 25% de comissão sobre o rake gerado pelos jogadores que referir.
                     </p>
                     <button onClick={handleApply}
                         className="rounded-xl bg-white px-8 py-3 text-sm font-bold text-primary hover:bg-muted transition-colors">
@@ -62,11 +62,11 @@ export default function AffiliateDashboardPage() {
     if (affiliate.status === 'pending') {
         return (
             <div className="space-y-6">
-                <h1 className="text-2xl font-bold text-white">ðŸ¤ Programa de Afiliados</h1>
+                <h1 className="text-2xl font-bold text-white">🤝 Programa de Afiliados</h1>
                 <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-8 text-center">
                     <Clock className="mx-auto h-12 w-12 text-yellow-500 mb-4" />
-                    <h2 className="text-lg font-bold text-yellow-800 mb-2">Candidatura em anÃ¡lise</h2>
-                    <p className="text-yellow-700">A sua candidatura estÃ¡ a ser revista pela equipa. SerÃ¡ notificado quando for aprovada.</p>
+                    <h2 className="text-lg font-bold text-yellow-800 mb-2">Candidatura em análise</h2>
+                    <p className="text-yellow-700">A sua candidatura está a ser revista pela equipa. Será notificado quando for aprovada.</p>
                 </div>
             </div>
         )
@@ -74,18 +74,18 @@ export default function AffiliateDashboardPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-white">ðŸ¤ Painel de Afiliado</h1>
+            <h1 className="text-2xl font-bold text-white">🤝 Painel de Afiliado</h1>
 
             {message && (
                 <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
-                    {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">Ã—</button>
+                    {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">×</button>
                 </div>
             )}
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total Ganho" value={`â‚¬${summary.total_earned.toFixed(2)}`} color="text-green-600" />
-                <StatCard icon={<Clock className="h-5 w-5" />} label="Pendente" value={`â‚¬${summary.pending.toFixed(2)}`} color="text-yellow-600" />
+                <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total Ganho" value={`€${summary.total_earned.toFixed(2)}`} color="text-green-600" />
+                <StatCard icon={<Clock className="h-5 w-5" />} label="Pendente" value={`€${summary.pending.toFixed(2)}`} color="text-yellow-600" />
                 <StatCard icon={<Users className="h-5 w-5" />} label="Referidos" value={summary.total_referrals} color="text-accent" />
                 <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Clicks" value={summary.total_clicks} color="text-primary" />
             </div>
@@ -166,13 +166,13 @@ export default function AffiliateDashboardPage() {
             {/* Recent Commissions */}
             <div className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
                 <div className="border-b bg-gray-50 px-6 py-4">
-                    <h3 className="font-semibold text-gray-700">ComissÃµes Recentes</h3>
+                    <h3 className="font-semibold text-gray-700">Comissões Recentes</h3>
                 </div>
                 <div className="divide-y">
                     {commissions.slice(0, 20).map((c: any) => (
                         <div key={c.id} className="flex items-center justify-between p-4 text-sm">
                             <div>
-                                <span className="font-medium text-gray-900">â‚¬{c.amount.toFixed(2)}</span>
+                                <span className="font-medium text-gray-900">€{c.amount.toFixed(2)}</span>
                                 <span className="ml-2 text-xs text-gray-500">{c.source_type}</span>
                                 <span className="ml-2 text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('pt-PT')}</span>
                             </div>
@@ -182,7 +182,7 @@ export default function AffiliateDashboardPage() {
                                 }`}>{c.status === 'paid' ? 'Pago' : c.status === 'pending' ? 'Pendente' : c.status}</span>
                         </div>
                     ))}
-                    {commissions.length === 0 && <div className="py-8 text-center text-gray-500 text-sm">Sem comissÃµes ainda.</div>}
+                    {commissions.length === 0 && <div className="py-8 text-center text-gray-500 text-sm">Sem comissões ainda.</div>}
                 </div>
             </div>
         </div>

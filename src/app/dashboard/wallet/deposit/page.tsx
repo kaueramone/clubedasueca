@@ -54,9 +54,9 @@ export default function DepositPage() {
             {step === 1 && (
                 <form onSubmit={handleGenerateRef} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">Valor a depositar (â‚¬)</label>
+                        <label className="block text-sm font-medium text-gray-700">Valor a depositar (€)</label>
                         <div className="relative mt-1">
-                            <span className="absolute left-3 top-3 text-gray-400">â‚¬</span>
+                            <span className="absolute left-3 top-3 text-gray-400">€</span>
                             <input
                                 type="number"
                                 min="1"
@@ -64,18 +64,18 @@ export default function DepositPage() {
                                 required
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-accent focus:outline-none focus:ring-accent placeholder:text-gray-700"
+                                className="block w-full rounded-xl border border-gray-300 bg-gray-50 pl-8 p-3 text-lg font-semibold focus:border-accent focus:outline-none focus:ring-accent placeholder:text-gray-500"
                                 placeholder="10.00"
                             />
                         </div>
-                        <p className="mt-2 text-xs text-gray-500">Valor mÃ­nimo: 1.00â‚¬</p>
+                        <p className="mt-2 text-xs text-gray-500">Valor mínimo: 1.00€</p>
                     </div>
 
                     <button
                         type="submit"
                         className="w-full rounded-xl bg-accent py-3 font-semibold text-white shadow-md active:scale-[0.98] hover:brightness-110 transition-all"
                     >
-                        Gerar ReferÃªncia MB Way
+                        Gerar Referência MB Way
                     </button>
                 </form>
             )}
@@ -86,8 +86,8 @@ export default function DepositPage() {
                         <Smartphone className="h-8 w-8" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900">ConfirmaÃ§Ã£o MB Way</h3>
-                        <p className="text-sm text-gray-500">Aceite a notificaÃ§Ã£o no seu telemÃ³vel</p>
+                        <h3 className="text-lg font-bold text-gray-900">Confirmação MB Way</h3>
+                        <p className="text-sm text-gray-500">Aceite a notificação no seu telemóvel</p>
                     </div>
 
                     <div className="rounded-xl bg-gray-50 p-4 text-left space-y-2">
@@ -96,12 +96,12 @@ export default function DepositPage() {
                             <span className="font-mono font-bold">12345</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-gray-500">ReferÃªncia</span>
+                            <span className="text-gray-500">Referência</span>
                             <span className="font-mono font-bold">123 456 789</span>
                         </div>
                         <div className="flex justify-between border-t border-gray-200 pt-2">
                             <span className="text-gray-500">Valor</span>
-                            <span className="font-bold text-accent">â‚¬{parseFloat(amount).toFixed(2)}</span>
+                            <span className="font-bold text-accent">€{parseFloat(amount).toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -110,7 +110,7 @@ export default function DepositPage() {
                         disabled={loading}
                         className="w-full rounded-xl bg-ios-green py-3 font-semibold text-white shadow-md active:scale-[0.98] transition-transform disabled:opacity-50"
                     >
-                        {loading ? 'A processar...' : 'Simular Pagamento no App BancÃ¡rio'}
+                        {loading ? 'A processar...' : 'Simular Pagamento no App Bancário'}
                     </button>
 
                     <button
@@ -127,8 +127,8 @@ export default function DepositPage() {
                     <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-green-600 mb-4 animate-bounce">
                         <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">DepÃ³sito Confirmado!</h3>
-                    <p className="text-gray-500 mt-2">O saldo foi adicionado Ã  sua carteira.</p>
+                    <h3 className="text-xl font-bold text-gray-900">Depósito Confirmado!</h3>
+                    <p className="text-gray-500 mt-2">O saldo foi adicionado à sua carteira.</p>
                     <p className="text-xs text-gray-400 mt-4">Redirecionando...</p>
                 </div>
             )}

@@ -26,8 +26,8 @@ export function UpdatePasswordForm() {
                     name="password"
                     type="password"
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
-                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                    placeholder="••••••••"
                 />
             </div>
 

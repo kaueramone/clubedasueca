@@ -11,7 +11,7 @@ interface AuditEntry {
 
 /**
  * Insere um registo de auditoria na tabela audit_logs.
- * Falhas no audit log NÃO devem bloquear a operação principal,
+ * Falhas no audit log NóO devem bloquear a operação principal,
  * por isso os erros são silenciados (logged para console).
  */
 export async function logAudit(

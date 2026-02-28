@@ -22,16 +22,16 @@ export default async function HistoryPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-gray-900">HistÃ³rico de Atividade</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Histó³rico de Atividade</h1>
 
             <div className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
                 <div className="border-b bg-gray-50 px-6 py-4">
-                    <h2 className="font-semibold text-gray-700">TransaÃ§Ãµes Financeiras</h2>
+                    <h2 className="font-semibold text-gray-700">Transaó§óµes Financeiras</h2>
                 </div>
                 <div className="divide-y">
                     {transactions?.length === 0 ? (
                         <div className="p-8 text-center text-gray-500">
-                            Sem transaÃ§Ãµes registadas.
+                            Sem transaó§óµes registadas.
                         </div>
                     ) : (
                         transactions?.map((tx) => (
@@ -41,7 +41,7 @@ export default async function HistoryPage() {
                                     <p className="text-sm text-gray-500">{new Date(tx.created_at).toLocaleString()}</p>
                                 </div>
                                 <span className={`font-mono font-bold ${tx.amount > 0 ? 'text-ios-green' : 'text-gray-900'}`}>
-                                    {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}â‚¬
+                                    {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}€‚¬
                                 </span>
                             </div>
                         ))

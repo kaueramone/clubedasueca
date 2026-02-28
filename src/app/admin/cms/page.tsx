@@ -38,8 +38,8 @@ export default function AdminCmsPage() {
             is_published: formData.get('is_published') === 'true' || formData.get('is_published') === 'on'
         }
         const res = await saveBlogPost(editingPost?.id || null, data)
-        if (res.error) setMessage(`âŒ ${res.error}`)
-        else { setMessage('âœ… Post guardado!'); setEditingPost(null); loadData() }
+        if (res.error) setMessage(`❌ ${res.error}`)
+        else { setMessage('✅ Post guardado!'); setEditingPost(null); loadData() }
     }
 
     function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -62,13 +62,13 @@ export default function AdminCmsPage() {
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="mx-auto max-w-6xl space-y-6">
                 <div>
-                    <Link href="/admin" className="text-sm text-accent hover:underline">â† Admin</Link>
-                    <h1 className="text-2xl font-bold text-gray-900 mt-1">ðŸ“ Blog Creator & SEO</h1>
+                    <Link href="/admin" className="text-sm text-accent hover:underline">← Admin</Link>
+                    <h1 className="text-2xl font-bold text-gray-900 mt-1">📝 Blog Creator & SEO</h1>
                 </div>
 
                 {message && (
                     <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
-                        {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">Ã—</button>
+                        {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">×</button>
                     </div>
                 )}
 
@@ -102,25 +102,25 @@ export default function AdminCmsPage() {
                                 <form onSubmit={handleSavePost} className="grid gap-4">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">TÃ­tulo</label>
-                                            <input name="title" required defaultValue={editingPost.title} onChange={handleTitleChange} placeholder="Ex: Como Jogar Sueca" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-700 text-gray-900" />
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                                            <input name="title" required defaultValue={editingPost.title} onChange={handleTitleChange} placeholder="Ex: Como Jogar Sueca" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                                            <input name="slug" required defaultValue={editingPost.slug} placeholder="Ex: como-jogar-sueca" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-700 text-gray-900" />
+                                            <input name="slug" required defaultValue={editingPost.slug} placeholder="Ex: como-jogar-sueca" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Resumo Opcional (Excerpt)</label>
-                                        <textarea name="excerpt" defaultValue={editingPost.excerpt} rows={2} placeholder="Breve resumo sobre o artigo..." className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-700 text-gray-900" />
+                                        <textarea name="excerpt" defaultValue={editingPost.excerpt} rows={2} placeholder="Breve resumo sobre o artigo..." className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Imagem Principal (URL)</label>
-                                        <input name="cover_image" defaultValue={editingPost.cover_image} type="url" placeholder="https://exemplo.com/imagem.png" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-700 text-gray-900" />
+                                        <input name="cover_image" defaultValue={editingPost.cover_image} type="url" placeholder="https://exemplo.com/imagem.png" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">ConteÃºdo (Markdown)</label>
-                                        <textarea name="content" required defaultValue={editingPost.content} rows={15} placeholder="Escreva o conteÃºdo completo aqui (Suporta Markdown)..." className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm placeholder:text-gray-700 text-gray-900" />
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Conteúdo (Markdown)</label>
+                                        <textarea name="content" required defaultValue={editingPost.content} rows={15} placeholder="Escreva o conteúdo completo aqui (Suporta Markdown)..." className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm placeholder:text-gray-500 text-gray-900" />
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input type="checkbox" name="is_published" id="post_published" defaultChecked={editingPost.is_published} className="rounded border-gray-300" />
@@ -146,7 +146,7 @@ export default function AdminCmsPage() {
                                                     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${post.is_published ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                                         {post.is_published ? 'Publicado' : 'Rascunho'}
                                                     </span>
-                                                    <span className="text-xs text-gray-500">{post.views || 0} visualizaÃ§Ãµes</span>
+                                                    <span className="text-xs text-gray-500">{post.views || 0} visualizações</span>
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">

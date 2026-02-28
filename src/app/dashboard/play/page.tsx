@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { joinGame } from "./actions"; // Need to wrap joinGame in client component or form?
-import { PlusCircle, Search, User } from "lucide-react";
+import { cancelGame } from "@/features/game/actions";
+import { PlusCircle, Search, User, Trash2 } from "lucide-react";
 import { CreateGameForm } from "./create-game-form";
 import { SubmitButton } from "@/components/submit-button"; // Can reuse or create specific
 import Link from "next/link"; // Changed from 'lucide-react' to 'next/link'
@@ -10,6 +11,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function LobbyPage() {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { data: games } = await supabase
         .from("games")
         .select("*, profiles:host_id(username, avatar_url), game_players(count)")
@@ -21,7 +24,7 @@ export default async function LobbyPage() {
         return (players[0]?.count || 0) < 4
     }) || [];
 
-    // TÃ¡tica de Growth Hacking: Simular mesas sempre cheias/em jogo para criar perceÃ§Ã£o de movimento
+    // Tó¡tica de Growth Hacking: Simular mesas sempre cheias/em jogo para criar perceó§ó£o de movimento
     const dummyGames = [
         {
             id: 'dummy-1',
@@ -53,7 +56,7 @@ export default async function LobbyPage() {
 
             <div className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
                 <div className="border-b bg-gray-50 px-6 py-4 flex items-center justify-between">
-                    <h2 className="font-semibold text-gray-700">Mesas DisponÃ­veis</h2>
+                    <h2 className="font-semibold text-gray-700">Mesas Disponíveis</h2>
                     <div className="relative hidden sm:block">
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                         <input type="text" placeholder="Procurar mesa..." className="h-9 w-64 rounded-full border border-gray-300 pl-9 pr-4 text-sm focus:border-accent focus:outline-none" />
@@ -63,8 +66,8 @@ export default async function LobbyPage() {
                 <div className="p-6">
                     {availableGames.length === 0 ? (
                         <div className="py-12 flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/10 rounded-2xl border border-dashed border-border">
-                            <span className="text-4xl mb-4">ðŸª‘</span>
-                            <p>NÃ£o hÃ¡ mesas disponÃ­veis no momento. Crie a primeira!</p>
+                            <span className="text-4xl mb-4">🪑</span>
+                            <p>Não há mesas disponíveis no momento. Crie a primeira!</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,8 +84,8 @@ export default async function LobbyPage() {
                                         <div className="relative z-10 p-4 flex-1 space-y-3">
                                             <div className="flex items-start justify-between">
                                                 <div>
-                                                    <h3 className="font-bold text-lg text-foreground line-clamp-1">Mesa de {game.profiles?.username || "AnÃ³nimo"}</h3>
-                                                    <p className="text-sm font-medium text-muted-foreground mt-1">Aposta: <span className="font-bold text-success">â‚¬{game.stake.toFixed(2)}</span></p>
+                                                    <h3 className="font-bold text-lg text-foreground line-clamp-1">Mesa de {game.profiles?.username || "Anónimo"}</h3>
+                                                    <p className="text-sm font-medium text-muted-foreground mt-1">Aposta: <span className="font-bold text-success">€{game.stake.toFixed(2)}</span></p>
                                                 </div>
                                                 {game.isDummy ? (
                                                     <span className="flex items-center gap-1.5 text-danger font-bold text-xs bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20">
@@ -134,6 +137,16 @@ export default async function LobbyPage() {
                                                 <button disabled className="w-full rounded-lg bg-muted py-2 text-sm font-semibold text-muted-foreground border border-border cursor-not-allowed">
                                                     Mesa Preenchida
                                                 </button>
+                                            ) : game.host_id === user?.id ? (
+                                                <form action={async () => {
+                                                    "use server"
+                                                    await cancelGame(game.id)
+                                                }}>
+                                                    <SubmitButton className="w-full flex items-center justify-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/20 shadow-sm transition-all">
+                                                        <Trash2 className="w-4 h-4" />
+                                                        Cancelar Mesa
+                                                    </SubmitButton>
+                                                </form>
                                             ) : (
                                                 <form action={async () => {
                                                     "use server"
