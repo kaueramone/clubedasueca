@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { isValidMove, getTrickWinner, getCardSuit, getCardValue } from './utils'
+import { logAudit } from '@/lib/audit'
+import { processWagerForBonuses } from '@/features/bonuses/actions'
 import { processGameAffiliateCommissions } from '@/features/affiliates/actions'
 import { trackUserMetrics } from '@/features/crm/actions'
 import { redirect } from 'next/navigation'
