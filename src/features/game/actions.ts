@@ -10,6 +10,9 @@ import { trackUserMetrics } from '@/features/crm/actions'
 import { redirect } from 'next/navigation'
 
 export async function cancelGame(gameId: string) {
+    if (!gameId || gameId === 'undefined') {
+        return { error: 'ID da mesa inválido.' }
+    }
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: "Não autenticado" }

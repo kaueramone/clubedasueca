@@ -160,8 +160,10 @@ export default async function LobbyPage() {
                                             ) : (
                                                 <form action={async (formData) => {
                                                     "use server"
-                                                    await joinGame(game.id, formData)
+                                                    const gId = formData.get('gameId') as string
+                                                    await joinGame(gId, formData)
                                                 }} className="flex flex-col gap-2">
+                                                    <input type="hidden" name="gameId" value={game.id} />
                                                     <select
                                                         name="team"
                                                         className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
@@ -179,7 +181,7 @@ export default async function LobbyPage() {
                                             )}
                                         </div>
                                     </div>
-                                )
+                                );
                             })}
                         </div>
                     )}

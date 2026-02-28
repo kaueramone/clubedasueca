@@ -40,6 +40,9 @@ export async function createGame(prevState: any, formData: FormData) {
 }
 
 export async function joinGame(gameId: string, formData?: FormData) {
+    if (!gameId || gameId === 'undefined') {
+        return { error: 'ID da mesa inválido.' }
+    }
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: "Não autenticado" }
