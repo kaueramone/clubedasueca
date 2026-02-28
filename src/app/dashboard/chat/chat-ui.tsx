@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Search, Send, Image as ImageIcon, UserPlus, Check, X, Menu, ArrowLeft, Loader2, MessageCircle } from 'lucide-react'
-import { searchUsers, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, getDirectMessages, sendDirectMessage, SUPPORT_CONTACT_ID } from './actions'
+import { searchUsers, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, getDirectMessages, sendDirectMessage } from './actions'
 import Image from 'next/image'
 
 export default function ChatUI({ currentUser, contacts: initialContacts, pendingRequests: initialRequests }: any) {
@@ -283,10 +283,10 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                                     return (
                                         <div key={m.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm shadow-sm ${isMe
-                                                    ? 'bg-primary text-white rounded-br-none'
-                                                    : activeContact.isSupport
-                                                        ? 'bg-accent/10 border border-accent/20 text-gray-900 dark:text-white rounded-bl-none'
-                                                        : 'bg-white dark:bg-secondary border border-border text-gray-900 dark:text-white rounded-bl-none'
+                                                ? 'bg-primary text-white rounded-br-none'
+                                                : activeContact.isSupport
+                                                    ? 'bg-accent/10 border border-accent/20 text-gray-900 dark:text-white rounded-bl-none'
+                                                    : 'bg-white dark:bg-secondary border border-border text-gray-900 dark:text-white rounded-bl-none'
                                                 }`}>
                                                 {m.content}
                                             </div>

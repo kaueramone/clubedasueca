@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 // Define the Support "User" ID as a constant string mapping to recognize it in UI
-export const SUPPORT_CONTACT_ID = 'support-official-contact'
+const SUPPORT_CONTACT_ID = 'support-official-contact'
 
 export async function searchUsers(query: string) {
     if (!query || query.length < 3) return []
