@@ -7,6 +7,7 @@ import { LogOut } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { UserPresence } from "@/components/dashboard/user-presence";
+import { HeaderBalance } from "@/components/dashboard/header-balance";
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,12 @@ export default async function DashboardLayout({
         .eq('id', user.id)
         .single();
 
+    const { data: wallet } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
     const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url;
     const initial = profile?.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'E';
 
@@ -50,10 +57,7 @@ export default async function DashboardLayout({
 
                     <div className="flex items-center gap-3 md:gap-6">
                         <div className="hidden md:flex items-center gap-3">
-                            <div className="flex flex-col items-end">
-                                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Saldo</span>
-                                <span className="text-sm font-bold text-accent">€ 0.00</span>
-                            </div>
+                            <HeaderBalance initialBalance={wallet?.balance || 0} userId={user.id} />
                             <Link href="/dashboard/wallet/deposit" className="bg-success/10 text-success hover:bg-success hover:text-white transition-colors border border-success/20 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm">
                                 Depositar
                             </Link>

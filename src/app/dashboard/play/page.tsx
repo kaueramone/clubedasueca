@@ -132,26 +132,46 @@ export default async function LobbyPage() {
                                             </div>
                                         </div>
 
-                                        <div className="relative z-10 p-3 bg-card/80 backdrop-blur-sm border-t border-border mt-auto">
+                                        <div className="relative z-10 p-3 bg-card/80 backdrop-blur-sm border-t border-border mt-auto flex flex-col gap-2">
                                             {game.isDummy ? (
                                                 <button disabled className="w-full rounded-lg bg-muted py-2 text-sm font-semibold text-muted-foreground border border-border cursor-not-allowed">
                                                     Mesa Preenchida
                                                 </button>
                                             ) : game.host_id === user?.id ? (
-                                                <form action={async () => {
-                                                    "use server"
-                                                    await cancelGame(game.id)
-                                                }}>
-                                                    <SubmitButton className="w-full flex items-center justify-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/20 shadow-sm transition-all">
-                                                        <Trash2 className="w-4 h-4" />
-                                                        Cancelar Mesa
-                                                    </SubmitButton>
-                                                </form>
+                                                <div className="flex flex-col gap-2">
+                                                    <form action={async () => {
+                                                        "use server"
+                                                        await joinGame(game.id)
+                                                    }}>
+                                                        <SubmitButton className="w-full rounded-lg bg-accent py-2 text-sm font-semibold text-accent-foreground hover:bg-accent/90 shadow-sm transition-all focus:ring-2 focus:ring-accent focus:ring-offset-2">
+                                                            Entrar na Mesa
+                                                        </SubmitButton>
+                                                    </form>
+                                                    <form action={async () => {
+                                                        "use server"
+                                                        await cancelGame(game.id)
+                                                    }}>
+                                                        <SubmitButton className="w-full flex items-center justify-center gap-2 rounded-lg bg-red-500/10 border border-red-500/20 py-2 text-sm font-semibold text-red-600 hover:bg-red-500/20 shadow-sm transition-all">
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Cancelar Mesa
+                                                        </SubmitButton>
+                                                    </form>
+                                                </div>
                                             ) : (
-                                                <form action={async () => {
+                                                <form action={async (formData) => {
                                                     "use server"
-                                                    await joinGame(game.id)
-                                                }}>
+                                                    await joinGame(game.id, formData)
+                                                }} className="flex flex-col gap-2">
+                                                    <select
+                                                        name="team"
+                                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                                                        defaultValue=""
+                                                    >
+                                                        <option value="" disabled>Escolha a Equipa (Opcional)</option>
+                                                        <option value="A">Equipa A</option>
+                                                        <option value="B">Equipa B</option>
+                                                        <option value="">Qualquer Lugar</option>
+                                                    </select>
                                                     <SubmitButton className="w-full rounded-lg bg-accent py-2 text-sm font-semibold text-accent-foreground hover:bg-accent/90 shadow-sm transition-all focus:ring-2 focus:ring-accent focus:ring-offset-2">
                                                         Sentar na Mesa
                                                     </SubmitButton>

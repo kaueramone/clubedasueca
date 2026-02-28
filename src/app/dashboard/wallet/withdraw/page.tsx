@@ -43,7 +43,6 @@ export default function WithdrawPage() {
 
             <div className="mb-6 rounded-xl bg-yellow-50 p-4 text-sm text-yellow-800 border border-yellow-100">
                 <p>⚠️ O levantamento pode demorar até 24 horas para aprovação.</p>
-                <p className="mt-1">Taxa fixa de saque: <strong>1.00€</strong></p>
             </div>
 
             <form onSubmit={handleWithdraw} className="space-y-6">
@@ -62,7 +61,7 @@ export default function WithdrawPage() {
                             placeholder="0.00"
                         />
                     </div>
-                    <p className="mt-2 text-xs text-gray-500">Mínimo: 10.00€ (+1€ taxa)</p>
+                    <p className="mt-2 text-xs text-gray-500">Mínimo: 10.00€</p>
                 </div>
 
                 <div>

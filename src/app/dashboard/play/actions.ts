@@ -39,15 +39,18 @@ export async function createGame(prevState: any, formData: FormData) {
     redirect(`/dashboard/play/${gameId}`)
 }
 
-export async function joinGame(gameId: string) {
+export async function joinGame(gameId: string, formData?: FormData) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: "Não autenticado" }
+
+    const preferredTeam = formData?.get('team') as string || null
 
     // Atomic join game via RPC
     const { data, error } = await supabase.rpc('process_join_game', {
         p_user_id: user.id,
         p_game_id: gameId,
+        p_preferred_team: preferredTeam
     })
 
     if (error) {
