@@ -1,7 +1,9 @@
 'use client'
 
 import { useFormState } from 'react-dom'
+import { useState } from 'react'
 import Link from 'next/link'
+import { Eye, EyeOff } from 'lucide-react'
 import { login } from '@/app/auth/actions'
 import { SubmitButton } from '@/components/submit-button'
 
@@ -12,6 +14,7 @@ const initialState = {
 export function LoginForm() {
     // @ts-ignore - useFormState types can be tricky with server actions
     const [state, formAction] = useFormState(login, initialState)
+    const [showPassword, setShowPassword] = useState(false)
 
     return (
         <form action={formAction} className="space-y-6">
@@ -39,14 +42,23 @@ export function LoginForm() {
                 >
                     Password
                 </label>
-                <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
-                    placeholder="••••••••"
-                />
+                <div className="relative mt-1">
+                    <input
+                        id="password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        required
+                        className="block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 pr-12 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                        placeholder="••••••••"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                </div>
             </div>
 
             {state?.error && (

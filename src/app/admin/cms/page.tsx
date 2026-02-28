@@ -42,6 +42,22 @@ export default function AdminCmsPage() {
         else { setMessage('✅ Post guardado!'); setEditingPost(null); loadData() }
     }
 
+    function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        if (!editingPost?.id) {
+            const slug = e.target.value
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)+/g, "");
+
+            const slugInput = document.querySelector('input[name="slug"]') as HTMLInputElement;
+            if (slugInput) {
+                slugInput.value = slug;
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="mx-auto max-w-6xl space-y-6">
@@ -87,24 +103,24 @@ export default function AdminCmsPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
-                                            <input name="title" required defaultValue={editingPost.title} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                            <input name="title" required defaultValue={editingPost.title} onChange={handleTitleChange} placeholder="Ex: Como Jogar Sueca" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-                                            <input name="slug" required defaultValue={editingPost.slug} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                            <input name="slug" required defaultValue={editingPost.slug} placeholder="Ex: como-jogar-sueca" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Resumo Opcional (Excerpt)</label>
-                                        <textarea name="excerpt" defaultValue={editingPost.excerpt} rows={2} className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        <textarea name="excerpt" defaultValue={editingPost.excerpt} rows={2} placeholder="Breve resumo sobre o artigo..." className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Imagem Principal (URL)</label>
-                                        <input name="cover_image" defaultValue={editingPost.cover_image} type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2" />
+                                        <input name="cover_image" defaultValue={editingPost.cover_image} type="url" placeholder="https://exemplo.com/imagem.png" className="w-full rounded-lg border border-gray-300 px-3 py-2 placeholder:text-gray-500 text-gray-900" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Conteúdo (Markdown)</label>
-                                        <textarea name="content" required defaultValue={editingPost.content} rows={15} className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm" />
+                                        <textarea name="content" required defaultValue={editingPost.content} rows={15} placeholder="Escreva o conteúdo completo aqui (Suporta Markdown)..." className="w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm placeholder:text-gray-500 text-gray-900" />
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <input type="checkbox" name="is_published" id="post_published" defaultChecked={editingPost.is_published} className="rounded border-gray-300" />

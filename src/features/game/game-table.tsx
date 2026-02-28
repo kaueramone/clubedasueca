@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Trophy, Home, RotateCcw, Clock, User } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Clock, User, PlusCircle } from 'lucide-react'
 
 // Portuguese Colors Constants
 const PT_RED = '#CE1126'
@@ -359,7 +359,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 className={cn(
                     "relative transition-all select-none filter drop-shadow-md",
                     onClick ? "cursor-pointer hover:-translate-y-4 hover:scale-105 active:scale-95 z-0 hover:z-10" : "",
-                    isOpponent ? "w-16 h-20 sm:w-20 sm:h-28" : "w-20 h-28 sm:w-24 sm:h-36"
+                    isOpponent ? "w-14 h-20 sm:w-20 sm:h-28" : "w-16 h-24 sm:w-20 sm:h-28 lg:w-24 lg:h-36"
                 )}
             >
                 <Image
@@ -378,7 +378,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return (
             <div className={cn(
                 "relative filter drop-shadow-sm",
-                "w-16 h-20 sm:w-20 sm:h-28",
+                "w-14 h-20 sm:w-20 sm:h-28",
                 rotate ? "rotate-90" : ""
             )}>
                 <Image
@@ -432,10 +432,12 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* --- Players --- */}
 
             {/* Top Player (Partner) */}
-            <div className="absolute top-4 sm:top-8 flex flex-col items-center z-10 w-full">
+            <div className="absolute top-12 sm:top-8 flex flex-col items-center z-10 w-full">
                 <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden mb-[-10px] z-20 shadow-lg relative`}>
                     {gameState.game_players[2]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
+                    ) : gameState.status === 'waiting' ? (
+                        <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                     ) : (
                         <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
                     )}
@@ -449,10 +451,12 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Left Player (Opponent) - CORRECTED LAYOUT: Avatar on Left (Edge), Cards on Right (Center) */}
-            <div className="absolute left-4 sm:left-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2">
+            <div className="absolute left-1 sm:left-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
                 <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
                     {gameState.game_players[1]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
+                    ) : gameState.status === 'waiting' ? (
+                        <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
                     )}
@@ -466,7 +470,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
-            <div className="absolute right-4 sm:right-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2">
+            <div className="absolute right-1 sm:right-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
                     {getOpponentCards(gameState.game_players[3]).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
@@ -475,6 +479,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
                     {gameState.game_players[3]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
+                    ) : gameState.status === 'waiting' ? (
+                        <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                     ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
                     )}
@@ -523,8 +529,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Bottom Player (Me) */}
-            <div className="absolute bottom-4 sm:bottom-8 w-full flex flex-col items-center z-20">
-                <div className="flex -space-x-8 sm:-space-x-12 mb-6 px-4 py-2 hover:-space-x-6 sm:hover:-space-x-8 transition-all duration-300 ease-out perspective-1000 max-w-[100vw] overflow-visible">
+            <div className="absolute bottom-2 sm:bottom-8 w-full flex flex-col items-center z-20">
+                <div className="flex -space-x-12 sm:-space-x-12 mb-4 sm:mb-6 px-1 py-1 hover:-space-x-8 md:hover:-space-x-6 transition-all duration-300 ease-out perspective-1000 max-w-full overflow-visible">
                     {myPlayer.hand?.map((card: string, index: number) => {
                         const total = myPlayer.hand.length
                         const mid = (total - 1) / 2

@@ -3,6 +3,8 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { GlobalHeader } from "@/components/layout/global-header";
+import { GlobalFooter } from "@/components/layout/global-footer";
 
 
 export default async function Home() {
@@ -18,40 +20,7 @@ export default async function Home() {
     return (
         <div className="min-h-screen bg-background flex flex-col font-sans">
             {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                    <Link href="/" className="relative w-40 h-10">
-                        <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
-                        <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
-                    </Link>
-                    <nav className="flex items-center gap-4">
-                        {session ? (
-                            <Link href="/dashboard">
-                                <Button variant="primary" size="sm" className="flex items-center gap-2">
-                                    <span className="h-6 w-6 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-xs font-bold">EU</span>
-                                    A Minha Conta
-                                </Button>
-                            </Link>
-                        ) : (
-                            <>
-                                <Link href="/login" className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                                    Entrar
-                                </Link>
-                                <Link href="/register" className="hidden sm:block">
-                                    <Button variant="primary" size="sm" className="hidden sm:flex">
-                                        Criar Conta
-                                    </Button>
-                                </Link>
-                                <Link href="/login" className="sm:hidden">
-                                    <Button variant="primary" size="sm" className="font-bold text-xs h-8 px-4 rounded-xl shadow-lg">
-                                        Entrar
-                                    </Button>
-                                </Link>
-                            </>
-                        )}
-                    </nav>
-                </div>
-            </header>
+            <GlobalHeader isLoggedIn={!!session} />
 
             {/* Hero Section */}
             <main className="flex-1">
@@ -186,51 +155,7 @@ export default async function Home() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-border bg-background py-12">
-                <div className="container mx-auto px-4">
-                    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                            <div className="relative w-52 h-14 mb-4 block">
-                                <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" />
-                                <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" />
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                                Jogue a sueca portuguesa com seus amigos e coloque suas moedas na mesa.
-                            </p>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold text-foreground mb-4">Sobre</h3>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                                <li><Link href="/p/como-funciona" className="hover:text-accent transition-colors">Como funciona?</Link></li>
-                                <li><Link href="/p/deposito-saque" className="hover:text-accent transition-colors">Deposito e Saque</Link></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold text-foreground mb-4">O Jogo</h3>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                                <li><Link href="/demo" className="hover:text-accent transition-colors">Jogar Partida de Treino</Link></li>
-                                <li><Link href="/blog" className="hover:text-accent transition-colors">O Nosso Blog</Link></li>
-                                <li><Link href="/register" className="hover:text-accent transition-colors">Criar Conta no Clube</Link></li>
-                            </ul>
-                        </div>
-
-                        <div>
-                            <h3 className="font-bold text-foreground mb-4">Legal</h3>
-                            <ul className="space-y-2 text-sm text-muted-foreground">
-                                <li><Link href="/p/termos" className="hover:text-accent transition-colors">Termos de Utilização</Link></li>
-                                <li><Link href="/p/privacidade" className="hover:text-accent transition-colors">Política de Privacidade</Link></li>
-                                <li><Link href="/p/kyc" className="hover:text-accent transition-colors">Políticas KYC & AML</Link></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div className="mt-12 border-t border-border pt-8 mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-                        <p>© {new Date().getFullYear()} Clube da Sueca. Todos os direitos reservados.</p>
-                        <p>Plataforma para maiores de 18 anos (+18)</p>
-                    </div>
-                </div>
-            </footer>
+            <GlobalFooter />
         </div>
     );
 }
