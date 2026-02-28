@@ -18,7 +18,7 @@ export default async function ChatPage() {
         friendship_id: 'support',
         id: 'support-official-contact',
         username: 'Suporte Oficial',
-        avatar_url: '/images/clubedasueca-icone.png',
+        avatar_url: '/images/favicon.png',
         isSupport: true
     }
 

@@ -36,23 +36,23 @@ export default function AdminCrmPage() {
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="mx-auto max-w-7xl space-y-6">
                 <div>
-                    <Link href="/admin" className="text-sm text-accent hover:underline">← Admin</Link>
-                    <h1 className="text-2xl font-bold text-gray-900 mt-1">🎯 CRM & Retenção</h1>
+                    <Link href="/admin" className="text-sm text-accent hover:underline">â† Admin</Link>
+                    <h1 className="text-2xl font-bold text-gray-900 mt-1">ðŸŽ¯ CRM & RetenÃ§Ã£o</h1>
                 </div>
 
                 {/* Tabs */}
                 <div className="flex border-b border-gray-200">
                     <button onClick={() => setTab('users')}
                         className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${tab === 'users' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-                        👥 Utilizadores (Segmentação)
+                        ðŸ‘¥ Utilizadores (SegmentaÃ§Ã£o)
                     </button>
                     <button onClick={() => setTab('automations')}
                         className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${tab === 'automations' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-                        ⚡ Regras de Automação
+                        âš¡ Regras de AutomaÃ§Ã£o
                     </button>
                     <button onClick={() => setTab('logs')}
                         className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${tab === 'logs' ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
-                        📧 Logs de Email
+                        ðŸ“§ Logs de Email
                     </button>
                 </div>
 
@@ -88,9 +88,9 @@ export default function AdminCrmPage() {
                                         <th className="px-6 py-3 font-semibold text-gray-700">Utilizador</th>
                                         <th className="px-6 py-3 font-semibold text-gray-700">Segmento</th>
                                         <th className="px-6 py-3 font-semibold text-gray-700">LTV (Lucro)</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-700">Depósitos</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-700">DepÃ³sitos</th>
                                         <th className="px-6 py-3 font-semibold text-gray-700">Jogos</th>
-                                        <th className="px-6 py-3 font-semibold text-gray-700">Última Atividade</th>
+                                        <th className="px-6 py-3 font-semibold text-gray-700">Ãšltima Atividade</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -113,9 +113,9 @@ export default function AdminCrmPage() {
                                                                     'bg-gray-100 text-gray-800'
                                                         }`}>{u.segment}</span>
                                                 </td>
-                                                <td className="px-6 py-4 font-bold text-gray-900">€{u.ltv?.toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-gray-500">€{u.total_deposited?.toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-gray-500">{u.games_played} jogados<br /><span className="text-xs">{u.games_won} vitórias</span></td>
+                                                <td className="px-6 py-4 font-bold text-gray-900">â‚¬{u.ltv?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-gray-500">â‚¬{u.total_deposited?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-gray-500">{u.games_played} jogados<br /><span className="text-xs">{u.games_won} vitÃ³rias</span></td>
                                                 <td className="px-6 py-4 text-gray-500">
                                                     {u.last_game_at ? new Date(u.last_game_at).toLocaleDateString('pt-PT') : 'Nunca'}
                                                 </td>
@@ -133,8 +133,8 @@ export default function AdminCrmPage() {
                     <div className="space-y-4">
                         <div className="flex justify-between items-center bg-muted p-4 rounded-xl border border-border">
                             <p className="text-primary text-sm">
-                                As regras de automação disparam emails quando certos eventos ocorrem (ex: registo, inatividade).
-                                NOTA: Integração com provedor SMTP (SendGrid/Resend) requer configuração adicional.
+                                As regras de automaÃ§Ã£o disparam emails quando certos eventos ocorrem (ex: registo, inatividade).
+                                NOTA: IntegraÃ§Ã£o com provedor SMTP (SendGrid/Resend) requer configuraÃ§Ã£o adicional.
                             </p>
                             <button className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Nova Regra</button>
                         </div>

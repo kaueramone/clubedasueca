@@ -34,9 +34,9 @@ export default function UserBonusesPage() {
 
         const result = await redeemPromoCode(promoCode)
         if (result.error) {
-            setMessage(`❌ ${result.error}`)
+            setMessage(`âŒ ${result.error}`)
         } else {
-            setMessage('✅ Código resgatado com sucesso!')
+            setMessage('âœ… CÃ³digo resgatado com sucesso!')
             setPromoCode('')
             loadData()
         }
@@ -54,15 +54,15 @@ export default function UserBonusesPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold text-foreground">🎁 Promoções e Bónus</h1>
+            <h1 className="text-2xl font-bold text-foreground">ðŸŽ PromoÃ§Ãµes e BÃ³nus</h1>
 
             {/* VIP Status Card */}
             <div className="rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 p-6 text-white shadow-lg">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-gray-300">Nível VIP</p>
+                        <p className="text-sm text-gray-300">NÃ­vel VIP</p>
                         <h2 className="text-2xl font-bold flex items-center gap-2">
-                            <span>{currentLevel?.icon || '⭐'}</span>
+                            <span>{currentLevel?.icon || 'â­'}</span>
                             <span>{currentLevel?.name || 'Bronze'}</span>
                         </h2>
                     </div>
@@ -93,7 +93,7 @@ export default function UserBonusesPage() {
                         <p className="font-bold text-lg">{currentLevel?.cashback_rate || 0}%</p>
                     </div>
                     <div className="rounded-lg bg-white/10 p-3">
-                        <p className="text-gray-300">Multiplicador Bónus</p>
+                        <p className="text-gray-300">Multiplicador BÃ³nus</p>
                         <p className="font-bold text-lg">{currentLevel?.bonus_multiplier || 1}x</p>
                     </div>
                 </div>
@@ -102,13 +102,13 @@ export default function UserBonusesPage() {
             {/* Redeem Promo Code */}
             <div className="rounded-2xl bg-card p-6 shadow-sm border border-border">
                 <h3 className="font-bold text-foreground flex items-center gap-2 mb-4">
-                    <Ticket className="h-5 w-5 text-primary" /> Código Promocional
+                    <Ticket className="h-5 w-5 text-primary" /> CÃ³digo Promocional
                 </h3>
                 <form onSubmit={handleRedeemCode} className="flex gap-2">
                     <input
                         value={promoCode}
                         onChange={(e) => setPromoCode(e.target.value)}
-                        placeholder="Inserir código..."
+                        placeholder="Inserir cÃ³digo..."
                         className="flex-1 rounded-xl border border-input bg-background/50 px-4 py-2 text-sm uppercase text-foreground placeholder:text-foreground/50 focus:border-accent focus:outline-none"
                     />
                     <button type="submit"
@@ -125,14 +125,14 @@ export default function UserBonusesPage() {
             <div className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
                 <div className="border-b bg-gray-50 px-6 py-4">
                     <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                        <Gift className="h-5 w-5 text-green-600" /> Os Meus Bónus
+                        <Gift className="h-5 w-5 text-green-600" /> Os Meus BÃ³nus
                     </h3>
                 </div>
                 <div className="divide-y">
                     {bonuses.length === 0 ? (
                         <div className="py-12 text-center text-gray-500">
                             <Gift className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                            <p>Sem bónus ativos de momento.</p>
+                            <p>Sem bÃ³nus ativos de momento.</p>
                         </div>
                     ) : (
                         bonuses.map(ub => (
@@ -140,10 +140,10 @@ export default function UserBonusesPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h4 className="font-semibold text-gray-900">
-                                            {(ub.bonus as any)?.name || 'Bónus'}
+                                            {(ub.bonus as any)?.name || 'BÃ³nus'}
                                         </h4>
                                         <p className="text-sm text-gray-500">
-                                            Valor: <span className="font-bold text-green-600">€{ub.amount}</span>
+                                            Valor: <span className="font-bold text-green-600">â‚¬{ub.amount}</span>
                                         </p>
                                     </div>
                                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${ub.status === 'active' ? 'bg-green-100 text-green-700' :
@@ -159,7 +159,7 @@ export default function UserBonusesPage() {
                                 {ub.status === 'active' && ub.rollover_target > 0 && (
                                     <div className="mt-3">
                                         <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                            <span>Rollover: €{ub.wagered?.toFixed(2)} / €{ub.rollover_target?.toFixed(2)}</span>
+                                            <span>Rollover: â‚¬{ub.wagered?.toFixed(2)} / â‚¬{ub.rollover_target?.toFixed(2)}</span>
                                             <span>{Math.min(100, (ub.wagered / ub.rollover_target * 100)).toFixed(0)}%</span>
                                         </div>
                                         <div className="h-2 rounded-full bg-gray-200 overflow-hidden">

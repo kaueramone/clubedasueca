@@ -88,7 +88,7 @@ export default function AdminChatPage() {
             {/* Sidebar (Conversations List) */}
             <div className="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col h-full shrink-0">
                 <div className="p-4 border-b border-gray-200">
-                    <Link href="/admin" className="text-sm text-accent hover:underline mb-2 inline-block">← Admin Hub</Link>
+                    <Link href="/admin" className="text-sm text-accent hover:underline mb-2 inline-block">â† Admin Hub</Link>
                     <h1 className="text-xl font-bold flex items-center gap-2 text-primary">
                         <MessageSquare className="w-5 h-5 text-primary" /> Support Desk
                     </h1>
@@ -96,10 +96,10 @@ export default function AdminChatPage() {
                     <select
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
-                        className="mt-4 w-full rounded-xl border border-gray-300 p-2 text-sm text-gray-700 font-medium"
+                        className="mt-4 w-full rounded-xl border border-gray-300 p-2 text-sm text-gray-900 font-bold"
                     >
                         <option value="all">Todas as conversas</option>
-                        <option value="waiting_agent">A aguardar Agente ⚠️</option>
+                        <option value="waiting_agent">A aguardar Agente âš ï¸</option>
                         <option value="active">Em Atendimento</option>
                         <option value="open">Bot FAQ / Novas</option>
                         <option value="resolved">Resolvidas</option>
@@ -218,7 +218,7 @@ export default function AdminChatPage() {
                                     </form>
                                 ) : (
                                     <div className="text-center p-4 bg-yellow-50 text-yellow-800 rounded-xl text-sm border border-yellow-200">
-                                        Apenas pode enviar mensagens após "Atender Utilizador" e assinalar esta conversa à sua conta de administrador.
+                                        Apenas pode enviar mensagens apÃ³s "Atender Utilizador" e assinalar esta conversa Ã  sua conta de administrador.
                                     </div>
                                 )}
                             </div>

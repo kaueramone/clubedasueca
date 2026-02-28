@@ -23,16 +23,16 @@ export default function AdminAffiliatesPage() {
 
     async function handleStatusChange(id: string, status: string) {
         const result = await updateAffiliateStatus(id, status)
-        if (result.error) setMessage(`❌ ${result.error}`)
-        else { setMessage(`✅ Estado atualizado para ${status}`); loadData() }
+        if (result.error) setMessage(`âŒ ${result.error}`)
+        else { setMessage(`âœ… Estado atualizado para ${status}`); loadData() }
     }
 
     async function handlePay(affiliateId: string) {
         const amount = parseFloat(payAmount)
-        if (isNaN(amount) || amount <= 0) { setMessage('❌ Valor inválido'); return }
+        if (isNaN(amount) || amount <= 0) { setMessage('âŒ Valor invÃ¡lido'); return }
         const result = await payAffiliate(affiliateId, amount)
-        if (result.error) setMessage(`❌ ${result.error}`)
-        else { setMessage('✅ Pagamento processado!'); setPayingId(null); setPayAmount(''); loadData() }
+        if (result.error) setMessage(`âŒ ${result.error}`)
+        else { setMessage('âœ… Pagamento processado!'); setPayingId(null); setPayAmount(''); loadData() }
     }
 
     if (loading) return <div className="flex items-center justify-center py-20 text-gray-500">A carregar...</div>
@@ -48,13 +48,13 @@ export default function AdminAffiliatesPage() {
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="mx-auto max-w-6xl space-y-6">
                 <div>
-                    <Link href="/admin" className="text-sm text-accent hover:underline">← Admin</Link>
-                    <h1 className="text-2xl font-bold text-gray-900 mt-1">🤝 Gestão de Afiliados</h1>
+                    <Link href="/admin" className="text-sm text-accent hover:underline">â† Admin</Link>
+                    <h1 className="text-2xl font-bold text-gray-900 mt-1">ðŸ¤ GestÃ£o de Afiliados</h1>
                 </div>
 
                 {message && (
                     <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
-                        {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">×</button>
+                        {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">Ã—</button>
                     </div>
                 )}
 
@@ -109,10 +109,10 @@ export default function AdminAffiliatesPage() {
                                         </div>
                                     </div>
                                     <div className="mt-2 text-xs text-gray-500 flex gap-4">
-                                        <span>Modelo: {aff.commission_model === 'revenue_share' ? `Rev Share ${aff.revenue_share_pct}%` : `CPA €${aff.cpa_amount}`}</span>
-                                        <span>Ganhos: €{aff.total_earned?.toFixed(2)}</span>
-                                        <span>Pago: €{aff.total_paid?.toFixed(2)}</span>
-                                        <span>Pendente: €{((aff.total_earned || 0) - (aff.total_paid || 0)).toFixed(2)}</span>
+                                        <span>Modelo: {aff.commission_model === 'revenue_share' ? `Rev Share ${aff.revenue_share_pct}%` : `CPA â‚¬${aff.cpa_amount}`}</span>
+                                        <span>Ganhos: â‚¬{aff.total_earned?.toFixed(2)}</span>
+                                        <span>Pago: â‚¬{aff.total_paid?.toFixed(2)}</span>
+                                        <span>Pendente: â‚¬{((aff.total_earned || 0) - (aff.total_paid || 0)).toFixed(2)}</span>
                                     </div>
 
                                     {payingId === aff.id && (

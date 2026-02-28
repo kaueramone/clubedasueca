@@ -32,21 +32,21 @@ export default function AdminBannersPage() {
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         const result = await createBanner(new FormData(e.currentTarget))
-        if (result.error) setMessage(`❌ ${result.error}`)
-        else { setMessage('✅ Banner criado com sucesso!'); setShowCreate(false); loadData() }
+        if (result.error) setMessage(`âŒ ${result.error}`)
+        else { setMessage('âœ… Banner criado com sucesso!'); setShowCreate(false); loadData() }
     }
 
     async function handleToggleStatus(id: string, currentStatus: boolean) {
         const result = await updateBanner(id, { is_active: !currentStatus })
-        if (result.error) setMessage(`❌ ${result.error}`)
+        if (result.error) setMessage(`âŒ ${result.error}`)
         else { loadData() }
     }
 
     async function handleDelete(id: string) {
         if (!confirm('Deseja mesmo eliminar este banner?')) return
         const result = await deleteBanner(id)
-        if (result.error) setMessage(`❌ ${result.error}`)
-        else { setMessage('✅ Banner eliminado'); loadData() }
+        if (result.error) setMessage(`âŒ ${result.error}`)
+        else { setMessage('âœ… Banner eliminado'); loadData() }
     }
 
     if (loading) return <div className="flex items-center justify-center py-20 text-gray-500">A carregar...</div>
@@ -56,8 +56,8 @@ export default function AdminBannersPage() {
             <div className="mx-auto max-w-6xl space-y-6">
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href="/admin" className="text-sm text-accent hover:underline">← Admin</Link>
-                        <h1 className="text-2xl font-bold text-gray-900 mt-1">🖼️ Gestão de Banners</h1>
+                        <Link href="/admin" className="text-sm text-accent hover:underline">â† Admin</Link>
+                        <h1 className="text-2xl font-bold text-gray-900 mt-1">ðŸ–¼ï¸ GestÃ£o de Banners</h1>
                     </div>
                     <button onClick={() => setShowCreate(!showCreate)}
                         className="flex items-center gap-2 rounded-xl bg-accent/90 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
@@ -67,7 +67,7 @@ export default function AdminBannersPage() {
 
                 {message && (
                     <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
-                        {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">×</button>
+                        {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">Ã—</button>
                     </div>
                 )}
 
@@ -76,12 +76,12 @@ export default function AdminBannersPage() {
                         <h2 className="text-lg font-bold text-gray-900 mb-4">Criar Novo Banner</h2>
                         <form onSubmit={handleCreate} className="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
-                                <input name="title" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Ex: Mega Torneio Fim de Semana" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">TÃ­tulo *</label>
+                                <input name="title" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" placeholder="Ex: Mega Torneio Fim de Semana" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Posição</label>
-                                <select name="position" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">PosiÃ§Ã£o</label>
+                                <select name="position" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700">
                                     <option value="dashboard_top">Dashboard (Topo)</option>
                                     <option value="hero">Hero (Landing Page)</option>
                                     <option value="sidebar">Sidebar</option>
@@ -89,36 +89,36 @@ export default function AdminBannersPage() {
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                                <input name="description" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Participe já e ganhe 500€ em bónus..." />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">DescriÃ§Ã£o</label>
+                                <input name="description" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" placeholder="Participe jÃ¡ e ganhe 500â‚¬ em bÃ³nus..." />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">URL da Imagem (opcional)</label>
-                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner.png" />
+                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" placeholder="https://exemplo.com/banner.png" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Link de Destino</label>
-                                <input name="link_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://..." />
+                                <input name="link_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" placeholder="https://..." />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Segmento Alvo</label>
-                                <select name="target_segment" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500">
+                                <select name="target_segment" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700">
                                     <option value="all">Todos os Utilizadores</option>
-                                    <option value="new">Novos (S/ Depósito)</option>
+                                    <option value="new">Novos (S/ DepÃ³sito)</option>
                                     <option value="vip">Apenas VIPs</option>
                                 </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade (Maior = Antes)</label>
-                                <input name="priority" type="number" defaultValue="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
+                                <input name="priority" type="number" defaultValue="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
-                                <input name="start_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Data de InÃ­cio</label>
+                                <input name="start_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Fim (opcional)</label>
-                                <input name="end_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
+                                <input name="end_date" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 font-bold placeholder:text-gray-700" />
                             </div>
                             <div className="md:col-span-2 flex justify-end gap-2 mt-4">
                                 <button type="button" onClick={() => setShowCreate(false)}
@@ -182,7 +182,7 @@ export default function AdminBannersPage() {
                                         <div className="flex items-center gap-2">
                                             <Eye className="h-4 w-4 text-gray-400" />
                                             <div>
-                                                <p className="text-[10px] uppercase font-bold text-gray-500 leading-none">Impressões</p>
+                                                <p className="text-[10px] uppercase font-bold text-gray-500 leading-none">ImpressÃµes</p>
                                                 <p className="font-semibold text-gray-900 leading-tight">{banner.stats?.impressions || 0}</p>
                                             </div>
                                         </div>

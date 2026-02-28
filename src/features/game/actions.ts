@@ -3,10 +3,28 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { isValidMove, getTrickWinner, getCardSuit, getCardValue } from './utils'
-import { logAudit } from '@/lib/audit'
-import { processWagerForBonuses } from '@/features/bonuses/actions'
 import { processGameAffiliateCommissions } from '@/features/affiliates/actions'
 import { trackUserMetrics } from '@/features/crm/actions'
+import { redirect } from 'next/navigation'
+
+export async function cancelGame(gameId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: "Não autenticado" }
+
+    const { data, error } = await supabase.rpc('process_cancel_game', {
+        p_game_id: gameId,
+        p_user_id: user.id
+    })
+
+    if (error) {
+        console.error('[CANCEL_GAME]', error)
+        return { error: error.message || 'Erro ao cancelar mesa.' }
+    }
+
+    revalidatePath('/dashboard/play')
+    redirect('/dashboard/play')
+}
 
 export async function playCard(gameId: string, card: string) {
     const supabase = await createClient()

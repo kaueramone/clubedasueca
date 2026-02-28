@@ -26,8 +26,8 @@ export function RegisterForm() {
                     name="fullName"
                     type="text"
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
-                    placeholder="João Silva"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                    placeholder="JoÃ£o Silva"
                 />
             </div>
 
@@ -39,7 +39,7 @@ export function RegisterForm() {
                         name="birthDate"
                         type="date"
                         required
-                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     />
                 </div>
                 <div>
@@ -48,16 +48,16 @@ export function RegisterForm() {
                         id="nationality"
                         name="nationality"
                         required
-                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     >
                         <option value="">Selecione...</option>
                         <option value="Portugal">Portugal</option>
                         <option value="Brasil">Brasil</option>
                         <option value="Angola">Angola</option>
                         <option value="Cabo Verde">Cabo Verde</option>
-                        <option value="Moçambique">Moçambique</option>
-                        <option value="S. Tomé e Príncipe">S. Tomé e Príncipe</option>
-                        <option value="Guiné-Bissau">Guiné-Bissau</option>
+                        <option value="MoÃ§ambique">MoÃ§ambique</option>
+                        <option value="S. TomÃ© e PrÃ­ncipe">S. TomÃ© e PrÃ­ncipe</option>
+                        <option value="GuinÃ©-Bissau">GuinÃ©-Bissau</option>
                         <option value="Outra">Outra</option>
                     </select>
                 </div>
@@ -70,7 +70,7 @@ export function RegisterForm() {
                     name="email"
                     type="email"
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     placeholder="seu@email.com"
                 />
             </div>
@@ -82,8 +82,8 @@ export function RegisterForm() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
-                    placeholder="••••••••"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors">
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -97,8 +97,8 @@ export function RegisterForm() {
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     required
-                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
-                    placeholder="••••••••"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 font-bold focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
+                    placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors">
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

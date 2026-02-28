@@ -8,9 +8,9 @@ import Link from 'next/link'
 function BonusTypeLabel({ type }: { type: string }) {
     const labels: Record<string, { text: string; color: string }> = {
         welcome: { text: 'Boas-vindas', color: 'bg-green-100 text-green-700' },
-        deposit_match: { text: 'Match Depósito', color: 'bg-blue-100 text-blue-700' },
+        deposit_match: { text: 'Match DepÃ³sito', color: 'bg-blue-100 text-blue-700' },
         reload: { text: 'Recarga', color: 'bg-primary/10 text-primary' },
-        free_play: { text: 'Jogo Grátis', color: 'bg-yellow-100 text-yellow-700' },
+        free_play: { text: 'Jogo GrÃ¡tis', color: 'bg-yellow-100 text-yellow-700' },
         cashback: { text: 'Cashback', color: 'bg-pink-100 text-pink-700' },
         promo_code: { text: 'Promo Code', color: 'bg-orange-100 text-orange-700' },
         vip_reward: { text: 'VIP Reward', color: 'bg-indigo-100 text-indigo-700' },
@@ -50,7 +50,7 @@ export default function AdminBonusesPage() {
         if (result.error) {
             setMessage(`Erro: ${result.error}`)
         } else {
-            setMessage('Bónus criado com sucesso!')
+            setMessage('BÃ³nus criado com sucesso!')
             setShowCreateBonus(false)
             form.reset()
             loadData()
@@ -65,7 +65,7 @@ export default function AdminBonusesPage() {
         if (result.error) {
             setMessage(`Erro: ${result.error}`)
         } else {
-            setMessage('Código criado com sucesso!')
+            setMessage('CÃ³digo criado com sucesso!')
             setShowCreatePromo(false)
             form.reset()
             loadData()
@@ -92,17 +92,17 @@ export default function AdminBonusesPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <Link href="/admin" className="text-sm text-accent hover:underline">← Admin</Link>
-                        <h1 className="text-2xl font-bold text-gray-900 mt-1">🎁 Promoções e Bónus</h1>
+                        <Link href="/admin" className="text-sm text-accent hover:underline">â† Admin</Link>
+                        <h1 className="text-2xl font-bold text-gray-900 mt-1">ðŸŽ PromoÃ§Ãµes e BÃ³nus</h1>
                     </div>
                     <div className="flex gap-2">
                         <button onClick={() => setShowCreateBonus(!showCreateBonus)}
                             className="flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors">
-                            <Plus className="h-4 w-4" /> Novo Bónus
+                            <Plus className="h-4 w-4" /> Novo BÃ³nus
                         </button>
                         <button onClick={() => setShowCreatePromo(!showCreatePromo)}
                             className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">
-                            <Tag className="h-4 w-4" /> Novo Código
+                            <Tag className="h-4 w-4" /> Novo CÃ³digo
                         </button>
                     </div>
                 </div>
@@ -110,33 +110,33 @@ export default function AdminBonusesPage() {
                 {message && (
                     <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
                         {message}
-                        <button onClick={() => setMessage('')} className="ml-2 font-bold">×</button>
+                        <button onClick={() => setMessage('')} className="ml-2 font-bold">Ã—</button>
                     </div>
                 )}
 
                 {/* Create Bonus Form */}
                 {showCreateBonus && (
                     <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Criar Novo Bónus</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Criar Novo BÃ³nus</h2>
                         <form onSubmit={handleCreateBonus} className="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome *</label>
-                                <input name="name" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Bónus de Boas-Vindas" />
+                                <input name="name" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="BÃ³nus de Boas-Vindas" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
                                 <select name="type" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
                                     <option value="welcome">Boas-vindas</option>
-                                    <option value="deposit_match">Match Depósito</option>
+                                    <option value="deposit_match">Match DepÃ³sito</option>
                                     <option value="reload">Recarga</option>
-                                    <option value="free_play">Jogo Grátis</option>
+                                    <option value="free_play">Jogo GrÃ¡tis</option>
                                     <option value="cashback">Cashback</option>
                                     <option value="promo_code">Promo Code</option>
                                     <option value="vip_reward">VIP Reward</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Valor Fixo (€)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Valor Fixo (â‚¬)</label>
                                 <input name="amount" type="number" step="0.01" min="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="5.00" />
                             </div>
                             <div>
@@ -144,11 +144,11 @@ export default function AdminBonusesPage() {
                                 <input name="percentage" type="number" step="0.01" min="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="100" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Máximo (€)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">MÃ¡ximo (â‚¬)</label>
                                 <input name="max_amount" type="number" step="0.01" min="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="50.00" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Depósito Mínimo (€)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">DepÃ³sito MÃ­nimo (â‚¬)</label>
                                 <input name="min_deposit" type="number" step="0.01" min="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="10.00" />
                             </div>
                             <div>
@@ -160,11 +160,11 @@ export default function AdminBonusesPage() {
                                 <input name="valid_days" type="number" min="1" defaultValue="30" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Máx. usos globais</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">MÃ¡x. usos globais</label>
                                 <input name="max_uses" type="number" min="1" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Ilimitado" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Máx. por utilizador</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">MÃ¡x. por utilizador</label>
                                 <input name="max_per_user" type="number" min="1" defaultValue="1" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                             </div>
                             <div>
@@ -180,14 +180,14 @@ export default function AdminBonusesPage() {
                                 </select>
                             </div>
                             <div className="md:col-span-2">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                                <textarea name="description" rows={2} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Descrição do bónus..." />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">DescriÃ§Ã£o</label>
+                                <textarea name="description" rows={2} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="DescriÃ§Ã£o do bÃ³nus..." />
                             </div>
                             <div className="md:col-span-2 flex justify-end gap-2">
                                 <button type="button" onClick={() => setShowCreateBonus(false)}
                                     className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancelar</button>
                                 <button type="submit"
-                                    className="rounded-lg bg-green-600 px-6 py-2 text-sm font-semibold text-white hover:bg-green-700">Criar Bónus</button>
+                                    className="rounded-lg bg-green-600 px-6 py-2 text-sm font-semibold text-white hover:bg-green-700">Criar BÃ³nus</button>
                             </div>
                         </form>
                     </div>
@@ -196,34 +196,34 @@ export default function AdminBonusesPage() {
                 {/* Create Promo Code Form */}
                 {showCreatePromo && (
                     <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-200">
-                        <h2 className="text-lg font-bold text-gray-900 mb-4">Criar Código Promocional</h2>
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">Criar CÃ³digo Promocional</h2>
                         <form onSubmit={handleCreatePromo} className="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Código *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">CÃ³digo *</label>
                                 <input name="code" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm uppercase" placeholder="BEMVINDO2024" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Bónus Associado *</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">BÃ³nus Associado *</label>
                                 <select name="bonus_id" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
-                                    <option value="">Selecionar bónus...</option>
+                                    <option value="">Selecionar bÃ³nus...</option>
                                     {bonuses.map(b => (
                                         <option key={b.id} value={b.id}>{b.name} ({b.type})</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Máx. resgates</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">MÃ¡x. resgates</label>
                                 <input name="max_redemptions" type="number" min="1" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" placeholder="Ilimitado" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Válido até</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">VÃ¡lido atÃ©</label>
                                 <input name="valid_until" type="datetime-local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
                             </div>
                             <div className="md:col-span-2 flex justify-end gap-2">
                                 <button type="button" onClick={() => setShowCreatePromo(false)}
                                     className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">Cancelar</button>
                                 <button type="submit"
-                                    className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90">Criar Código</button>
+                                    className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90">Criar CÃ³digo</button>
                             </div>
                         </form>
                     </div>
@@ -233,12 +233,12 @@ export default function AdminBonusesPage() {
                 <div className="rounded-2xl bg-white shadow-sm border border-gray-200 overflow-hidden">
                     <div className="border-b bg-gray-50 px-6 py-4">
                         <h2 className="font-semibold text-gray-700 flex items-center gap-2">
-                            <Gift className="h-5 w-5" /> Bónus ({bonuses.length})
+                            <Gift className="h-5 w-5" /> BÃ³nus ({bonuses.length})
                         </h2>
                     </div>
                     <div className="divide-y">
                         {bonuses.length === 0 ? (
-                            <div className="py-12 text-center text-gray-500">Nenhum bónus criado.</div>
+                            <div className="py-12 text-center text-gray-500">Nenhum bÃ³nus criado.</div>
                         ) : (
                             bonuses.map(bonus => (
                                 <div key={bonus.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
@@ -253,9 +253,9 @@ export default function AdminBonusesPage() {
                                                     }`}>{bonus.status}</span>
                                             </div>
                                             <div className="mt-1 text-xs text-gray-500 space-x-3">
-                                                {bonus.amount && <span>Fixo: €{bonus.amount}</span>}
+                                                {bonus.amount && <span>Fixo: â‚¬{bonus.amount}</span>}
                                                 {bonus.percentage && <span>Match: {bonus.percentage}%</span>}
-                                                {bonus.max_amount && <span>Máx: €{bonus.max_amount}</span>}
+                                                {bonus.max_amount && <span>MÃ¡x: â‚¬{bonus.max_amount}</span>}
                                                 <span>Rollover: {bonus.rollover_multiplier}x</span>
                                                 <span>Usos: {bonus.current_uses}{bonus.max_uses ? `/${bonus.max_uses}` : ''}</span>
                                             </div>
@@ -279,12 +279,12 @@ export default function AdminBonusesPage() {
                 <div className="rounded-2xl bg-white shadow-sm border border-gray-200 overflow-hidden">
                     <div className="border-b bg-gray-50 px-6 py-4">
                         <h2 className="font-semibold text-gray-700 flex items-center gap-2">
-                            <Tag className="h-5 w-5" /> Códigos Promocionais ({promoCodes.length})
+                            <Tag className="h-5 w-5" /> CÃ³digos Promocionais ({promoCodes.length})
                         </h2>
                     </div>
                     <div className="divide-y">
                         {promoCodes.length === 0 ? (
-                            <div className="py-12 text-center text-gray-500">Nenhum código criado.</div>
+                            <div className="py-12 text-center text-gray-500">Nenhum cÃ³digo criado.</div>
                         ) : (
                             promoCodes.map(promo => (
                                 <div key={promo.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
@@ -295,15 +295,15 @@ export default function AdminBonusesPage() {
                                                 }`}>{promo.is_active ? 'Ativo' : 'Inativo'}</span>
                                         </div>
                                         <div className="mt-1 text-xs text-gray-500 space-x-3">
-                                            <span>Bónus: {(promo.bonus as any)?.name || '—'}</span>
+                                            <span>BÃ³nus: {(promo.bonus as any)?.name || 'â€”'}</span>
                                             <span>Resgates: {promo.current_redemptions}{promo.max_redemptions ? `/${promo.max_redemptions}` : ''}</span>
-                                            {promo.valid_until && <span>Válido até: {new Date(promo.valid_until).toLocaleDateString('pt-PT')}</span>}
+                                            {promo.valid_until && <span>VÃ¡lido atÃ©: {new Date(promo.valid_until).toLocaleDateString('pt-PT')}</span>}
                                         </div>
                                     </div>
                                     <button
                                         onClick={() => navigator.clipboard.writeText(promo.code)}
                                         className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                                        title="Copiar código">
+                                        title="Copiar cÃ³digo">
                                         <Copy className="h-4 w-4" />
                                     </button>
                                 </div>

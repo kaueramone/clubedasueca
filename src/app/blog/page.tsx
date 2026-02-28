@@ -5,8 +5,8 @@ import { Calendar, User, Eye } from 'lucide-react';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-    title: 'O Blog da Tradição | Clube da Sueca',
-    description: 'Notícias, dicas, guias estratégicos e atualizações sobre o mundo da sueca portuguesa.',
+    title: 'O Blog da TradiÃ§Ã£o | Clube da Sueca',
+    description: 'NotÃ­cias, dicas, guias estratÃ©gicos e atualizaÃ§Ãµes sobre o mundo da sueca portuguesa.',
 };
 
 export default async function BlogIndexPage() {
@@ -31,16 +31,16 @@ export default async function BlogIndexPage() {
             <main className="container mx-auto px-4 py-16 max-w-6xl">
                 <div className="mb-16 md:text-center md:mx-auto max-w-3xl">
                     <h1 className="text-4xl md:text-6xl font-serif font-bold text-gray-900 dark:text-foreground tracking-tight mb-4">
-                        O Blog da Tradição
+                        O Blog da TradiÃ§Ã£o
                     </h1>
                     <p className="text-xl text-gray-600 dark:text-muted-foreground leading-relaxed">
-                        Atualizações globais da plataforma, manuais para iniciantes e reportagens sobre a sueca digital.
+                        AtualizaÃ§Ãµes globais da plataforma, manuais para iniciantes e reportagens sobre a sueca digital.
                     </p>
                 </div>
 
                 {posts.length === 0 ? (
                     <div className="text-center py-20 bg-white dark:bg-card border border-border rounded-3xl p-8">
-                        <p className="text-muted-foreground text-lg">Ainda não existem artigos publicados. Volta mais tarde!</p>
+                        <p className="text-muted-foreground text-lg">Ainda nÃ£o existem artigos publicados. Volta mais tarde!</p>
                     </div>
                 ) : (
                     <>
@@ -69,7 +69,7 @@ export default async function BlogIndexPage() {
                                             {heroPost.title}
                                         </h2>
                                         <p className="text-gray-600 dark:text-muted-foreground text-lg mb-8 line-clamp-3">
-                                            {heroPost.excerpt || 'Leia a notícia na íntegra no nosso portal...'}
+                                            {heroPost.excerpt || 'Leia a notÃ­cia na Ã­ntegra no nosso portal...'}
                                         </p>
                                         <div className="flex items-center justify-between text-sm text-gray-500 mt-auto">
                                             <div className="flex items-center gap-3">
@@ -96,7 +96,7 @@ export default async function BlogIndexPage() {
                             </Link>
                         )}
 
-                        {/* GRID POSTS SECUNDÁRIOS */}
+                        {/* GRID POSTS SECUNDÃRIOS */}
                         {regularPosts.length > 0 && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {regularPosts.map((post) => (

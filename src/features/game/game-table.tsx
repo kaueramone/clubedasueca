@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { playCard } from './actions'
+import { playCard, cancelGame } from './actions'
 import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
 import Image from 'next/image'
@@ -35,6 +35,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     const [gameState, setGameState] = useState(initialTrainingState)
     const [loading, setLoading] = useState(false)
+    const [cancelling, setCancelling] = useState(false)
     const [scores, setScores] = useState({ A: 0, B: 0 })
 
     // Detailed Round Recap State
@@ -344,6 +345,16 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         setLoading(false)
     }
 
+    const handleCancelGame = async () => {
+        if (!confirm('Tem a certeza que deseja cancelar esta mesa? O valor será reembolsado para a sua carteira.')) return
+        setCancelling(true)
+        const res = await cancelGame(game.id)
+        if (res?.error) {
+            alert(res.error)
+            setCancelling(false)
+        }
+    }
+
     // --- New Color Logic for Avatars in Portuguese Theme ---
     const getAvatarBorderColor = (p: any) => {
         // Team A = Green (Portugal Green), Team B = Red (Portugal Red)
@@ -405,6 +416,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 <Image src="/images/mesa-vert.png" alt="Table" fill className="object-cover md:hidden" priority />
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
+
+            {/* Owner Table Controls */}
+            {gameState.status === 'waiting' && currentUser?.id === game?.host_id && !isTraining && (
+                <div className="absolute top-4 left-4 z-30">
+                    <button
+                        onClick={handleCancelGame}
+                        disabled={cancelling}
+                        className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur-md shadow-lg transition-colors border border-red-400"
+                    >
+                        {cancelling ? <Clock className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                        Cancelar Mesa
+                    </button>
+                </div>
+            )}
 
             {/* Scoreboard - Updated Colors */}
             <div className="absolute top-4 right-4 z-30 bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl text-white">
