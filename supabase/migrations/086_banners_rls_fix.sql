@@ -4,6 +4,10 @@
 -- Let's drop the generic ALL policy and create explicit ones.
 
 DROP POLICY IF EXISTS "Admins can manage banners" ON public.banners;
+DROP POLICY IF EXISTS "Admins can select banners" ON public.banners;
+DROP POLICY IF EXISTS "Admins can insert banners" ON public.banners;
+DROP POLICY IF EXISTS "Admins can update banners" ON public.banners;
+DROP POLICY IF EXISTS "Admins can delete banners" ON public.banners;
 
 CREATE POLICY "Admins can select banners" ON public.banners
   FOR SELECT USING (auth.uid() IN (SELECT id FROM public.profiles WHERE role = 'admin'));

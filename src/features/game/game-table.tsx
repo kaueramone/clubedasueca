@@ -345,10 +345,24 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return () => { supabase.removeChannel(channel) }
     }, [game?.id, supabase, isTraining])
 
+    // --- Relative Player Positions ---
     const players = gameState?.game_players || []
     const myPlayer = isTraining ? players[0] : players.find((p: any) => p.user_id === currentUser?.id)
 
-    if (!myPlayer) return <div>Access denied</div>
+    // Safety Fallback (se por alguma razão 'access denied' não triggerar e a vista carregar)
+    const myPos = myPlayer?.position ?? 0;
+
+    // offset = 0 (Me), offset = 1 (Left), offset = 2 (Top/Partner), offset = 3 (Right)
+    const getRelativePlayer = (offset: number) => {
+        const targetPos = (myPos + offset) % 4;
+        return players.find((p: any) => p.position === targetPos);
+    }
+
+    const pLeft = getRelativePlayer(1);
+    const pTop = getRelativePlayer(2);
+    const pRight = getRelativePlayer(3);
+
+    if (!myPlayer && gameState.status === 'playing') return <div>Acesso Negado ou não é Jogador desta mesa</div>
 
     const handlePlayCard = async (card: string) => {
         if (loading || isTrickProcessing || roundRecap) return
@@ -362,7 +376,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
         if (isTraining) {
             if (gameState.current_turn !== 0) return
-            const myHand = gameState.game_players[0].hand
+            const myHand = myPlayer.hand
             const leadCard = gameState.current_trick_cards[0]?.card
             const leadSuit = leadCard ? getCardSuit(leadCard) : null
 
@@ -432,10 +446,22 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     src="/cards/card_back.png"
                     alt="Back"
                     fill
-                    className="object-contain"
+                    className="object-cover rounded-md"
                 />
             </div>
         )
+    }
+
+    // Helper for compact Trump display
+    const getSuitIcon = (suit: string) => {
+        if (!suit) return null;
+        switch (suit) {
+            case 'H': return <span className="text-red-500 text-xl leading-none">♥</span>
+            case 'D': return <span className="text-red-500 text-xl leading-none">♦</span>
+            case 'C': return <span className="text-gray-900 text-xl leading-none">♣</span>
+            case 'S': return <span className="text-gray-900 text-xl leading-none">♠</span>
+            default: return null
+        }
     }
 
     // Helper to generate precise number of cards for opponents
@@ -527,37 +553,37 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* --- Players --- */}
 
             {/* Top Player (Partner) */}
-            <div className="absolute top-[18%] sm:top-16 flex flex-col items-center z-10 w-full">
+            <div className="absolute top-[8%] sm:top-8 flex flex-col items-center z-10 w-full">
                 <div className="flex flex-col items-center mb-[-10px] z-20">
-                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{gameState.game_players[2]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
-                    <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden shadow-lg relative`}>
-                        {gameState.game_players[2]?.profiles?.avatar_url ? (
-                            <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
-                        ) : gameState.game_players[2]?.profiles?.username ? (
-                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{gameState.game_players[2].profiles.username.charAt(0).toUpperCase()}</div>
+                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{pTop?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
+                    <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(pTop)} bg-black/20 overflow-hidden shadow-lg relative`}>
+                        {pTop?.profiles?.avatar_url ? (
+                            <Image src={pTop.profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : pTop?.profiles?.username ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{pTop.profiles.username.charAt(0).toUpperCase()}</div>
                         ) : gameState.status === 'waiting' ? (
                             <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                         ) : (
-                            <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
+                            <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Bot</div>
                         )}
                     </div>
                 </div>
                 {/* Fixed Hand Count */}
                 <div className="flex -space-x-[50px] sm:-space-x-[70px] h-20 items-start">
-                    {getOpponentCards(gameState.game_players[2]).map(i => (
+                    {getOpponentCards(pTop).map(i => (
                         <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>
                     ))}
                 </div>
             </div>
 
             {/* Left Player (Opponent) - CORRECTED LAYOUT: Avatar on Left (Edge), Cards on Right (Center) */}
-            <div className="absolute left-6 sm:left-[12%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
+            <div className="absolute left-6 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
                 <div className="flex flex-col items-center shrink-0">
-                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
-                        {gameState.game_players[1]?.profiles?.avatar_url ? (
-                            <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
-                        ) : gameState.game_players[1]?.profiles?.username ? (
-                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{gameState.game_players[1].profiles.username.charAt(0).toUpperCase()}</div>
+                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(pLeft)} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+                        {pLeft?.profiles?.avatar_url ? (
+                            <Image src={pLeft.profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : pLeft?.profiles?.username ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{pLeft.profiles.username.charAt(0).toUpperCase()}</div>
                         ) : gameState.status === 'waiting' ? (
                             <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                         ) : (
@@ -565,31 +591,30 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         )}
                     </div>
                     <div className="flex flex-col items-center mt-1">
-                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{gameState.game_players[1]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
-                        <span className="text-[8px] sm:text-[10px] text-white/70 font-bold bg-black/30 px-1.5 rounded-full mt-0.5">(Bot)</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pLeft?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
                 </div>
                 {/* Lateral stacking deck effect */}
-                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
-                    {getOpponentCards(gameState.game_players[1]).map(i => (
+                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] ml-2">
+                    {getOpponentCards(pLeft).map(i => (
                         <div key={i} className="transform -rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
                 </div>
             </div>
 
             {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
-            <div className="absolute right-6 sm:right-[12%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
-                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
-                    {getOpponentCards(gameState.game_players[3]).map(i => (
+            <div className="absolute right-6 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
+                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] mr-2">
+                    {getOpponentCards(pRight).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
                 </div>
                 <div className="flex flex-col items-center shrink-0">
-                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
-                        {gameState.game_players[3]?.profiles?.avatar_url ? (
-                            <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
-                        ) : gameState.game_players[3]?.profiles?.username ? (
-                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{gameState.game_players[3].profiles.username.charAt(0).toUpperCase()}</div>
+                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(pRight)} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+                        {pRight?.profiles?.avatar_url ? (
+                            <Image src={pRight.profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : pRight?.profiles?.username ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{pRight.profiles.username.charAt(0).toUpperCase()}</div>
                         ) : gameState.status === 'waiting' ? (
                             <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                         ) : (
@@ -597,8 +622,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         )}
                     </div>
                     <div className="flex flex-col items-center mt-1">
-                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{gameState.game_players[3]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
-                        <span className="text-[8px] sm:text-[10px] text-white/70 font-bold bg-black/30 px-1.5 rounded-full mt-0.5">(Bot)</span>
+                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pRight?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
                 </div>
             </div>
@@ -696,9 +720,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <span className="text-white font-bold text-shadow-sm">{myPlayer.profiles?.username || 'Eu'}</span>
                     <div className="h-full w-px bg-white/20 mx-2" />
                     {gameState.trump_card && (
-                        <div className="flex items-center gap-1">
-                            <span className="text-xs text-white/70 uppercase">Trunfo</span>
-                            {renderCard(gameState.trump_card, undefined, true)}
+                        <div className="flex items-center gap-1.5 bg-white border-2 border-accent px-3 py-1 rounded-md shadow-inner">
+                            <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Trunfo</span>
+                            {getSuitIcon(getCardSuit(gameState.trump_card))}
                         </div>
                     )}
                 </div>

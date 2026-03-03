@@ -46,10 +46,18 @@ export default async function DashboardLayout({
         .eq('friend_id', user.id)
         .eq('status', 'pending');
 
+    const { count: unreadMessagesCount } = await supabase
+        .from('chat_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('receiver_id', user.id)
+        .eq('is_read', false);
+
+    const totalNotifications = (pendingCount || 0) + (unreadMessagesCount || 0);
+
     return (
         <div className="flex h-screen bg-ios-gray6">
             <UserPresence userId={user.id} email={user.email || ''} />
-            <Sidebar userEmail={user.email} pendingCount={pendingCount || 0} />
+            <Sidebar userEmail={user.email} pendingCount={totalNotifications} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
                 <header className="flex h-16 items-center justify-between border-b border-[#123F33] bg-[#0B1F1A] px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
@@ -94,7 +102,7 @@ export default async function DashboardLayout({
                     {children}
                 </main>
             </div>
-            <BottomNav pendingCount={pendingCount || 0} />
+            <BottomNav pendingCount={totalNotifications} />
         </div>
     );
 }

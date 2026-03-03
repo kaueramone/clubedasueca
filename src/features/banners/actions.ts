@@ -105,19 +105,22 @@ export async function createBanner(formData: FormData) {
         start_date: formData.get('start_date') as string || new Date().toISOString(),
         end_date: formData.get('end_date') as string || null,
         is_active: true,
+        created_by: user.id, // Needed for RLS
     }
 
     const { data, error } = await supabase.from('banners').insert(bannerData).select().single()
 
     if (error) return { error: error.message }
 
-    await logAudit(supabase, {
-        userId: user.id,
-        action: 'create_banner',
-        entityType: 'banner',
-        entityId: data.id,
-        details: bannerData as any,
-    })
+    if (data && data.id) {
+        await logAudit(supabase, {
+            userId: user.id,
+            action: 'create_banner',
+            entityType: 'banner',
+            entityId: data.id,
+            details: bannerData as any,
+        })
+    }
 
     revalidatePath('/admin/banners')
     return { success: true, banner: data }

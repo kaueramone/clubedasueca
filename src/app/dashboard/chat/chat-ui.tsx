@@ -128,11 +128,6 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <MessageCircle className="w-5 h-5 text-accent" />
                         Mensagens
-                        {pendingRequests.length > 0 && (
-                            <span className="bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center -ml-1 mt-[-10px] shadow-sm">
-                                {pendingRequests.length}
-                            </span>
-                        )}
                     </h2>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
