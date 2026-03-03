@@ -194,20 +194,20 @@ export default function ProfilePage() {
                             <select
                                 value={profile.nationality}
                                 onChange={e => setProfile({ ...profile, nationality: e.target.value })}
-                                className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                className="flex h-10 w-full rounded-md border border-input bg-background/50 px-3 py-2 text-sm text-gray-800 dark:text-gray-200 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                <option value="PT">Portugal 🇵🇹</option>
-                                <option value="BR">Brasil 🇧🇷</option>
-                                <option value="AO">Angola 🇦🇴</option>
-                                <option value="MZ">Moçambique 🇲🇿</option>
-                                <option value="CV">Cabo Verde 🇨🇻</option>
-                                <option value="ST">São Tomé e Príncipe 🇸🇹</option>
-                                <option value="GW">Guiné-Bissau 🇬🇼</option>
-                                <option value="CH">Suíça 🇨🇭</option>
-                                <option value="FR">França 🇫🇷</option>
-                                <option value="UK">Reino Unido 🇬🇧</option>
-                                <option value="LU">Luxemburgo 🇱🇺</option>
-                                <option value="OTHER">Outra</option>
+                                <option value="PT" className="text-gray-900 bg-white">Portugal 🇵🇹</option>
+                                <option value="BR" className="text-gray-900 bg-white">Brasil 🇧🇷</option>
+                                <option value="AO" className="text-gray-900 bg-white">Angola 🇦🇴</option>
+                                <option value="MZ" className="text-gray-900 bg-white">Moçambique 🇲🇿</option>
+                                <option value="CV" className="text-gray-900 bg-white">Cabo Verde 🇨🇻</option>
+                                <option value="ST" className="text-gray-900 bg-white">São Tomé e Príncipe 🇸🇹</option>
+                                <option value="GW" className="text-gray-900 bg-white">Guiné-Bissau 🇬🇼</option>
+                                <option value="CH" className="text-gray-900 bg-white">Suíça 🇨🇭</option>
+                                <option value="FR" className="text-gray-900 bg-white">França 🇫🇷</option>
+                                <option value="UK" className="text-gray-900 bg-white">Reino Unido 🇬🇧</option>
+                                <option value="LU" className="text-gray-900 bg-white">Luxemburgo 🇱🇺</option>
+                                <option value="OTHER" className="text-gray-900 bg-white">Outra</option>
                             </select>
                         </div>
                     </div>

@@ -46,7 +46,7 @@ export default async function DashboardLayout({
             <Sidebar userEmail={user.email} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
-                <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6 shrink-0 shadow-sm z-20">
+                <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
                     <div className="flex items-center gap-4">
                         {/* Mobile Menu Toggle could go here later if needed */}
                         <div className="relative w-32 h-8 md:hidden">

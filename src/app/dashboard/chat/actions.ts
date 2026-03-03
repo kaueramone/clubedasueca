@@ -13,12 +13,12 @@ export async function searchUsers(query: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return []
 
-    // Search by username or email, excluding self
+    // Search by username
     const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, email')
         .neq('id', user.id)
-        .or(`username.ilike.%${query}%,email.ilike.%${query}%`)
+        .ilike('username', `%${query}%`)
         .limit(10)
 
     if (error) {
