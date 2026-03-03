@@ -141,7 +141,7 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                             placeholder="Procurar amigos (mín. 3 letras)"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-4 py-2 bg-gray-100 dark:bg-secondary border border-transparent focus:border-accent rounded-full text-base font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400 outline-none transition-colors"
+                            className="w-full pl-9 pr-4 py-2 bg-background border border-border focus:border-accent rounded-full text-base font-medium text-foreground placeholder:text-muted-foreground outline-none transition-colors"
                         />
                     </div>
                 </div>

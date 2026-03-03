@@ -327,7 +327,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return () => { supabase.removeChannel(channel) }
     }, [game?.id, supabase, isTraining])
 
-    const myPlayer = gameState.game_players.find((p: any) => p.user_id === currentUser.id)
+    const players = gameState?.game_players || []
+    const myPlayer = isTraining ? players[0] : players.find((p: any) => p.user_id === currentUser?.id)
+
     if (!myPlayer) return <div>Access denied</div>
 
     const handlePlayCard = async (card: string) => {

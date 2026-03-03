@@ -132,7 +132,7 @@ export default function ProfilePage() {
                         <div className="relative group cursor-pointer">
                             <div className="w-32 h-32 rounded-full overflow-hidden bg-muted border-4 border-border shadow-lg relative">
                                 {previewUrl ? (
-                                    <Image src={previewUrl} alt="Avatar" fill className="object-cover" />
+                                    <img src={previewUrl} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                                         <User className="w-12 h-12" />
