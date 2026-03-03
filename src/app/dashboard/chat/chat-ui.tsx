@@ -163,7 +163,10 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                                                 <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0">
                                                     {u.avatar_url && <Image src={u.avatar_url} alt="A" width={32} height={32} className="object-cover w-full h-full" />}
                                                 </div>
-                                                <span className="text-sm font-medium truncate">{u.username}</span>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-sm font-medium truncate text-foreground">{u.full_name || u.username}</span>
+                                                    <span className="text-[10px] text-muted-foreground truncate">{u.username} • {u.email}</span>
+                                                </div>
                                             </div>
                                             <button onClick={() => onAddFriend(u.id)} className="p-1.5 bg-accent/10 hover:bg-accent text-accent hover:text-white rounded-full transition-colors" title="Adicionar">
                                                 <UserPlus className="w-4 h-4" />
