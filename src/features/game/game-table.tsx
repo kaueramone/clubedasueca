@@ -529,10 +529,12 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* Top Player (Partner) */}
             <div className="absolute top-[18%] sm:top-16 flex flex-col items-center z-10 w-full">
                 <div className="flex flex-col items-center mb-[-10px] z-20">
-                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{gameState.game_players[2]?.profiles?.username || 'Zé'}</span>
+                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{gameState.game_players[2]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
                     <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden shadow-lg relative`}>
                         {gameState.game_players[2]?.profiles?.avatar_url ? (
                             <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : gameState.game_players[2]?.profiles?.username ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{gameState.game_players[2].profiles.username.charAt(0).toUpperCase()}</div>
                         ) : gameState.status === 'waiting' ? (
                             <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                         ) : (
@@ -554,6 +556,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
                         {gameState.game_players[1]?.profiles?.avatar_url ? (
                             <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : gameState.game_players[1]?.profiles?.username ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{gameState.game_players[1].profiles.username.charAt(0).toUpperCase()}</div>
                         ) : gameState.status === 'waiting' ? (
                             <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                         ) : (
@@ -584,6 +588,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
                         {gameState.game_players[3]?.profiles?.avatar_url ? (
                             <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : gameState.game_players[3]?.profiles?.username ? (
+                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{gameState.game_players[3].profiles.username.charAt(0).toUpperCase()}</div>
                         ) : gameState.status === 'waiting' ? (
                             <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
                         ) : (

@@ -139,6 +139,7 @@ $$;
 
 
 -- 2. LEAVE GAME (Refund if waiting)
+DROP FUNCTION IF EXISTS public.process_leave_game(UUID, UUID);
 CREATE OR REPLACE FUNCTION public.process_leave_game(
   p_user_id UUID,
   p_game_id UUID
@@ -195,6 +196,7 @@ $$;
 
 
 -- 3. CANCEL GAME (Host only, waiting only)
+DROP FUNCTION IF EXISTS public.process_cancel_game(UUID, UUID);
 CREATE OR REPLACE FUNCTION public.process_cancel_game(
   p_user_id UUID,
   p_game_id UUID

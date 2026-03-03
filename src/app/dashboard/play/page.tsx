@@ -107,27 +107,46 @@ export default async function LobbyPage() {
                                                 </div>
 
                                                 <div className="flex gap-1 z-10">
-                                                    {/* Seat 1 (Host/Player) */}
+                                                    {/* Seat 1 (Always Host usually, but checking position 0) */}
                                                     <div className="h-10 w-10 text-xs rounded-full bg-primary flex items-center justify-center overflow-hidden border border-primary/50 shadow-sm text-white">
-                                                        {game.profiles?.avatar_url ? <img src={game.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-white">{game.profiles?.username?.charAt(0) || 'A'}</span>}
+                                                        {game.game_players?.find((p: any) => p.position === 0)?.profiles?.avatar_url ? (
+                                                            <img src={game.game_players.find((p: any) => p.position === 0).profiles.avatar_url} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            <span className="font-bold text-white">{game.game_players?.find((p: any) => p.position === 0)?.profiles?.username?.charAt(0) || 'D'}</span>
+                                                        )}
                                                     </div>
 
                                                     {/* Seat 2 */}
-                                                    <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${playerCount > 1 ? 'bg-primary border-primary/50' : 'bg-muted border-border/50'}`}>
-                                                        {playerCount > 1 ? <User className="h-5 w-5 text-white" /> : <span className="text-muted-foreground/30">+</span>}
-                                                    </div>
+                                                    {(() => {
+                                                        const p = game.game_players?.find((pl: any) => pl.position === 1);
+                                                        return (
+                                                            <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${p ? 'bg-primary border-primary/50 text-white' : 'bg-muted border-border/50'}`}>
+                                                                {p ? (p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-white">{p.profiles?.username?.charAt(0) || 'P'}</span>) : <span className="text-muted-foreground/30">+</span>}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
 
                                                 <div className="flex gap-1 z-10">
                                                     {/* Seat 3 */}
-                                                    <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${playerCount > 2 ? 'bg-primary border-primary/50' : 'bg-muted border-border/50'}`}>
-                                                        {playerCount > 2 ? <User className="h-5 w-5 text-white" /> : <span className="text-muted-foreground/30">+</span>}
-                                                    </div>
+                                                    {(() => {
+                                                        const p = game.game_players?.find((pl: any) => pl.position === 2);
+                                                        return (
+                                                            <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${p ? 'bg-primary border-primary/50 text-white' : 'bg-muted border-border/50'}`}>
+                                                                {p ? (p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-white">{p.profiles?.username?.charAt(0) || 'P'}</span>) : <span className="text-muted-foreground/30">+</span>}
+                                                            </div>
+                                                        );
+                                                    })()}
 
                                                     {/* Seat 4 */}
-                                                    <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${playerCount > 3 ? 'bg-primary border-primary/50' : 'bg-muted border-border/50'}`}>
-                                                        {playerCount > 3 ? <User className="h-5 w-5 text-white" /> : <span className="text-muted-foreground/30">+</span>}
-                                                    </div>
+                                                    {(() => {
+                                                        const p = game.game_players?.find((pl: any) => pl.position === 3);
+                                                        return (
+                                                            <div className={`h-10 w-10 text-xs rounded-full flex items-center justify-center overflow-hidden border shadow-sm ${p ? 'bg-primary border-primary/50 text-white' : 'bg-muted border-border/50'}`}>
+                                                                {p ? (p.profiles?.avatar_url ? <img src={p.profiles.avatar_url} className="h-full w-full object-cover" /> : <span className="font-bold text-white">{p.profiles?.username?.charAt(0) || 'P'}</span>) : <span className="text-muted-foreground/30">+</span>}
+                                                            </div>
+                                                        );
+                                                    })()}
                                                 </div>
                                             </div>
                                         </div>
