@@ -231,12 +231,14 @@ export async function updateAffiliateStatus(affiliateId: string, newStatus: stri
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
 
-    const { error } = await supabase
-        .from('affiliates')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', affiliateId)
+    const { data, error } = await supabase.rpc('update_affiliate_status_admin', {
+        p_affiliate_id: affiliateId,
+        p_status: newStatus,
+        p_admin_id: user.id
+    })
 
     if (error) return { error: error.message }
+    if (data && !data.success) return { error: data.error || 'Erro ao atualizar' }
 
     await logAudit(supabase, {
         userId: user.id,
