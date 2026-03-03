@@ -188,11 +188,11 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                                 {pendingRequests.map((p: any) => (
                                     <li key={p.friendship_id} className="flex flex-col gap-2 p-3 bg-white dark:bg-secondary rounded-xl shadow-sm border border-border">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden shrink-0">
-                                                {p.avatar_url && <Image src={p.avatar_url} alt="A" width={40} height={40} className="object-cover w-full h-full" />}
+                                            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden shrink-0">
+                                                {p.avatar_url && <img src={p.avatar_url} alt="A" className="object-cover w-full h-full" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold truncate">{p.username}</p>
+                                                <p className="text-sm font-bold truncate text-primary">{p.username}</p>
                                                 <p className="text-xs text-muted-foreground truncate">Quer ser teu amigo</p>
                                             </div>
                                         </div>

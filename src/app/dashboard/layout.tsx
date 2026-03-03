@@ -40,10 +40,16 @@ export default async function DashboardLayout({
     const avatarUrl = profile?.avatar_url || user.user_metadata?.avatar_url;
     const initial = profile?.username?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase() || 'E';
 
+    const { count: pendingCount } = await supabase
+        .from('friendships')
+        .select('id', { count: 'exact', head: true })
+        .eq('friend_id', user.id)
+        .eq('status', 'pending');
+
     return (
         <div className="flex h-screen bg-ios-gray6">
             <UserPresence userId={user.id} email={user.email || ''} />
-            <Sidebar userEmail={user.email} />
+            <Sidebar userEmail={user.email} pendingCount={pendingCount || 0} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
                 <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
@@ -89,7 +95,7 @@ export default async function DashboardLayout({
                     {children}
                 </main>
             </div>
-            <BottomNav />
+            <BottomNav pendingCount={pendingCount || 0} />
         </div>
     );
 }

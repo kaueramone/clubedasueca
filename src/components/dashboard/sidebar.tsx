@@ -9,7 +9,7 @@ import { ShieldAlert } from "lucide-react"; // Add import
 
 import Image from 'next/image'
 
-export function Sidebar({ userEmail }: { userEmail?: string }) {
+export function Sidebar({ userEmail, pendingCount = 0 }: { userEmail?: string, pendingCount?: number }) {
     const pathname = usePathname();
     return (
         <div className="hidden h-full w-64 flex-col border-r border-[#123F33] bg-[#0B1F1A] md:flex">
@@ -35,6 +35,11 @@ export function Sidebar({ userEmail }: { userEmail?: string }) {
                                     }`}
                             />
                             {item.name}
+                            {item.name === "Chat" && pendingCount > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                                    {pendingCount}
+                                </span>
+                            )}
                         </Link>
                     );
                 })}

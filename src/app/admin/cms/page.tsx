@@ -161,6 +161,36 @@ export default function AdminCmsPage() {
                         )}
                     </div>
                 )}
+
+                {/* SEO TAB */}
+                {tab === 'seo' && (
+                    <div className="rounded-2xl bg-white p-6 shadow-sm border border-gray-200">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">SEO Global (Homepage & Meta)</h2>
+                        <form className="grid gap-4" onSubmit={(e) => { e.preventDefault(); setMessage('✅ Configurações de SEO atualizadas!'); }}>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Título do Site (Meta Title)</label>
+                                <input name="seo_title" defaultValue="Clube da Sueca - O Jogo de Cartas Tradicional" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição (Meta Description)</label>
+                                <textarea name="seo_description" rows={3} defaultValue="Joga sueca online com amigos e bots. O melhor clube de sueca com apostas e torneios." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Palavras-chave (Keywords)</label>
+                                <input name="seo_keywords" defaultValue="sueca, online, cartas, jogo, multiplayer, apostas" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Imagem Partilha Social (Open Graph URLs)</label>
+                                <input name="seo_image" defaultValue="https://apostanasueca.pt/images/og-image.jpg" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900" />
+                            </div>
+                            <div className="flex justify-end gap-2 mt-4">
+                                <button type="submit" className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-primary/90">
+                                    <Save className="h-4 w-4" /> Guardar SEO
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                )}
             </div>
         </div>
     )

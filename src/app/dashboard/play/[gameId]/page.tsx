@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
 
-export default async function GamePage({ params }: { params: { gameId: string } }) {
+export default async function GamePage({ params }: { params: Promise<{ gameId: string }> }) {
+    const { gameId } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -14,7 +15,7 @@ export default async function GamePage({ params }: { params: { gameId: string } 
     const { data: game, error } = await supabase
         .from("games")
         .select("*, game_players(*, profiles(username, avatar_url))")
-        .eq("id", params.gameId)
+        .eq("id", gameId)
         .single();
 
     if (error || !game) {
@@ -22,7 +23,7 @@ export default async function GamePage({ params }: { params: { gameId: string } 
         return (
             <div className="flex flex-col items-center justify-center p-12 text-center">
                 <h2 className="text-2xl font-bold">Jogo não encontrado</h2>
-                <p className="text-muted-foreground mt-2">UUID: {params.gameId}</p>
+                <p className="text-muted-foreground mt-2">UUID: {gameId}</p>
                 {error && <p className="text-danger mt-4 text-sm">{error.message}</p>}
             </div>
         );
