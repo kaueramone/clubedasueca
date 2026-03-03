@@ -31,6 +31,28 @@ export async function cancelGame(gameId: string) {
     redirect('/dashboard/play')
 }
 
+export async function leaveGame(gameId: string) {
+    if (!gameId || gameId === 'undefined') {
+        return { error: 'ID da mesa inválido.' }
+    }
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: "Não autenticado" }
+
+    const { data, error } = await supabase.rpc('process_leave_game', {
+        p_game_id: gameId,
+        p_user_id: user.id
+    })
+
+    if (error) {
+        console.error('[LEAVE_GAME]', error)
+        return { error: error.message || 'Erro ao abandonar mesa.' }
+    }
+
+    revalidatePath('/dashboard/play')
+    redirect('/dashboard/play')
+}
+
 export async function playCard(gameId: string, card: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -214,4 +236,44 @@ export async function playCard(gameId: string, card: string) {
 
     revalidatePath(`/dashboard/play/${gameId}`)
     return { success: true }
+}
+
+export async function playTimeoutCard(gameId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    // 1. Fetch Game State to see whose turn it is
+    const { data: game } = await supabase.from('games').select('*').eq('id', gameId).single()
+    if (!game || game.status !== 'playing') return { error: 'Jogo inativo' }
+
+    // 2. Fetch Players
+    const { data: players } = await supabase.from('game_players').select('*').eq('game_id', gameId)
+    if (!players) return { error: 'Jogadores não encontrados' }
+
+    const currentPlayer = players.find(p => p.position === game.current_turn)
+    // Se o player atual formos nós, faz play com random
+    if (currentPlayer && currentPlayer.user_id === user.id) {
+        const hand = currentPlayer.hand || []
+        if (hand.length === 0) return { error: 'Sem cartas na mão' }
+
+        // Find what lead suit is
+        const { data: moves } = await supabase
+            .from('game_moves')
+            .select('*')
+            .eq('game_id', gameId)
+            .eq('round_number', game.current_round || 1)
+            .eq('trick_number', game.current_trick || 1)
+            .order('played_at', { ascending: true })
+
+        const leadCard = moves && moves.length > 0 ? moves[0] : null
+        const leadSuit = leadCard ? getCardSuit(leadCard.card) : null
+
+        const validCards = hand.filter((c: string) => isValidMove(c, hand, leadSuit))
+        const cardToPlay = validCards.length > 0 ? validCards[Math.floor(Math.random() * validCards.length)] : hand[0]
+
+        return playCard(gameId, cardToPlay)
+    }
+
+    return { error: 'Não podes forçar timeout noutros, apenas podias jogar a tua e passaste do tempo.' }
 }

@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { playCard, cancelGame } from './actions'
+import { playCard, cancelGame, leaveGame, playTimeoutCard } from './actions'
 import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Trophy, Home, RotateCcw, Clock, User, PlusCircle, ArrowLeft } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Clock, User, PlusCircle, ArrowLeft, LogOut } from 'lucide-react'
 
 // Portuguese Colors Constants
 const PT_RED = '#CE1126'
@@ -116,18 +116,26 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     // --- AFK Timer Logic ---
     useEffect(() => {
-        if (!gameState || gameResult || isTrickProcessing || roundRecap) return
+        if (!gameState || gameResult || isTrickProcessing || roundRecap || gameState.status !== 'playing') return
 
-        const myTurn = gameState.current_turn === 0
+        const myPlayer = isTraining
+            ? gameState.game_players[0]
+            : gameState.game_players.find((p: any) => p.user_id === currentUser?.id)
+
+        const myTurn = myPlayer && gameState.current_turn === myPlayer.position
 
         let interval: NodeJS.Timeout
 
         if (myTurn) {
-            setTurnTimeLeft(15)
+            setTurnTimeLeft(15) // Reset on turn start
             interval = setInterval(() => {
                 setTurnTimeLeft(prev => {
                     if (prev <= 1) {
-                        autoPlayHuman()
+                        if (isTraining) {
+                            autoPlayHuman()
+                        } else {
+                            autoPlayOnline()
+                        }
                         return 0
                     }
                     return prev - 1
@@ -138,7 +146,17 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         }
 
         return () => clearInterval(interval)
-    }, [gameState.current_turn, gameResult, isTrickProcessing, roundRecap])
+    }, [gameState.current_turn, gameResult, isTrickProcessing, roundRecap, gameState.status])
+
+    const autoPlayOnline = async () => {
+        if (!game || isTraining) return
+        setLoading(true)
+        const res = await playTimeoutCard(game.id)
+        if (res?.error) {
+            console.error('[AUTO_PLAY_ERROR]', res.error)
+        }
+        setLoading(false)
+    }
 
     const autoPlayHuman = () => {
         if (!isTraining) return
@@ -448,6 +466,27 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 </div>
             )}
 
+            {/* Exit/Back Button (Real Game waiting) */}
+            {!isTraining && !isDemoGuest && gameState.status === 'waiting' && myPlayer && (
+                <div className="absolute top-4 left-4 z-40">
+                    <button
+                        onClick={async () => {
+                            if (!confirm('Deseja sair da mesa? O seu saldo será reembolsado.')) return;
+                            const res = await leaveGame(game.id);
+                            if (res?.error) {
+                                alert(res.error);
+                            } else {
+                                router.push('/dashboard/play');
+                            }
+                        }}
+                        className="bg-black/40 hover:bg-black/60 text-white p-2 sm:px-4 sm:py-2 flex items-center gap-2 rounded-full sm:rounded-xl backdrop-blur-md border border-white/10 shadow-xl transition-colors"
+                    >
+                        <LogOut className="w-5 h-5 text-red-400" />
+                        <span className="hidden sm:inline font-bold text-sm text-red-400">Abandonar Mesa</span>
+                    </button>
+                </div>
+            )}
+
             {/* Owner Table Controls */}
             {gameState.status === 'waiting' && currentUser?.id === game?.host_id && !isTraining && (
                 <div className="absolute top-4 left-4 z-30">
@@ -559,11 +598,28 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Center (Table) */}
-            {/* Same as before */}
             <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
                     <Image src="/images/favicon.png" alt="Watermark" fill className="object-contain p-4" />
                 </div>
+
+                {/* Waiting State Overlay */}
+                {gameState.status === 'waiting' && !isTraining && (
+                    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-center p-4">
+                        <User className="w-8 h-8 text-white/50 mb-2" />
+                        <h3 className="text-white font-bold text-sm sm:text-base">Aguardando Jogadores</h3>
+                        <p className="text-white/70 text-xs mt-1">
+                            {gameState.game_players?.length || 1}/4 na mesa
+                        </p>
+                        <button onClick={() => {
+                            navigator.clipboard.writeText(window.location.href);
+                            alert('Link da mesa copiado!');
+                        }} className="mt-4 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs font-bold hover:bg-accent/90 transition-colors shadow-lg flex items-center gap-2">
+                            <PlusCircle className="w-4 h-4" /> Convidar
+                        </button>
+                    </div>
+                )}
+
                 {roundRecap && (
                     <div
                         onClick={dismissRecap}
