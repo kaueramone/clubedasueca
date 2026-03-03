@@ -374,6 +374,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     // --- New Color Logic for Avatars in Portuguese Theme ---
     const getAvatarBorderColor = (p: any) => {
+        if (!p) return 'border-transparent' // Defensive check
         // Team A = Green (Portugal Green), Team B = Red (Portugal Red)
         if (p.team === 'A') return 'border-[#006600]'
         return 'border-[#CE1126]'
@@ -421,7 +422,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     // Helper to generate precise number of cards for opponents
     const getOpponentCards = (player: any) => {
-        const count = player.hand?.length || 0;
+        const count = player?.hand?.length || 0;
         return Array(count).fill(0).map((_, i) => i);
     }
 

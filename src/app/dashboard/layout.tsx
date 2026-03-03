@@ -52,12 +52,11 @@ export default async function DashboardLayout({
             <Sidebar userEmail={user.email} pendingCount={pendingCount || 0} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
-                <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
+                <header className="flex h-16 items-center justify-between border-b border-[#123F33] bg-[#0B1F1A] px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
                     <div className="flex items-center gap-4">
                         {/* Mobile Menu Toggle could go here later if needed */}
                         <div className="relative w-32 h-8 md:hidden">
-                            <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
-                            <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
+                            <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain" priority />
                         </div>
                     </div>
 
@@ -73,8 +72,8 @@ export default async function DashboardLayout({
 
                         <div className="flex items-center gap-2">
                             <Link href="/dashboard/profile" className="flex items-center gap-2 group">
-                                <span className="hidden md:block text-sm font-medium text-foreground group-hover:text-accent transition-colors">Minha Conta</span>
-                                <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-primary group-hover:border-accent transition-colors overflow-hidden">
+                                <span className="hidden md:block text-sm font-medium text-white/90 group-hover:text-accent transition-colors">Minha Conta</span>
+                                <div className="flex items-center justify-center h-9 w-9 rounded-full bg-white/10 border border-white/20 text-xs font-bold text-white group-hover:border-accent transition-colors overflow-hidden">
                                     {avatarUrl ? (
                                         <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
                                     ) : (
@@ -83,7 +82,7 @@ export default async function DashboardLayout({
                                 </div>
                             </Link>
                             <form action={signout}>
-                                <button className="text-muted-foreground hover:text-danger p-2 transition-colors rounded-full hover:bg-danger/10" title="Terminar Sessão">
+                                <button className="text-white/60 hover:text-danger p-2 transition-colors rounded-full hover:bg-danger/10" title="Terminar Sessão">
                                     <LogOut className="h-5 w-5" />
                                 </button>
                             </form>

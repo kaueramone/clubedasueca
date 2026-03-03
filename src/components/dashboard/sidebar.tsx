@@ -26,12 +26,12 @@ export function Sidebar({ userEmail, pendingCount = 0 }: { userEmail?: string, p
                             key={item.href}
                             href={item.href}
                             className={`group flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${isActive
-                                ? "bg-white/10 text-white border border-white/20 shadow-sm"
-                                : "text-white/70 hover:bg-white/5 hover:text-white"
+                                ? "bg-white/10 text-accent font-bold border border-white/20 shadow-sm"
+                                : "text-white hover:bg-white/10"
                                 }`}
                         >
                             <item.icon
-                                className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? "text-accent" : "text-white/50 group-hover:text-white/80"
+                                className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive ? "text-accent" : "text-white"
                                     }`}
                             />
                             {item.name}
