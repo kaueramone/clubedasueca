@@ -22,7 +22,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         status: 'playing',
         stake: 0,
         game_players: [
-            { user_id: 'human', position: 0, team: 'A', hand: [], profiles: { username: 'Você', avatar_url: currentUser?.user_metadata?.avatar_url || currentUser?.avatar_url || null } },
+            { user_id: 'human', position: 0, team: 'A', hand: [], profiles: { username: 'Você', avatar_url: currentUser?.user_metadata?.avatar_url || currentUser?.profiles?.avatar_url || null } },
             { user_id: 'bot1', position: 1, team: 'B', hand: [], profiles: { username: 'Manel (Bot)', avatar_url: '/bots/manel.jpg' } },
             { user_id: 'bot2', position: 2, team: 'A', hand: [], profiles: { username: 'Zé (Bot)', avatar_url: '/bots/ze.jpg' } },
             { user_id: 'bot3', position: 3, team: 'B', hand: [], profiles: { username: 'Quim (Bot)', avatar_url: '/bots/quim.jpg' } },
@@ -518,7 +518,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                             <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
                         )}
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mt-1 line-clamp-1 max-w-[60px] text-center">{gameState.game_players[1]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
+                    <div className="flex flex-col items-center mt-1">
+                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{gameState.game_players[1]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
+                        <span className="text-[8px] sm:text-[10px] text-white/70 font-bold bg-black/30 px-1.5 rounded-full mt-0.5">(Bot)</span>
+                    </div>
                 </div>
                 {/* Lateral stacking deck effect */}
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
@@ -545,7 +548,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                             <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
                         )}
                     </div>
-                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mt-1 line-clamp-1 max-w-[60px] text-center">{gameState.game_players[3]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
+                    <div className="flex flex-col items-center mt-1">
+                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{gameState.game_players[3]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
+                        <span className="text-[8px] sm:text-[10px] text-white/70 font-bold bg-black/30 px-1.5 rounded-full mt-0.5">(Bot)</span>
+                    </div>
                 </div>
             </div>
 
