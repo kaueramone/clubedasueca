@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Trophy, Home, RotateCcw, Clock, User, PlusCircle } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Clock, User, PlusCircle, ArrowLeft } from 'lucide-react'
 
 // Portuguese Colors Constants
 const PT_RED = '#CE1126'
@@ -22,10 +22,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         status: 'playing',
         stake: 0,
         game_players: [
-            { user_id: 'human', position: 0, team: 'A', hand: [], profiles: { username: 'Você', avatar_url: currentUser?.user_metadata?.avatar_url || null } },
-            { user_id: 'bot1', position: 1, team: 'B', hand: [], profiles: { username: 'Manel (Bot)', avatar_url: null } },
-            { user_id: 'bot2', position: 2, team: 'A', hand: [], profiles: { username: 'Zé (Bot)', avatar_url: null } },
-            { user_id: 'bot3', position: 3, team: 'B', hand: [], profiles: { username: 'Quim (Bot)', avatar_url: null } },
+            { user_id: 'human', position: 0, team: 'A', hand: [], profiles: { username: 'Você', avatar_url: currentUser?.user_metadata?.avatar_url || currentUser?.avatar_url || null } },
+            { user_id: 'bot1', position: 1, team: 'B', hand: [], profiles: { username: 'Manel (Bot)', avatar_url: '/bots/manel.jpg' } },
+            { user_id: 'bot2', position: 2, team: 'A', hand: [], profiles: { username: 'Zé (Bot)', avatar_url: '/bots/ze.jpg' } },
+            { user_id: 'bot3', position: 3, team: 'B', hand: [], profiles: { username: 'Quim (Bot)', avatar_url: '/bots/quim.jpg' } },
         ],
         current_trick_cards: [],
         current_turn: 0,
@@ -432,6 +432,19 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
+            {/* Exit/Back Button (Training or Demo) */}
+            {(isTraining || isDemoGuest) && (
+                <div className="absolute top-4 left-4 z-40">
+                    <button
+                        onClick={() => router.push(isDemoGuest ? '/' : '/dashboard')}
+                        className="bg-black/40 hover:bg-black/60 text-white p-2 sm:px-4 sm:py-2 flex items-center gap-2 rounded-full sm:rounded-xl backdrop-blur-md border border-white/10 shadow-xl transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                        <span className="hidden sm:inline font-bold text-sm">Sair</span>
+                    </button>
+                </div>
+            )}
+
             {/* Owner Table Controls */}
             {gameState.status === 'waiting' && currentUser?.id === game?.host_id && !isTraining && (
                 <div className="absolute top-4 left-4 z-30">
@@ -473,14 +486,17 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Top Player (Partner) */}
             <div className="absolute top-[18%] sm:top-16 flex flex-col items-center z-10 w-full">
-                <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden mb-[-10px] z-20 shadow-lg relative`}>
-                    {gameState.game_players[2]?.profiles?.avatar_url ? (
-                        <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
-                    ) : gameState.status === 'waiting' ? (
-                        <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
-                    ) : (
-                        <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
-                    )}
+                <div className="flex flex-col items-center mb-[-10px] z-20">
+                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{gameState.game_players[2]?.profiles?.username || 'Zé'}</span>
+                    <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden shadow-lg relative`}>
+                        {gameState.game_players[2]?.profiles?.avatar_url ? (
+                            <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : gameState.status === 'waiting' ? (
+                            <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
+                        ) : (
+                            <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Zé</div>
+                        )}
+                    </div>
                 </div>
                 {/* Fixed Hand Count */}
                 <div className="flex -space-x-[50px] sm:-space-x-[70px] h-20 items-start">
@@ -491,15 +507,18 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Left Player (Opponent) - CORRECTED LAYOUT: Avatar on Left (Edge), Cards on Right (Center) */}
-            <div className="absolute left-4 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
-                <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
-                    {gameState.game_players[1]?.profiles?.avatar_url ? (
-                        <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
-                    ) : gameState.status === 'waiting' ? (
-                        <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
-                    )}
+            <div className="absolute left-6 sm:left-[12%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
+                <div className="flex flex-col items-center shrink-0">
+                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+                        {gameState.game_players[1]?.profiles?.avatar_url ? (
+                            <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : gameState.status === 'waiting' ? (
+                            <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
+                        )}
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mt-1 line-clamp-1 max-w-[60px] text-center">{gameState.game_players[1]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
                 </div>
                 {/* Lateral stacking deck effect */}
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
@@ -510,20 +529,23 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
-            <div className="absolute right-4 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
+            <div className="absolute right-6 sm:right-[12%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
                     {getOpponentCards(gameState.game_players[3]).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
                 </div>
-                <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
-                    {gameState.game_players[3]?.profiles?.avatar_url ? (
-                        <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
-                    ) : gameState.status === 'waiting' ? (
-                        <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
-                    )}
+                <div className="flex flex-col items-center shrink-0">
+                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[3])} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
+                        {gameState.game_players[3]?.profiles?.avatar_url ? (
+                            <Image src={gameState.game_players[3].profiles.avatar_url} alt="P" fill className="object-cover" />
+                        ) : gameState.status === 'waiting' ? (
+                            <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
+                        )}
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mt-1 line-clamp-1 max-w-[60px] text-center">{gameState.game_players[3]?.profiles?.username?.split(' ')[0] || 'Bot'}</span>
                 </div>
             </div>
 
