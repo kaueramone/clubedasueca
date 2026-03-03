@@ -37,6 +37,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [loading, setLoading] = useState(false)
     const [cancelling, setCancelling] = useState(false)
     const [scores, setScores] = useState({ A: 0, B: 0 })
+    const [selectedCard, setSelectedCard] = useState<string | null>(null)
 
     // Detailed Round Recap State
     const [roundRecap, setRoundRecap] = useState<{
@@ -110,6 +111,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         setRoundRecap(null)
         setIsTrickProcessing(false)
         setTurnTimeLeft(15)
+        setSelectedCard(null)
     }
 
     // --- AFK Timer Logic ---
@@ -148,7 +150,13 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         const validCards = myHand.filter((c: string) => isValidMove(c, myHand, leadSuit))
         const cardToPlay = validCards.length > 0 ? validCards[Math.floor(Math.random() * validCards.length)] : myHand[0]
 
-        handlePlayCard(cardToPlay)
+        if (cardToPlay) {
+            setSelectedCard(cardToPlay)
+            setTimeout(() => {
+                setSelectedCard(null)
+                handleTrainingMove('human', cardToPlay)
+            }, 300)
+        }
     }
 
     // --- Round Recap Auto-Advance Logic ---
@@ -325,6 +333,13 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const handlePlayCard = async (card: string) => {
         if (loading || isTrickProcessing || roundRecap) return
 
+        if (selectedCard !== card) {
+            setSelectedCard(card)
+            return
+        }
+
+        setSelectedCard(null)
+
         if (isTraining) {
             if (gameState.current_turn !== 0) return
             const myHand = gameState.game_players[0].hand
@@ -369,8 +384,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 onClick={onClick}
                 className={cn(
                     "relative transition-all select-none filter drop-shadow-md",
-                    onClick ? "cursor-pointer hover:-translate-y-4 hover:scale-105 active:scale-95 z-0 hover:z-10" : "",
-                    isOpponent ? "w-14 h-20 sm:w-20 sm:h-28" : "w-16 h-24 sm:w-20 sm:h-28 lg:w-24 lg:h-36"
+                    onClick ? "cursor-pointer active:scale-95 z-0" : "",
+                    isOpponent ? "w-14 h-20 sm:w-20 sm:h-28" : "w-[5.2rem] h-[7.8rem] sm:w-[6.5rem] sm:h-[9.75rem] lg:w-32 lg:h-48"
                 )}
             >
                 <Image
@@ -457,7 +472,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* --- Players --- */}
 
             {/* Top Player (Partner) */}
-            <div className="absolute top-12 sm:top-8 flex flex-col items-center z-10 w-full">
+            <div className="absolute top-[18%] sm:top-16 flex flex-col items-center z-10 w-full">
                 <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[2])} bg-black/20 overflow-hidden mb-[-10px] z-20 shadow-lg relative`}>
                     {gameState.game_players[2]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[2].profiles.avatar_url} alt="P" fill className="object-cover" />
@@ -476,7 +491,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Left Player (Opponent) - CORRECTED LAYOUT: Avatar on Left (Edge), Cards on Right (Center) */}
-            <div className="absolute left-1 sm:left-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
+            <div className="absolute left-4 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
                 <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(gameState.game_players[1])} bg-gray-400 overflow-hidden z-20 shadow-lg relative shrink-0`}>
                     {gameState.game_players[1]?.profiles?.avatar_url ? (
                         <Image src={gameState.game_players[1].profiles.avatar_url} alt="P" fill className="object-cover" />
@@ -495,7 +510,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
-            <div className="absolute right-1 sm:right-[5%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
+            <div className="absolute right-4 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-1 sm:gap-2">
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px]">
                     {getOpponentCards(gameState.game_players[3]).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
@@ -514,7 +529,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Center (Table) */}
             {/* Same as before */}
-            <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
+            <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+                <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
+                    <Image src="/images/favicon.png" alt="Watermark" fill className="object-contain p-4" />
+                </div>
                 {roundRecap && (
                     <div
                         onClick={dismissRecap}
@@ -554,17 +572,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Bottom Player (Me) */}
-            <div className="absolute bottom-2 sm:bottom-8 w-full flex flex-col items-center z-20">
-                <div className="flex -space-x-12 sm:-space-x-12 mb-4 sm:mb-6 px-1 py-1 hover:-space-x-8 md:hover:-space-x-6 transition-all duration-300 ease-out perspective-1000 max-w-full overflow-visible">
+            <div className="absolute bottom-6 sm:bottom-10 w-full flex flex-col items-center z-20">
+                <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] mb-6 sm:mb-8 px-2 py-2 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center">
                     {myPlayer.hand?.map((card: string, index: number) => {
                         const total = myPlayer.hand.length
                         const mid = (total - 1) / 2
                         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
                         const rotate = (index - mid) * (isMobile ? 3 : 5)
-                        const translateY = Math.abs(index - mid) * (isMobile ? 2 : 5)
+                        const isSelected = selectedCard === card
+                        const pullUp = isSelected ? (isMobile ? 35 : 45) : 0
+                        const translateY = Math.abs(index - mid) * (isMobile ? 2 : 5) - pullUp
+
                         return (
-                            <div key={card} style={{ transform: `rotate(${rotate}deg) translateY(${translateY}px)`, zIndex: index }}
-                                className="transform-gpu transition-transform hover:!rotate-0 hover:!translate-y-[-20px] hover:!z-50 origin-bottom">
+                            <div key={card} style={{ transform: `rotate(${rotate}deg) translateY(${translateY}px)`, zIndex: isSelected ? 50 : index }}
+                                className={cn("transform-gpu transition-transform origin-bottom", !isSelected && "hover:!rotate-0 hover:!translate-y-[-10px] hover:!z-40")}>
                                 {renderCard(card, () => handlePlayCard(card))}
                             </div>
                         )
