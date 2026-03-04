@@ -87,23 +87,42 @@ export default function AdminBannersPage() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                                 <input name="description" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Participe já e ganhe 500€ em bónus..." />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    URL da Imagem Desktop (opcional)
-                                    <span className="block text-xs text-gray-400 font-normal mt-0.5">
-                                        Recomendado: 800x200px
-                                    </span>
-                                </label>
-                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner-desktop.png" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    URL da Imagem Mobile (opcional)
-                                    <span className="block text-xs text-gray-400 font-normal mt-0.5">
-                                        Recomendado: 400x200px
-                                    </span>
-                                </label>
-                                <input name="mobile_image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner-mobile.png" />
+                            <div className="md:col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                                <div className="space-y-3">
+                                    <h3 className="font-semibold text-gray-800 border-b pb-2">Imagem Desktop (800x200px)</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Enviar Arquivo
+                                        </label>
+                                        <input name="image_file" type="file" accept="image/*" className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-blue-700 hover:file:bg-accent/20" />
+                                    </div>
+                                    <div className="relative flex items-center py-2">
+                                        <div className="flex-grow border-t border-gray-300"></div>
+                                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase font-medium">Ou URL da Imagem</span>
+                                        <div className="flex-grow border-t border-gray-300"></div>
+                                    </div>
+                                    <div>
+                                        <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner-desktop.png" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="font-semibold text-gray-800 border-b pb-2">Imagem Mobile (400x200px)</h3>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Enviar Arquivo
+                                        </label>
+                                        <input name="mobile_image_file" type="file" accept="image/*" className="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent/10 file:text-blue-700 hover:file:bg-accent/20" />
+                                    </div>
+                                    <div className="relative flex items-center py-2">
+                                        <div className="flex-grow border-t border-gray-300"></div>
+                                        <span className="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase font-medium">Ou URL da Imagem</span>
+                                        <div className="flex-grow border-t border-gray-300"></div>
+                                    </div>
+                                    <div>
+                                        <input name="mobile_image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner-mobile.png" />
+                                    </div>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>

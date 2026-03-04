@@ -94,11 +94,37 @@ export async function createBanner(formData: FormData) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
 
+    let imageUrl = formData.get('image_url') as string | null
+    let mobileImageUrl = formData.get('mobile_image_url') as string | null
+
+    const desktopFile = formData.get('image_file') as File | null
+    const mobileFile = formData.get('mobile_image_file') as File | null
+
+    if (desktopFile && desktopFile.size > 0) {
+        const ext = desktopFile.name.split('.').pop() || 'png'
+        const fileName = `desktop-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`
+        const { error: uploadError } = await supabase.storage.from('banners').upload(fileName, desktopFile)
+        if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName)
+            imageUrl = publicUrl
+        }
+    }
+
+    if (mobileFile && mobileFile.size > 0) {
+        const ext = mobileFile.name.split('.').pop() || 'png'
+        const fileName = `mobile-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`
+        const { error: uploadError } = await supabase.storage.from('banners').upload(fileName, mobileFile)
+        if (!uploadError) {
+            const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName)
+            mobileImageUrl = publicUrl
+        }
+    }
+
     const bannerData = {
         title: formData.get('title') as string,
         description: formData.get('description') as string || null,
-        image_url: formData.get('image_url') as string || null,
-        mobile_image_url: formData.get('mobile_image_url') as string || null,
+        image_url: imageUrl,
+        mobile_image_url: mobileImageUrl,
         link_url: formData.get('link_url') as string || null,
         position: 'dashboard_top', // Always dashboard top
         priority: 0,
