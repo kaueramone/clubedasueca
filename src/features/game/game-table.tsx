@@ -55,7 +55,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
     const [isFadingOutTrump, setIsFadingOutTrump] = useState(false)
-    const [hasShownTrump, setHasShownTrump] = useState(false)
+    const hasShownTrumpRef = useRef(false)
 
     // Audio refs
     const audioPlaceRef = useRef<HTMLAudioElement | null>(null)
@@ -141,19 +141,19 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         setIsTrickProcessing(false)
         setTurnTimeLeft(15)
         setSelectedCard(null)
-        setHasShownTrump(false)
+        hasShownTrumpRef.current = false
         setShowTrumpAnimation(false)
     }
 
     // --- Trump Card Intro Animation Logic ---
     useEffect(() => {
         // Only show animation freshly if we are at the very beginning of the game to avoid spamming it on refresh
-        if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrump) {
+        if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrumpRef.current) {
             // Check if we just loaded from localStorage where a trick was partially played
             const isFreshStart = gameState.game_players.every((p: any) => p.hand.length === 10);
 
             if (isFreshStart) {
-                setHasShownTrump(true)
+                hasShownTrumpRef.current = true
                 setShowTrumpAnimation(true)
                 setIsFadingOutTrump(false)
 
@@ -172,10 +172,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 }
             } else {
                 // If it's a restored mid-game state, don't show the animation
-                setHasShownTrump(true)
+                hasShownTrumpRef.current = true
             }
         }
-    }, [gameState?.status, gameState?.trump_card, gameState?.rounds, gameState?.current_trick_cards, hasShownTrump])
+    }, [gameState?.status, gameState?.trump_card, gameState?.rounds, gameState?.current_trick_cards])
 
     // --- AFK Timer Logic ---
     useEffect(() => {
