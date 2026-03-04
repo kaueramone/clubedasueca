@@ -52,6 +52,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [isTrickProcessing, setIsTrickProcessing] = useState(false)
     const [turnTimeLeft, setTurnTimeLeft] = useState(15)
 
+    // Trump Card Intro Animation State
+    const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
+    const [hasShownTrump, setHasShownTrump] = useState(false)
+
     // Audio refs
     const audioPlaceRef = useRef<HTMLAudioElement | null>(null)
     const audioShuffleRef = useRef<HTMLAudioElement | null>(null)
@@ -112,7 +116,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         setIsTrickProcessing(false)
         setTurnTimeLeft(15)
         setSelectedCard(null)
+        setHasShownTrump(false)
     }
+
+    // --- Trump Card Intro Animation Logic ---
+    useEffect(() => {
+        if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrump) {
+            setShowTrumpAnimation(true)
+            setHasShownTrump(true)
+            const timer = setTimeout(() => {
+                setShowTrumpAnimation(false)
+            }, 3000)
+            return () => clearTimeout(timer)
+        }
+    }, [gameState?.status, gameState?.trump_card, gameState?.rounds, gameState?.current_trick_cards, hasShownTrump])
 
     // --- AFK Timer Logic ---
     useEffect(() => {
@@ -720,13 +737,30 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <span className="text-white font-bold text-shadow-sm">{myPlayer.profiles?.username || 'Eu'}</span>
                     <div className="h-full w-px bg-white/20 mx-2" />
                     {gameState.trump_card && (
-                        <div className="flex items-center gap-1.5 bg-white border-2 border-accent px-3 py-1 rounded-md shadow-inner">
-                            <span className="text-[10px] font-black text-gray-800 uppercase tracking-tighter">Trunfo</span>
-                            {getSuitIcon(getCardSuit(gameState.trump_card))}
+                        <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-300 px-3 py-0.5 sm:py-1 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.4)] relative mt-[-2px]">
+                            <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest drop-shadow-md pr-1">Trunfo</span>
+                            <div className="relative w-6 h-8 sm:w-7 sm:h-10 overflow-hidden rounded-[4px] shadow-sm border border-white/50 bg-white transform rotate-3">
+                                <Image src={getCardAssetPath(gameState.trump_card)} alt="Trunfo" fill className="object-cover" />
+                            </div>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Trump Card Intro Animation */}
+            {showTrumpAnimation && gameState.trump_card && (
+                <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm animate-in fade-in duration-500">
+                    <div className="text-center animate-in zoom-in duration-700 delay-150 fill-mode-backwards flex flex-col items-center">
+                        <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] mb-8">
+                            O Trunfo
+                        </h2>
+                        <div className="transform scale-[1.3] sm:scale-[1.8] shadow-[0_0_40px_rgba(255,215,0,0.6)] rounded-xl relative">
+                            <div className="absolute inset-0 bg-[#FFD700] rounded-xl blur-md opacity-40 animate-pulse"></div>
+                            {renderCard(gameState.trump_card)}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Game Result Overlay */}
             {gameResult && (
