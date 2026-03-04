@@ -93,7 +93,12 @@ export default function AdminBannersPage() {
                                 <input name="description" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Participe já e ganhe 500€ em bónus..." />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">URL da Imagem (opcional)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    URL da Imagem (opcional)
+                                    <span className="block text-xs text-gray-400 font-normal mt-0.5">
+                                        Recomendado: 800x200px (Desktop) ou 400x200px (Mobile)
+                                    </span>
+                                </label>
                                 <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner.png" />
                             </div>
                             <div>

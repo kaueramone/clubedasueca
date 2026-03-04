@@ -64,11 +64,11 @@ export default async function DashboardPage() {
                 </h1>
             </div>
 
-            {/* Banners Widget */}
-            <BannerDisplay position="dashboard_top" />
-
-            {/* Wallet Card */}
-            <WalletOverview initialBalance={wallet?.balance || 0} userId={user.id} />
+            {/* Top Row: Wallet & Promotional Banner */}
+            <div className="grid gap-4 md:grid-cols-2">
+                <WalletOverview initialBalance={wallet?.balance || 0} userId={user.id} />
+                <BannerDisplay position="dashboard_top" />
+            </div>
 
             {/* Main Actions */}
             <div className="grid gap-4 md:grid-cols-2">
