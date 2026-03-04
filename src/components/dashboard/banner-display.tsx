@@ -45,13 +45,13 @@ export function BannerDisplay({ position = 'dashboard_top' }: { position?: strin
                     <div
                         key={banner.id || idx}
                         onClick={() => handleBannerClick(banner)}
-                        className="relative w-full flex-shrink-0 bg-gradient-to-r from-primary/90 to-primary cursor-pointer transition-transform hover:scale-[1.01]"
+                        className="relative w-full flex-shrink-0 cursor-pointer transition-transform hover:scale-[1.01] min-h-[140px] sm:min-h-[180px]"
                     >
                         {/* Display logic for responsive banner images */}
                         {banner.image_url && (
                             <div
                                 className={cn(
-                                    "absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80",
+                                    "absolute inset-0 bg-cover bg-center transition-opacity",
                                     banner.mobile_image_url ? "hidden sm:block" : "block"
                                 )}
                                 style={{ backgroundImage: `url(${banner.image_url})` }}
@@ -59,21 +59,10 @@ export function BannerDisplay({ position = 'dashboard_top' }: { position?: strin
                         )}
                         {banner.mobile_image_url && (
                             <div
-                                className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80 block sm:hidden"
+                                className="absolute inset-0 bg-cover bg-center transition-opacity block sm:hidden"
                                 style={{ backgroundImage: `url(${banner.mobile_image_url})` }}
                             />
                         )}
-
-                        <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-center min-h-[120px]">
-                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 shadow-sm drop-shadow-md">
-                                {banner.title}
-                            </h3>
-                            {banner.description && (
-                                <p className="text-primary-foreground/90 max-w-2xl drop-shadow-md">
-                                    {banner.description}
-                                </p>
-                            )}
-                        </div>
                     </div>
                 ))}
             </div>
