@@ -80,13 +80,8 @@ export default function AdminBannersPage() {
                                 <input name="title" required className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="Ex: Mega Torneio Fim de Semana" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Posição</label>
-                                <select name="position" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500">
-                                    <option value="dashboard_top">Dashboard (Topo)</option>
-                                    <option value="hero">Hero (Landing Page)</option>
-                                    <option value="sidebar">Sidebar</option>
-                                    <option value="game_lobby">Game Lobby</option>
-                                </select>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Link de Destino</label>
+                                <input name="link_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://..." />
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
@@ -94,28 +89,21 @@ export default function AdminBannersPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    URL da Imagem (opcional)
+                                    URL da Imagem Desktop (opcional)
                                     <span className="block text-xs text-gray-400 font-normal mt-0.5">
-                                        Recomendado: 800x200px (Desktop) ou 400x200px (Mobile)
+                                        Recomendado: 800x200px
                                     </span>
                                 </label>
-                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner.png" />
+                                <input name="image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner-desktop.png" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Link de Destino</label>
-                                <input name="link_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://..." />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Segmento Alvo</label>
-                                <select name="target_segment" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500">
-                                    <option value="all">Todos os Utilizadores</option>
-                                    <option value="new">Novos (S/ Depósito)</option>
-                                    <option value="vip">Apenas VIPs</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade (Maior = Antes)</label>
-                                <input name="priority" type="number" defaultValue="0" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" />
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    URL da Imagem Mobile (opcional)
+                                    <span className="block text-xs text-gray-400 font-normal mt-0.5">
+                                        Recomendado: 400x200px
+                                    </span>
+                                </label>
+                                <input name="mobile_image_url" type="url" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 font-medium placeholder:text-gray-500" placeholder="https://exemplo.com/banner-mobile.png" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>

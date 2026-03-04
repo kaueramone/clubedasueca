@@ -98,10 +98,11 @@ export async function createBanner(formData: FormData) {
         title: formData.get('title') as string,
         description: formData.get('description') as string || null,
         image_url: formData.get('image_url') as string || null,
+        mobile_image_url: formData.get('mobile_image_url') as string || null,
         link_url: formData.get('link_url') as string || null,
-        position: formData.get('position') as string || 'dashboard_top',
-        priority: parseInt(formData.get('priority') as string) || 0,
-        target_segment: formData.get('target_segment') as string || 'all',
+        position: 'dashboard_top', // Always dashboard top
+        priority: 0,
+        target_segment: 'all', // Always all
         start_date: formData.get('start_date') as string || new Date().toISOString(),
         end_date: formData.get('end_date') as string || null,
         is_active: true,

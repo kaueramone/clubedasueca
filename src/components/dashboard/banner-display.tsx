@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { getActiveBanners, trackBannerClick } from '@/features/banners/actions'
+import { cn } from '@/lib/utils'
 
 export function BannerDisplay({ position = 'dashboard_top' }: { position?: string }) {
     const [banners, setBanners] = useState<any[]>([])
@@ -39,12 +40,22 @@ export function BannerDisplay({ position = 'dashboard_top' }: { position?: strin
             onClick={handleBannerClick}
             className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-primary/90 to-primary shadow-md cursor-pointer group transition-transform hover:scale-[1.01]"
         >
-            {banner.image_url ? (
+            {/* Display logic for responsive banner images */}
+            {banner.image_url && (
                 <div
-                    className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80"
+                    className={cn(
+                        "absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80",
+                        banner.mobile_image_url ? "hidden sm:block" : "block"
+                    )}
                     style={{ backgroundImage: `url(${banner.image_url})` }}
                 />
-            ) : null}
+            )}
+            {banner.mobile_image_url && (
+                <div
+                    className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80 block sm:hidden"
+                    style={{ backgroundImage: `url(${banner.mobile_image_url})` }}
+                />
+            )}
 
             <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-center min-h-[120px]">
                 <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 shadow-sm drop-shadow-md">

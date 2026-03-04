@@ -622,9 +622,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
-            {/* Exit/Back Button (Training or Demo) */}
-            {(isTraining || isDemoGuest) && (
-                <div className="absolute top-4 left-4 z-40">
+            {/* Left Controls Container (Exit + Chat) */}
+            <div className="absolute top-4 left-4 z-40 flex items-center gap-2">
+                {/* Exit/Back Button (Training or Demo) */}
+                {(isTraining || isDemoGuest) && (
                     <button
                         onClick={() => {
                             if (confirm('Deseja cancelar esta partida de treino? O progresso será perdido.')) {
@@ -638,12 +639,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <ArrowLeft className="w-5 h-5" />
                         <span className="hidden sm:inline font-bold text-sm">Sair</span>
                     </button>
-                </div>
-            )}
+                )}
 
-            {/* Exit/Back Button (Real Game waiting) */}
-            {!isTraining && !isDemoGuest && gameState.status === 'waiting' && myPlayer && (
-                <div className="absolute top-4 left-4 z-40">
+                {/* Exit/Back Button (Real Game waiting) */}
+                {!isTraining && !isDemoGuest && gameState.status === 'waiting' && myPlayer && (
                     <button
                         onClick={async () => {
                             if (!confirm('Deseja sair da mesa? O seu saldo será reembolsado.')) return;
@@ -659,36 +658,36 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <LogOut className="w-5 h-5 text-red-400" />
                         <span className="hidden sm:inline font-bold text-sm text-red-400">Abandonar Mesa</span>
                     </button>
-                </div>
-            )}
+                )}
 
-            {/* Owner Table Controls */}
-            {gameState.status === 'waiting' && currentUser?.id === game?.host_id && !isTraining && (
-                <div className="absolute top-4 left-4 z-30">
+                {/* Owner Cancel Controls */}
+                {gameState.status === 'waiting' && currentUser?.id === game?.host_id && !isTraining && (
                     <button
                         onClick={handleCancelGame}
                         disabled={cancelling}
-                        className="bg-red-500/80 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur-md shadow-lg transition-colors border border-red-400"
+                        className="bg-red-500/80 hover:bg-red-600 text-white p-2 sm:px-4 sm:py-2 rounded-full sm:rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur-md shadow-lg transition-colors border border-red-400"
                     >
-                        {cancelling ? <Clock className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-                        Cancelar Mesa
+                        {cancelling ? <Clock className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />}
+                        <span className="hidden sm:inline">Cancelar Mesa</span>
                     </button>
-                </div>
-            )}
+                )}
 
-            {/* Scoreboard - Updated Colors */}
-            <div className="absolute top-4 right-4 z-30 flex items-center gap-3">
+                {/* Chat Toggle Button */}
                 <button
                     onClick={() => setShowChat(true)}
-                    className="relative bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl transition-colors text-white mt-1"
+                    className="relative bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full sm:rounded-xl p-2 sm:p-3 border border-white/10 shadow-xl transition-colors text-white"
                 >
                     <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     {unreadCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-bounce">
+                        <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-md animate-bounce">
                             {unreadCount}
                         </span>
                     )}
                 </button>
+            </div>
+
+            {/* Scoreboard - Updated Colors */}
+            <div className="absolute top-4 right-4 z-30 flex items-center gap-3">
 
                 <div className="bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl text-white">
                     <div className="flex items-center gap-4 text-sm sm:text-base">
