@@ -54,6 +54,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
+    const [isFadingOutTrump, setIsFadingOutTrump] = useState(false)
     const [hasShownTrump, setHasShownTrump] = useState(false)
 
     // Audio refs
@@ -63,14 +64,38 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     const supabase = createClient()
 
+    // --- Training/Demo State Persistence ---
+    useEffect(() => {
+        if (!isTraining && !isDemoGuest) return;
+        const savedState = localStorage.getItem('sueca_training_state');
+        const savedScores = localStorage.getItem('sueca_training_scores');
+
+        if (savedState && savedScores) {
+            try {
+                setGameState(JSON.parse(savedState));
+                setScores(JSON.parse(savedScores));
+                // Only play shuffle if we are starting fresh, not loading from save
+            } catch (e) {
+                console.error("Failed to parse saved game state:", e);
+                startTrainingGame();
+            }
+        } else {
+            startTrainingGame();
+        }
+    }, [isTraining, isDemoGuest]);
+
+    // Save state on change
+    useEffect(() => {
+        if ((isTraining || isDemoGuest) && gameState && gameState.status === 'playing') {
+            localStorage.setItem('sueca_training_state', JSON.stringify(gameState));
+            localStorage.setItem('sueca_training_scores', JSON.stringify(scores));
+        }
+    }, [gameState, scores, isTraining, isDemoGuest]);
+
     useEffect(() => {
         audioPlaceRef.current = new Audio('/audio/card-place-1.ogg')
         audioShuffleRef.current = new Audio('/audio/card-shuffle.ogg')
         audioCollectRef.current = new Audio('/audio/chips-stack-1.ogg')
-
-        if (isTraining) {
-            startTrainingGame()
-        }
     }, [])
 
     function playSound(type: 'place' | 'shuffle' | 'collect') {
@@ -122,20 +147,32 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     // --- Trump Card Intro Animation Logic ---
     useEffect(() => {
-        let isMounted = true
+        // Only show animation freshly if we are at the very beginning of the game to avoid spamming it on refresh
         if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrump) {
-            setHasShownTrump(true)
-            setShowTrumpAnimation(true)
+            // Check if we just loaded from localStorage where a trick was partially played
+            const isFreshStart = gameState.game_players.every((p: any) => p.hand.length === 10);
 
-            const timer = setTimeout(() => {
-                if (isMounted) {
+            if (isFreshStart) {
+                setHasShownTrump(true)
+                setShowTrumpAnimation(true)
+                setIsFadingOutTrump(false)
+
+                const fadeTimer = setTimeout(() => {
+                    setIsFadingOutTrump(true)
+                }, 2000)
+
+                const removeTimer = setTimeout(() => {
                     setShowTrumpAnimation(false)
-                }
-            }, 3000)
+                    setIsFadingOutTrump(false)
+                }, 3000)
 
-            return () => {
-                isMounted = false
-                clearTimeout(timer)
+                return () => {
+                    clearTimeout(fadeTimer)
+                    clearTimeout(removeTimer)
+                }
+            } else {
+                // If it's a restored mid-game state, don't show the animation
+                setHasShownTrump(true)
             }
         }
     }, [gameState?.status, gameState?.trump_card, gameState?.rounds, gameState?.current_trick_cards, hasShownTrump])
@@ -509,7 +546,13 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {(isTraining || isDemoGuest) && (
                 <div className="absolute top-4 left-4 z-40">
                     <button
-                        onClick={() => router.push(isDemoGuest ? '/' : '/dashboard')}
+                        onClick={() => {
+                            if (confirm('Deseja cancelar esta partida de treino? O progresso será perdido.')) {
+                                localStorage.removeItem('sueca_training_state');
+                                localStorage.removeItem('sueca_training_scores');
+                                router.push(isDemoGuest ? '/' : '/dashboard');
+                            }
+                        }}
                         className="bg-black/40 hover:bg-black/60 text-white p-2 sm:px-4 sm:py-2 flex items-center gap-2 rounded-full sm:rounded-xl backdrop-blur-md border border-white/10 shadow-xl transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
@@ -758,9 +801,17 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Trump Card Intro Animation */}
             {showTrumpAnimation && gameState.trump_card && (
-                <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none animate-in fade-in zoom-in duration-500 fade-out-0 zoom-out-50 slide-out-to-bottom-full delay-[2000ms] fill-mode-forwards">
-                    <div className="text-center flex flex-col items-center">
-                        <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] mb-8 animate-out fade-out-0 delay-[2000ms] fill-mode-forwards">
+                <div className={cn(
+                    "absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none transition-opacity duration-700 ease-in-out",
+                    isFadingOutTrump ? "opacity-0" : "opacity-100"
+                )}>
+                    <div className={cn(
+                        "text-center flex flex-col items-center transition-all duration-700 ease-in-out",
+                        isFadingOutTrump
+                            ? "transform translate-y-32 scale-75 opacity-0"
+                            : "animate-in zoom-in duration-500 fill-mode-backwards"
+                    )}>
+                        <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] mb-8">
                             O Trunfo
                         </h2>
                         <div className="transform scale-[1.1] sm:scale-[1.4] shadow-[0_0_40px_rgba(255,215,0,0.6)] rounded-xl relative">
@@ -808,14 +859,22 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <div className="flex flex-col gap-3">
                             <div className="flex gap-3">
                                 <button
-                                    onClick={() => router.push(isDemoGuest ? '/' : '/dashboard')}
+                                    onClick={() => {
+                                        localStorage.removeItem('sueca_training_state');
+                                        localStorage.removeItem('sueca_training_scores');
+                                        router.push(isDemoGuest ? '/' : '/dashboard');
+                                    }}
                                     className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 rounded-xl transition-colors"
                                 >
                                     <Home className="h-5 w-5" />
                                     Sair
                                 </button>
                                 <button
-                                    onClick={startTrainingGame}
+                                    onClick={() => {
+                                        localStorage.removeItem('sueca_training_state');
+                                        localStorage.removeItem('sueca_training_scores');
+                                        startTrainingGame()
+                                    }}
                                     className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-colors"
                                 >
                                     <RotateCcw className="h-5 w-5" />
