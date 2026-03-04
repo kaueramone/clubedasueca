@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Trophy, Home, RotateCcw, Clock, User, PlusCircle, ArrowLeft, LogOut } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Clock, User, PlusCircle, ArrowLeft, LogOut, MessageCircle, X, Send } from 'lucide-react'
 
 // Portuguese Colors Constants
 const PT_RED = '#CE1126'
@@ -51,6 +51,13 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [gameResult, setGameResult] = useState<{ winnerTeam: string, scoreA: number, scoreB: number } | null>(null)
     const [isTrickProcessing, setIsTrickProcessing] = useState(false)
     const [turnTimeLeft, setTurnTimeLeft] = useState(15)
+
+    // Chat State
+    const [messages, setMessages] = useState<{ sender: string, text: string, time: string, isBot?: boolean }[]>([])
+    const [showChat, setShowChat] = useState(false)
+    const [newMessage, setNewMessage] = useState('')
+    const [unreadCount, setUnreadCount] = useState(0)
+    const chatEndRef = useRef<HTMLDivElement>(null)
 
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
@@ -282,6 +289,46 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         handleTrainingMove(bot.user_id, cardToPlay)
     }
 
+    // --- Bot Chat Simulator Logic ---
+    useEffect(() => {
+        if (!isTraining || !gameState || gameState.status !== 'playing' || gameResult) return
+
+        const botPhrases = [
+            "Bota trunfo nisso!", "Assiste parceiro!", "Quem não tem, chora!",
+            "Essa vaza já é nossa.", "Estás a dormir?", "Bem jogado!",
+            "Toma lá disto!", "Não cortas essa...", "É para a mesa ou para a gaveta?"
+        ]
+
+        const botNames = ["Manel (Bot)", "Zé (Bot)", "Quim (Bot)"]
+
+        // Random chance every 15-30 seconds to say something
+        const interval = setInterval(() => {
+            if (Math.random() > 0.7) { // 30% chance to speak on every interval
+                const randomBot = botNames[Math.floor(Math.random() * botNames.length)]
+                const randomPhrase = botPhrases[Math.floor(Math.random() * botPhrases.length)]
+
+                const newMsg = {
+                    sender: randomBot,
+                    text: randomPhrase,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    isBot: true
+                }
+
+                setMessages(prev => [...prev, newMsg])
+                if (!showChat) setUnreadCount(prev => prev + 1)
+            }
+        }, 12000 + Math.random() * 8000)
+
+        return () => clearInterval(interval)
+    }, [isTraining, gameState?.status, gameResult, showChat])
+
+    useEffect(() => {
+        if (showChat) {
+            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+            setUnreadCount(0)
+        }
+    }, [messages, showChat])
+
     const handleTrainingMove = (playerId: string, card: string) => {
         if (isTrickProcessing || roundRecap) return
 
@@ -393,7 +440,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         })
     }
 
-    // Realtime Subscription
+    // Realtime Subscription & Chat Channel
+    const [realtimeChannel, setRealtimeChannel] = useState<any>(null)
+
     useEffect(() => {
         if (isTraining) return
         const channel = supabase
@@ -404,9 +453,40 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     return newState
                 })
             })
+            .on('broadcast', { event: 'chat_message' }, (payload) => {
+                setMessages(prev => [...prev, payload.payload])
+                if (!showChat) setUnreadCount(prev => prev + 1)
+            })
             .subscribe()
+
+        setRealtimeChannel(channel)
         return () => { supabase.removeChannel(channel) }
-    }, [game?.id, supabase, isTraining])
+    }, [game?.id, supabase, isTraining, showChat])
+
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!newMessage.trim()) return
+
+        const msg = {
+            sender: currentUser?.profiles?.username || 'Você',
+            text: newMessage.trim(),
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+
+        if (isTraining) {
+            setMessages(prev => [...prev, msg])
+        } else if (realtimeChannel) {
+            // Optimistic update
+            setMessages(prev => [...prev, msg])
+            realtimeChannel.send({
+                type: 'broadcast',
+                event: 'chat_message',
+                payload: msg
+            })
+        }
+
+        setNewMessage('')
+    }
 
     // --- Relative Player Positions ---
     const players = gameState?.game_players || []
@@ -597,18 +677,98 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             )}
 
             {/* Scoreboard - Updated Colors */}
-            <div className="absolute top-4 right-4 z-30 bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl text-white">
-                <div className="flex items-center gap-4 text-sm sm:text-base">
-                    <div className="flex flex-col items-center">
-                        <span className="text-white/60 text-xs uppercase font-bold">Nós (A)</span>
-                        <span className="text-xl font-mono font-bold text-[#4ade80]">{scores.A}</span>
-                    </div>
-                    <div className="h-8 w-px bg-white/20" />
-                    <div className="flex flex-col items-center">
-                        <span className="text-white/60 text-xs uppercase font-bold">Eles (B)</span>
-                        <span className="text-xl font-mono font-bold text-[#f87171]">{scores.B}</span>
+            <div className="absolute top-4 right-4 z-30 flex items-center gap-3">
+                <button
+                    onClick={() => setShowChat(true)}
+                    className="relative bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl transition-colors text-white mt-1"
+                >
+                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-bounce">
+                            {unreadCount}
+                        </span>
+                    )}
+                </button>
+
+                <div className="bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl text-white">
+                    <div className="flex items-center gap-4 text-sm sm:text-base">
+                        <div className="flex flex-col items-center">
+                            <span className="text-white/60 text-xs uppercase font-bold">Nós (A)</span>
+                            <span className="text-xl font-mono font-bold text-[#4ade80]">{scores.A}</span>
+                        </div>
+                        <div className="h-8 w-px bg-white/20" />
+                        <div className="flex flex-col items-center">
+                            <span className="text-white/60 text-xs uppercase font-bold">Eles (B)</span>
+                            <span className="text-xl font-mono font-bold text-[#f87171]">{scores.B}</span>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            {/* In-Game Chat Slide-over Component */}
+            <div className={cn(
+                "absolute top-0 right-0 h-full w-full sm:w-[320px] bg-black/95 sm:bg-black/80 backdrop-blur-xl border-l border-white/10 z-[100] transition-transform duration-300 ease-in-out flex flex-col shadow-2xl",
+                showChat ? "translate-x-0" : "translate-x-full"
+            )}>
+                <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+                    <h3 className="text-white font-bold flex items-center gap-2">
+                        <MessageCircle className="w-5 h-5 text-accent" />
+                        Chat da Mesa
+                    </h3>
+                    <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10">
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/20">
+                    {messages.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm text-center px-4">
+                            <MessageCircle className="w-8 h-8 mb-2 opacity-20" />
+                            <p>O chat está vazio.</p>
+                            <p>Quebra o gelo!</p>
+                        </div>
+                    ) : (
+                        messages.map((msg, idx) => {
+                            const isMe = msg.sender === (currentUser?.profiles?.username || 'Você');
+                            return (
+                                <div key={idx} className={cn("flex flex-col max-w-[85%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
+                                    <span className="text-[10px] text-gray-400 mb-0.5 px-1 font-bold">
+                                        {msg.sender} {msg.isBot && <span className="bg-blue-500/20 text-blue-400 text-[8px] px-1 rounded ml-1">BOT</span>}
+                                    </span>
+                                    <div className={cn(
+                                        "px-3 py-2 rounded-2xl text-sm shadow-sm",
+                                        isMe
+                                            ? "bg-primary text-primary-foreground rounded-tr-sm"
+                                            : "bg-white/10 text-white rounded-tl-sm border border-white/5"
+                                    )}>
+                                        {msg.text}
+                                    </div>
+                                    <span className="text-[9px] text-gray-500 mt-0.5 px-1">{msg.time}</span>
+                                </div>
+                            )
+                        })
+                    )}
+                    <div ref={chatEndRef} />
+                </div>
+
+                <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 bg-black/40">
+                    <div className="relative flex items-center">
+                        <input
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            placeholder="Escreve uma mensagem..."
+                            className="w-full bg-white/10 border border-white/10 text-white text-sm rounded-full pl-4 pr-10 py-2.5 outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all placeholder:text-gray-500"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!newMessage.trim()}
+                            className="absolute right-1 w-8 h-8 flex items-center justify-center bg-accent text-accent-foreground rounded-full hover:bg-accent/90 disabled:opacity-50 disabled:hover:bg-accent transition-colors"
+                        >
+                            <Send className="w-4 h-4" />
+                        </button>
+                    </div>
+                </form>
             </div>
 
             {/* AFK Timer */}
