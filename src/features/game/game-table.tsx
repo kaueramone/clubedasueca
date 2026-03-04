@@ -54,7 +54,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
-    const [isMinimizingTrump, setIsMinimizingTrump] = useState(false)
     const [hasShownTrump, setHasShownTrump] = useState(false)
 
     // Audio refs
@@ -119,30 +118,24 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         setSelectedCard(null)
         setHasShownTrump(false)
         setShowTrumpAnimation(false)
-        setIsMinimizingTrump(false)
     }
 
     // --- Trump Card Intro Animation Logic ---
     useEffect(() => {
+        let isMounted = true
         if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrump) {
-            setShowTrumpAnimation(true)
-            setIsMinimizingTrump(false)
             setHasShownTrump(true)
+            setShowTrumpAnimation(true)
 
-            // Start minimizing animation after 2.2 seconds
-            const minimizeTimer = setTimeout(() => {
-                setIsMinimizingTrump(true)
-            }, 2200)
-
-            // Completely remove overlay after 3 seconds
-            const removeTimer = setTimeout(() => {
-                setShowTrumpAnimation(false)
-                setIsMinimizingTrump(false)
+            const timer = setTimeout(() => {
+                if (isMounted) {
+                    setShowTrumpAnimation(false)
+                }
             }, 3000)
 
             return () => {
-                clearTimeout(minimizeTimer)
-                clearTimeout(removeTimer)
+                isMounted = false
+                clearTimeout(timer)
             }
         }
     }, [gameState?.status, gameState?.trump_card, gameState?.rounds, gameState?.current_trick_cards, hasShownTrump])
@@ -765,20 +758,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Trump Card Intro Animation */}
             {showTrumpAnimation && gameState.trump_card && (
-                <div className={cn(
-                    "absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none transition-all duration-700",
-                    isMinimizingTrump ? "opacity-0" : "opacity-100 animate-in fade-in duration-500"
-                )}>
-                    <div className={cn(
-                        "text-center flex flex-col items-center transition-all duration-700 ease-in-out",
-                        isMinimizingTrump
-                            ? "transform translate-y-64 scale-50 opacity-0"
-                            : "animate-in zoom-in duration-700 delay-150 fill-mode-backwards"
-                    )}>
-                        <h2 className={cn(
-                            "text-3xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] mb-8 transition-opacity duration-300",
-                            isMinimizingTrump ? "opacity-0" : "opacity-100"
-                        )}>
+                <div className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none animate-in fade-in zoom-in duration-500 fade-out-0 zoom-out-50 slide-out-to-bottom-full delay-[2000ms] fill-mode-forwards">
+                    <div className="text-center flex flex-col items-center">
+                        <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] mb-8 animate-out fade-out-0 delay-[2000ms] fill-mode-forwards">
                             O Trunfo
                         </h2>
                         <div className="transform scale-[1.1] sm:scale-[1.4] shadow-[0_0_40px_rgba(255,215,0,0.6)] rounded-xl relative">
