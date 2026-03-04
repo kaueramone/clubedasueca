@@ -28,7 +28,7 @@ export function BannerDisplay({ position = 'dashboard_top' }: { position?: strin
 
     const banner = banners[currentIndex]
 
-    const handleBannerClick = () => {
+    const handleBannerClick = (banner: any) => {
         trackBannerClick(banner.id).catch(console.error)
         if (banner.link_url) {
             window.open(banner.link_url, '_blank')
@@ -36,36 +36,46 @@ export function BannerDisplay({ position = 'dashboard_top' }: { position?: strin
     }
 
     return (
-        <div
-            onClick={handleBannerClick}
-            className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-r from-primary/90 to-primary shadow-md cursor-pointer group transition-transform hover:scale-[1.01]"
-        >
-            {/* Display logic for responsive banner images */}
-            {banner.image_url && (
-                <div
-                    className={cn(
-                        "absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80",
-                        banner.mobile_image_url ? "hidden sm:block" : "block"
-                    )}
-                    style={{ backgroundImage: `url(${banner.image_url})` }}
-                />
-            )}
-            {banner.mobile_image_url && (
-                <div
-                    className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80 block sm:hidden"
-                    style={{ backgroundImage: `url(${banner.mobile_image_url})` }}
-                />
-            )}
+        <div className="relative w-full overflow-hidden rounded-2xl shadow-md group">
+            <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+                {banners.map((banner, idx) => (
+                    <div
+                        key={banner.id || idx}
+                        onClick={() => handleBannerClick(banner)}
+                        className="relative w-full flex-shrink-0 bg-gradient-to-r from-primary/90 to-primary cursor-pointer transition-transform hover:scale-[1.01]"
+                    >
+                        {/* Display logic for responsive banner images */}
+                        {banner.image_url && (
+                            <div
+                                className={cn(
+                                    "absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80",
+                                    banner.mobile_image_url ? "hidden sm:block" : "block"
+                                )}
+                                style={{ backgroundImage: `url(${banner.image_url})` }}
+                            />
+                        )}
+                        {banner.mobile_image_url && (
+                            <div
+                                className="absolute inset-0 bg-cover bg-center opacity-60 mix-blend-overlay transition-opacity group-hover:opacity-80 block sm:hidden"
+                                style={{ backgroundImage: `url(${banner.mobile_image_url})` }}
+                            />
+                        )}
 
-            <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-center min-h-[120px]">
-                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 shadow-sm drop-shadow-md">
-                    {banner.title}
-                </h3>
-                {banner.description && (
-                    <p className="text-primary-foreground/90 max-w-2xl drop-shadow-md">
-                        {banner.description}
-                    </p>
-                )}
+                        <div className="relative z-10 p-6 sm:p-8 flex flex-col justify-center min-h-[120px]">
+                            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 shadow-sm drop-shadow-md">
+                                {banner.title}
+                            </h3>
+                            {banner.description && (
+                                <p className="text-primary-foreground/90 max-w-2xl drop-shadow-md">
+                                    {banner.description}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                ))}
             </div>
 
             {/* Dots for multiple banners */}
