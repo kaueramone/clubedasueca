@@ -707,8 +707,15 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* In-Game Chat Slide-over Component */}
             <div className={cn(
-                "absolute top-0 right-0 h-full w-full sm:w-[320px] bg-black/95 sm:bg-black/80 backdrop-blur-xl border-l border-white/10 z-[100] transition-transform duration-300 ease-in-out flex flex-col shadow-2xl",
-                showChat ? "translate-x-0" : "translate-x-full"
+                "absolute z-[100] flex flex-col shadow-2xl transition-all duration-300 ease-in-out border-white/10 overflow-hidden",
+                // Mobile styles: floating window on the right under the scoreboard
+                "top-[88px] right-2 w-[280px] max-h-[350px] sm:max-h-none h-[50vh] bg-black/75 backdrop-blur-md rounded-2xl border",
+                // Desktop styles: full height right sidebar
+                "sm:top-0 sm:right-0 sm:w-[320px] sm:h-full sm:bg-black/80 sm:backdrop-blur-xl sm:rounded-none sm:border-y-0 sm:border-r-0 sm:border-l",
+                // Animation states
+                showChat
+                    ? "opacity-100 translate-x-0 pointer-events-auto"
+                    : "opacity-0 translate-x-8 sm:translate-x-full pointer-events-none"
             )}>
                 <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
                     <h3 className="text-white font-bold flex items-center gap-2">
