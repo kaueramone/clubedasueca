@@ -107,7 +107,9 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
                                     <div className="relative z-10 p-4 flex-1 space-y-3">
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <h3 className="font-bold text-lg text-foreground line-clamp-1">Mesa de {game.profiles?.username || "Anónimo"}</h3>
+                                                <h3 className={`font-bold text-lg line-clamp-1 ${(game.isDummy || game.status === 'playing') && game.host_id !== currentUser?.id ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
+                                                    Mesa de {game.profiles?.username || "Anónimo"}
+                                                </h3>
                                                 <p className="text-sm font-medium text-muted-foreground mt-1">Aposta: <span className="font-bold text-success">€{game.stake.toFixed(2)}</span></p>
                                             </div>
                                             {game.isDummy ? (

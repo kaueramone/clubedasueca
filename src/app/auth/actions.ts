@@ -9,6 +9,23 @@ import { applyWelcomeBonus } from '@/features/bonuses/actions'
 import { registerReferral } from '@/features/affiliates/actions'
 import { trackUserMetrics } from '@/features/crm/actions'
 
+const TURNSTILE_SECRET = '0x4AAAAAACsNPXDmhbBSYA3_Hv6dSgnaHaQ'
+
+async function verifyTurnstile(token: string | null): Promise<boolean> {
+    if (!token) return false
+    try {
+        const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ secret: TURNSTILE_SECRET, response: token }),
+        })
+        const data = await res.json()
+        return data.success === true
+    } catch {
+        return false
+    }
+}
+
 async function getBaseUrl(): Promise<string> {
     const headersList = await headers()
     const host = headersList.get('host')
@@ -19,6 +36,12 @@ async function getBaseUrl(): Promise<string> {
 
 export async function login(prevState: any, formData: FormData) {
     const supabase = await createClient()
+
+    const turnstileToken = formData.get('cf-turnstile-response') as string
+    const isHuman = await verifyTurnstile(turnstileToken)
+    if (!isHuman) {
+        return { error: 'Verificação de segurança falhou. Por favor tente novamente.' }
+    }
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string
@@ -38,6 +61,12 @@ export async function login(prevState: any, formData: FormData) {
 
 export async function signup(prevState: any, formData: FormData) {
     const supabase = await createClient()
+
+    const turnstileToken = formData.get('cf-turnstile-response') as string
+    const isHuman = await verifyTurnstile(turnstileToken)
+    if (!isHuman) {
+        return { error: 'Verificação de segurança falhou. Por favor tente novamente.' }
+    }
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string

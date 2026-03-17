@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Search, Send, Image as ImageIcon, UserPlus, Check, X, Menu, ArrowLeft, Loader2, MessageCircle } from 'lucide-react'
 import { searchUsers, sendFriendRequest, acceptFriendRequest, rejectFriendRequest, getDirectMessages, sendDirectMessage } from './actions'
 import Image from 'next/image'
+import { createClient } from '@/lib/supabase/client'
 
 export default function ChatUI({ currentUser, contacts: initialContacts, pendingRequests: initialRequests }: any) {
     const [contacts, setContacts] = useState(initialContacts)
@@ -26,9 +27,11 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages])
 
-    // Fetch messages periodically
+    // Fetch messages + Realtime subscription
     useEffect(() => {
         if (!activeContact) return
+
+        const supabase = createClient()
 
         const fetchMessages = async () => {
             const data = await getDirectMessages(activeContact.id)
@@ -38,9 +41,31 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
         setIsLoadingMessages(true)
         fetchMessages().then(() => setIsLoadingMessages(false))
 
-        const interval = setInterval(fetchMessages, 3000)
-        return () => clearInterval(interval)
-    }, [activeContact])
+        // Subscribe to new direct messages in realtime
+        const channel = supabase
+            .channel(`chat-${currentUser.id}-${activeContact.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'chat_messages',
+                    filter: `receiver_id=eq.${currentUser.id}`,
+                },
+                (payload) => {
+                    if (payload.new.sender_id === activeContact.id) {
+                        setMessages(prev => {
+                            const exists = prev.find(m => m.id === payload.new.id)
+                            if (exists) return prev
+                            return [...prev, payload.new]
+                        })
+                    }
+                }
+            )
+            .subscribe()
+
+        return () => { supabase.removeChannel(channel) }
+    }, [activeContact, currentUser.id])
 
     // Search effect
     useEffect(() => {

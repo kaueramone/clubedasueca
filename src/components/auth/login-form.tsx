@@ -1,11 +1,13 @@
 'use client'
 
 import { useFormState } from 'react-dom'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
 import { login } from '@/app/auth/actions'
 import { SubmitButton } from '@/components/submit-button'
+
+const TURNSTILE_SITE_KEY = '0x4AAAAAACsNPdO_nwmclG_7'
 
 const initialState = {
     error: null as string | null,
@@ -15,6 +17,32 @@ export function LoginForm() {
     // @ts-ignore - useFormState types can be tricky with server actions
     const [state, formAction] = useFormState(login, initialState)
     const [showPassword, setShowPassword] = useState(false)
+    const turnstileRef = useRef<HTMLDivElement>(null)
+    const widgetIdRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        const scriptId = 'cf-turnstile-script'
+        if (!document.getElementById(scriptId)) {
+            const script = document.createElement('script')
+            script.id = scriptId
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+            script.async = true
+            script.defer = true
+            document.head.appendChild(script)
+        }
+
+        const tryRender = () => {
+            if (typeof (window as any).turnstile !== 'undefined' && turnstileRef.current && !widgetIdRef.current) {
+                widgetIdRef.current = (window as any).turnstile.render(turnstileRef.current, {
+                    sitekey: TURNSTILE_SITE_KEY,
+                    theme: 'light',
+                })
+            } else if (typeof (window as any).turnstile === 'undefined') {
+                setTimeout(tryRender, 300)
+            }
+        }
+        setTimeout(tryRender, 300)
+    }, [])
 
     return (
         <form action={formAction} className="space-y-6">
@@ -84,6 +112,8 @@ export function LoginForm() {
                     </Link>
                 </div>
             </div>
+
+            <div ref={turnstileRef} className="flex justify-center" />
 
             <SubmitButton className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
                 Entrar

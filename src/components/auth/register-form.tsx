@@ -1,11 +1,13 @@
 'use client'
 
 import { useFormState } from 'react-dom'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Eye, EyeOff } from 'lucide-react'
+
+const TURNSTILE_SITE_KEY = '0x4AAAAAACsNPdO_nwmclG_7'
 
 const initialState = {
     error: null as string | null,
@@ -16,6 +18,32 @@ export function RegisterForm() {
     const [state, formAction] = useFormState(signup, initialState)
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const turnstileRef = useRef<HTMLDivElement>(null)
+    const widgetIdRef = useRef<string | null>(null)
+
+    useEffect(() => {
+        const scriptId = 'cf-turnstile-script'
+        if (!document.getElementById(scriptId)) {
+            const script = document.createElement('script')
+            script.id = scriptId
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
+            script.async = true
+            script.defer = true
+            document.head.appendChild(script)
+        }
+
+        const tryRender = () => {
+            if (typeof (window as any).turnstile !== 'undefined' && turnstileRef.current && !widgetIdRef.current) {
+                widgetIdRef.current = (window as any).turnstile.render(turnstileRef.current, {
+                    sitekey: TURNSTILE_SITE_KEY,
+                    theme: 'light',
+                })
+            } else if (typeof (window as any).turnstile === 'undefined') {
+                setTimeout(tryRender, 300)
+            }
+        }
+        setTimeout(tryRender, 300)
+    }, [])
 
     return (
         <form action={formAction} className="space-y-4">
@@ -117,6 +145,8 @@ export function RegisterForm() {
                     </div>
                 </div>
             )}
+
+            <div ref={turnstileRef} className="flex justify-center" />
 
             <SubmitButton className="flex w-full justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-[0.98] mt-2">
                 Criar Conta

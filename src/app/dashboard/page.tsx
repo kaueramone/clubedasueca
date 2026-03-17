@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { Wallet, Joystick, BookOpen } from "lucide-react";
+import { Joystick, BookOpen, History, Users } from "lucide-react";
 import { WalletOverview } from "@/components/dashboard/wallet-overview";
 import { BannerDisplay } from "@/components/dashboard/banner-display";
+import { GlobalChat } from "@/components/dashboard/global-chat";
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,6 @@ export default async function DashboardPage() {
         .single();
 
     if (!profile) {
-        // Self-healing: Create profile if missing
         const { data: newProfile, error: profileError } = await supabase
             .from("profiles")
             .insert({
@@ -31,7 +31,6 @@ export default async function DashboardPage() {
             })
             .select()
             .single();
-
         if (!profileError) profile = newProfile;
     }
 
@@ -42,91 +41,111 @@ export default async function DashboardPage() {
         .single();
 
     if (!wallet) {
-        // Self-healing: Create wallet if missing
         const { data: newWallet, error: walletError } = await supabase
             .from("wallets")
-            .insert({
-                user_id: user.id,
-                balance: 0.00,
-                currency: 'EUR'
-            })
+            .insert({ user_id: user.id, balance: 0.00, currency: 'EUR' })
             .select()
             .single();
-
         if (!walletError) wallet = newWallet;
     }
 
+    const firstName = profile?.username ? profile.username.split(" ")[0] : "Jogador";
+
+    const navCards = [
+        {
+            href: '/dashboard/play',
+            icon: <Joystick className="h-5 w-5" />,
+            label: 'Jogar',
+            sublabel: 'Encontrar mesa ou criar',
+            color: 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground',
+            badge: null,
+        },
+        {
+            href: '/dashboard/training',
+            icon: <Joystick className="h-5 w-5" />,
+            label: 'Treino',
+            sublabel: 'Praticar com bots',
+            color: 'bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground',
+            badge: 'Grátis',
+        },
+        {
+            href: '/dashboard/chat',
+            icon: <Users className="h-5 w-5" />,
+            label: 'Amigos',
+            sublabel: 'Chat e pedidos',
+            color: 'bg-violet-500/10 text-violet-600 group-hover:bg-violet-500 group-hover:text-white',
+            badge: null,
+        },
+        {
+            href: '/dashboard/history',
+            icon: <History className="h-5 w-5" />,
+            label: 'Histórico',
+            sublabel: 'Jogos e transações',
+            color: 'bg-muted text-muted-foreground group-hover:bg-foreground group-hover:text-background',
+            badge: null,
+        },
+        {
+            href: '/dashboard/tutorial',
+            icon: <BookOpen className="h-5 w-5" />,
+            label: 'Tutorial',
+            sublabel: 'Como jogar',
+            color: 'bg-emerald-500/10 text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white',
+            badge: null,
+        },
+    ];
+
     return (
-        <div className="space-y-6">
-            <div className="flex items-center">
-                <h1 className="text-2xl font-bold text-foreground">
-                    Olá, {profile?.username ? profile.username.split(" ")[0] : "Jogador"}!
-                </h1>
-            </div>
+        <div className="space-y-5">
+            {/* Greeting */}
+            <h1 className="text-xl font-bold text-foreground">
+                Olá, {firstName}! 👋
+            </h1>
 
-            {/* Top Row: Wallet & Promotional Banner */}
-            <div className="grid gap-4 md:grid-cols-2">
-                <WalletOverview initialBalance={wallet?.balance || 0} userId={user.id} />
-                <BannerDisplay position="dashboard_top" />
-            </div>
+            {/* Main Layout: Left column + Right column (chat) */}
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
 
-            {/* Main Actions */}
-            <div className="grid gap-4 md:grid-cols-2">
-                <Link href="/dashboard/play" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                            <Joystick className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-foreground">Jogar Sueca</h3>
-                            <p className="text-sm text-muted-foreground">Encontrar mesa ou criar</p>
+                {/* LEFT: wallet + banner + nav cards */}
+                <div className="space-y-5">
+                    {/* Wallet + Banner row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <WalletOverview initialBalance={wallet?.balance || 0} userId={user.id} />
+                        <BannerDisplay position="dashboard_top" />
+                    </div>
+
+                    {/* Quick Nav */}
+                    <div>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Acesso Rápido</h2>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                            {navCards.map((card) => (
+                                <Link
+                                    key={card.href}
+                                    href={card.href}
+                                    className="group relative flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm border border-border hover:shadow-md hover:border-accent/20 transition-all hover:scale-[1.02]"
+                                >
+                                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${card.color}`}>
+                                        {card.icon}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-foreground text-sm leading-tight">{card.label}</p>
+                                            {card.badge && (
+                                                <span className="text-[9px] font-black bg-accent text-accent-foreground px-1.5 py-0.5 rounded-full uppercase">{card.badge}</span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground leading-tight mt-0.5 truncate">{card.sublabel}</p>
+                                    </div>
+                                </Link>
+                            ))}
                         </div>
                     </div>
-                </Link>
+                </div>
 
-                <Link href="/dashboard/history" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                            <Wallet className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-foreground">Histórico</h3>
-                            <p className="text-sm text-muted-foreground">Jogos e transações</p>
-                        </div>
+                {/* RIGHT: Global Chat */}
+                <div className="lg:sticky lg:top-4">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Chat da Comunidade</h2>
+                    <div className="h-[420px] lg:h-[500px]">
+                        <GlobalChat currentUserId={user.id} />
                     </div>
-                </Link>
-
-                <Link href="/dashboard/training" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                            <Joystick className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-foreground">Treino (Bots)</h3>
-                            <p className="text-sm text-muted-foreground">Praticar sem apostar</p>
-                        </div>
-                    </div>
-                </Link>
-
-                <Link href="/dashboard/tutorial" className="group relative overflow-hidden rounded-2xl bg-card p-6 shadow-sm transition-all hover:shadow-md hover:scale-[1.01] border border-border">
-                    <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
-                            <BookOpen className="h-6 w-6" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-foreground">Como Jogar</h3>
-                            <p className="text-sm text-muted-foreground">Regras e Dicas</p>
-                        </div>
-                    </div>
-                </Link>
-            </div>
-
-            {/* Recent Activity (Placeholder) */}
-            {/* Recent Activity (Placeholder) */}
-            <div className="rounded-2xl bg-card p-6 shadow-sm border border-border">
-                <h3 className="font-bold text-foreground">Atividade Recente</h3>
-                <div className="mt-4 flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                    <p>Sem atividade recente.</p>
                 </div>
             </div>
         </div>
