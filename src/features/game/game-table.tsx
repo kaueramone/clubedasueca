@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Clock, User, PlusCircle, ArrowLeft, LogOut, RotateCcw, UserPlus, X, Check } from 'lucide-react'
+import { Clock, User, ArrowLeft, LogOut, RotateCcw, UserPlus, X, Check } from 'lucide-react'
 
 import { PlayerAvatar } from './components/player-avatar'
 import { ScoreBoard } from './components/score-board'
@@ -62,6 +62,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [showInviteModal, setShowInviteModal] = useState(false)
     const [inviteFriends, setInviteFriends] = useState<{ id: string, username: string, avatar_url: string | null }[]>([])
     const [inviteSent, setInviteSent] = useState<Record<string, boolean>>({})
+    const [inviteTeam, setInviteTeam] = useState<'A' | 'B' | null>(null)
+    const [shareCopied, setShareCopied] = useState(false)
 
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
@@ -75,18 +77,29 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     const supabase = createClient()
 
-    const openInviteModal = async () => {
+    const openSeatInvite = async (seatAbsPos: number) => {
+        const team: 'A' | 'B' = seatAbsPos % 2 === 0 ? 'A' : 'B'
+        setInviteTeam(team)
+        setInviteSent({})
         const friends = await getFriendsForInvite()
         setInviteFriends(friends)
-        setInviteSent({})
         setShowInviteModal(true)
     }
 
     const handleSendInvite = async (friendId: string) => {
         const gameId = gameState?.id
         if (!gameId) return
-        await sendTableInvite(gameId, friendId)
+        await sendTableInvite(gameId, friendId, inviteTeam || undefined)
         setInviteSent(prev => ({ ...prev, [friendId]: true }))
+    }
+
+    const handleShareLink = () => {
+        const url = `${window.location.origin}/dashboard/play/${game?.id}`
+        const text = `Vem jogar Sueca comigo no Clube da Sueca! 🃏 Entra na minha mesa: ${url}`
+        navigator.clipboard.writeText(text).then(() => {
+            setShareCopied(true)
+            setTimeout(() => setShareCopied(false), 2500)
+        })
     }
 
     // --- Sync real user profile into training game state ---
@@ -549,6 +562,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const players = gameState?.game_players || []
     const myPlayer = isTraining ? players[0] : players.find((p: any) => p.user_id === currentUser?.id)
     const myPos = myPlayer?.position ?? 0;
+    const isHost = !isTraining && game?.host_id === currentUser?.id && gameState.status === 'waiting'
 
     const { pLeft, pTop, pRight } = useMemo(() => {
         const getRelativePlayer = (offset: number) => {
@@ -756,7 +770,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             <div className="absolute top-[8%] sm:top-8 flex flex-col items-center z-10 w-full">
                 <div className="flex flex-col items-center mb-[-10px] z-20">
                     <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{pTop?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
-                    <PlayerAvatar player={pTop} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pTop)} />
+                    <PlayerAvatar player={pTop} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pTop)} onInvite={isHost && !pTop ? () => openSeatInvite((myPos + 2) % 4) : undefined} />
                 </div>
                 <div className="flex -space-x-[50px] sm:-space-x-[70px] h-20 items-start">
                     {getOpponentCards(pTop).map(i => (
@@ -768,7 +782,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* Left Player (Opponent) */}
             <div className="absolute left-6 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
                 <div className="flex flex-col items-center shrink-0">
-                    <PlayerAvatar player={pLeft} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pLeft)} />
+                    <PlayerAvatar player={pLeft} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pLeft)} onInvite={isHost && !pLeft ? () => openSeatInvite((myPos + 1) % 4) : undefined} />
                     <div className="flex flex-col items-center mt-1">
                         <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pLeft?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
@@ -788,7 +802,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     ))}
                 </div>
                 <div className="flex flex-col items-center shrink-0">
-                    <PlayerAvatar player={pRight} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pRight)} />
+                    <PlayerAvatar player={pRight} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pRight)} onInvite={isHost && !pRight ? () => openSeatInvite((myPos + 3) % 4) : undefined} />
                     <div className="flex flex-col items-center mt-1">
                         <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pRight?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
@@ -806,14 +820,16 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-center p-4">
                         <User className="w-8 h-8 text-white/50 mb-2" />
                         <h3 className="text-white font-bold text-sm sm:text-base">Aguardando Jogadores</h3>
-                        <p className="text-white/70 text-xs mt-1">
+                        <p className="text-white/70 text-xs mt-1 mb-3">
                             {gameState.game_players?.length || 1}/4 na mesa
                         </p>
-                        {game?.host_id === currentUser?.id && (
-                            <button onClick={openInviteModal} className="mt-4 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs font-bold hover:bg-accent/90 transition-colors shadow-lg flex items-center gap-2">
-                                <UserPlus className="w-4 h-4" /> Convidar Amigo
-                            </button>
-                        )}
+                        <button
+                            onClick={handleShareLink}
+                            className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors shadow flex items-center gap-1.5 border border-white/20"
+                        >
+                            {shareCopied ? <><Check className="w-3.5 h-3.5 text-green-300" /> Link copiado!</> : <>🔗 Partilhar Mesa</>}
+                        </button>
+                        {!shareCopied && <p className="text-white/40 text-[10px] mt-1.5">Partilha com amigos externos</p>}
                     </div>
                 )}
 
@@ -929,12 +945,19 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
                     <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-5">
-                        <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center justify-between mb-1">
                             <h3 className="font-bold text-foreground text-base">Convidar Amigo</h3>
                             <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
+                        {inviteTeam && (
+                            <p className="text-xs text-muted-foreground mb-4">
+                                {inviteTeam === 'A'
+                                    ? '🟢 Equipa A — vai jogar no teu time'
+                                    : '🔴 Equipa B — vai jogar contra ti'}
+                            </p>
+                        )}
 
                         {inviteFriends.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-6">Não tens amigos online para convidar.</p>

@@ -307,7 +307,7 @@ export async function getFriendsForInvite() {
     }).filter((f: any) => f.id)
 }
 
-export async function sendTableInvite(gameId: string, toUserId: string) {
+export async function sendTableInvite(gameId: string, toUserId: string, team?: 'A' | 'B') {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
@@ -329,6 +329,7 @@ export async function sendTableInvite(gameId: string, toUserId: string) {
                 game_id: gameId,
                 from_user_id: user.id,
                 to_user_id: toUserId,
+                team: team || null,
                 status: 'pending',
                 expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
             },
@@ -346,11 +347,30 @@ export async function respondTableInvite(inviteId: string, accept: boolean) {
 
     const { data: invite } = await supabase
         .from('table_invites')
-        .select('game_id, to_user_id')
+        .select('game_id, to_user_id, games(stake)')
         .eq('id', inviteId)
         .single()
 
     if (!invite || invite.to_user_id !== user.id) return { error: 'Convite inválido' }
+
+    if (accept) {
+        const stake = (invite.games as any)?.stake || 0
+        if (stake > 0) {
+            const { data: wallet } = await supabase
+                .from('wallets')
+                .select('balance')
+                .eq('user_id', user.id)
+                .single()
+
+            if (!wallet || wallet.balance < stake) {
+                return {
+                    error: 'Saldo insuficiente',
+                    required: stake,
+                    balance: wallet?.balance || 0,
+                }
+            }
+        }
+    }
 
     await supabase
         .from('table_invites')
@@ -358,7 +378,6 @@ export async function respondTableInvite(inviteId: string, accept: boolean) {
         .eq('id', inviteId)
 
     if (accept) {
-        // Redirect handled client-side
         return { success: true, gameId: invite.game_id }
     }
     return { success: true }
