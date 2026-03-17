@@ -306,10 +306,10 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                                     return (
                                         <div key={m.id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                             <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm shadow-sm ${isMe
-                                                ? 'bg-primary text-white rounded-br-none'
+                                                ? 'bg-primary text-primary-foreground rounded-br-none'
                                                 : activeContact.isSupport
-                                                    ? 'bg-accent/10 border border-accent/20 text-gray-900 dark:text-white rounded-bl-none'
-                                                    : 'bg-white dark:bg-secondary border border-border text-gray-900 dark:text-white rounded-bl-none'
+                                                    ? 'bg-accent/10 border border-accent/20 text-foreground rounded-bl-none'
+                                                    : 'bg-muted border border-border text-foreground rounded-bl-none'
                                                 }`}>
                                                 {m.content}
                                             </div>
@@ -335,7 +335,7 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                                     placeholder={activeContact.isSupport ? "Escreva a sua dúvida para o suporte..." : "Escreva a sua mensagem..."}
                                     value={newMessage}
                                     onChange={e => setNewMessage(e.target.value)}
-                                    className="flex-1 bg-gray-100 dark:bg-secondary border border-transparent focus:border-accent rounded-xl px-4 py-3 outline-none text-base font-semibold text-gray-900 dark:text-gray-100 placeholder:text-gray-600 dark:placeholder:text-gray-400 transition-colors"
+                                    className="flex-1 bg-muted border border-transparent focus:border-accent rounded-xl px-4 py-3 outline-none text-base font-semibold text-foreground placeholder:text-muted-foreground transition-colors"
                                 />
 
                                 <button type="submit" disabled={isSending || !newMessage.trim()} className="p-3 bg-accent hover:bg-accent/90 text-white rounded-xl disabled:opacity-50 transition-colors shrink-0 shadow-sm">

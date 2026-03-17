@@ -290,14 +290,14 @@ export async function getFriendsForInvite() {
 
     const { data: friendships } = await supabase
         .from('friendships')
-        .select('user_id, friend_id')
-        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+        .select('user1_id, user2_id')
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('status', 'accepted')
 
     if (!friendships || friendships.length === 0) return []
 
     const friendIds = friendships.map((f: any) =>
-        f.user_id === user.id ? f.friend_id : f.user_id
+        f.user1_id === user.id ? f.user2_id : f.user1_id
     )
 
     const { data: profiles } = await supabase

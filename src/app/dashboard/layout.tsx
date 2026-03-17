@@ -58,7 +58,7 @@ export default async function DashboardLayout({
     return (
         <div className="flex h-screen bg-ios-gray6">
             <UserPresence userId={user.id} email={user.email || ''} />
-            <Sidebar userEmail={user.email} pendingCount={totalNotifications} />
+            <Sidebar userEmail={user.email} pendingCount={totalNotifications} userId={user.id} initialChatUnread={unreadMessagesCount || 0} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
                 <header className="flex h-16 items-center justify-between border-b border-[#123F33] bg-[#0B1F1A] px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
@@ -103,7 +103,7 @@ export default async function DashboardLayout({
                     {children}
                 </main>
             </div>
-            <BottomNav pendingCount={totalNotifications} />
+            <BottomNav pendingCount={totalNotifications} userId={user.id} initialChatUnread={unreadMessagesCount || 0} />
             <InviteNotification userId={user.id} />
         </div>
     );
