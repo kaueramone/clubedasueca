@@ -34,7 +34,7 @@ export async function getUsers(page = 1, search = '') {
     const from = (page - 1) * 20
     const to = from + 19
 
-    let query = supabase.from('profiles').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to)
+    let query = supabase.from('profiles').select('*, wallets(balance)', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to)
 
     if (search) {
         query = query.ilike('username', `%${search}%`)

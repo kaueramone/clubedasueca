@@ -76,6 +76,7 @@ export default function AdminUsers() {
                             <thead className="bg-muted/50 text-foreground font-medium border-b border-border">
                                 <tr>
                                     <th className="px-6 py-4">Utilizador</th>
+                                    <th className="px-6 py-4">Saldo</th>
                                     <th className="px-6 py-4">Role</th>
                                     <th className="px-6 py-4">Status</th>
                                     <th className="px-6 py-4 text-right">Ações</th>
@@ -89,6 +90,9 @@ export default function AdminUsers() {
                                                 {user.avatar_url ? <img src={user.avatar_url} className="h-full w-full object-cover" /> : <User className="h-4 w-4 text-primary" />}
                                             </div>
                                             <span className="font-semibold text-foreground">{user.username || 'Sem Nome'}</span>
+                                        </td>
+                                        <td className="px-6 py-4 font-semibold text-foreground">
+                                            €{((user.wallets?.[0]?.balance) ?? 0).toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4">
                                             <Badge variant={user.role === 'admin' ? 'secondary' : 'outline'}>
