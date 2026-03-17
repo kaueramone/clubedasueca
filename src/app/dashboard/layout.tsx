@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { UserPresence } from "@/components/dashboard/user-presence";
 import { HeaderBalance } from "@/components/dashboard/header-balance";
+import { InviteNotification } from "@/components/dashboard/invite-notification";
 
 export const dynamic = 'force-dynamic';
 
@@ -103,6 +104,7 @@ export default async function DashboardLayout({
                 </main>
             </div>
             <BottomNav pendingCount={totalNotifications} />
+            <InviteNotification userId={user.id} />
         </div>
     );
 }

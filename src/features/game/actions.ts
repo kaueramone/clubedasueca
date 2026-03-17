@@ -277,3 +277,89 @@ export async function playTimeoutCard(gameId: string) {
 
     return { error: 'Não podes forçar timeout noutros, apenas podias jogar a tua e passaste do tempo.' }
 }
+
+
+// ============================================
+// TABLE INVITES
+// ============================================
+
+export async function getFriendsForInvite() {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data } = await supabase
+        .from('friendships')
+        .select('friend_id, user_id, profiles!friendships_friend_id_fkey(id, username, avatar_url), profiles2:profiles!friendships_user_id_fkey(id, username, avatar_url)')
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
+        .eq('status', 'accepted')
+
+    if (!data) return []
+
+    return data.map((f: any) => {
+        const isSender = f.user_id === user.id
+        const friend = isSender ? f.profiles : f.profiles2
+        return {
+            id: friend?.id,
+            username: friend?.username || 'Jogador',
+            avatar_url: friend?.avatar_url || null,
+        }
+    }).filter((f: any) => f.id)
+}
+
+export async function sendTableInvite(gameId: string, toUserId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    // Check game is still open
+    const { data: game } = await supabase
+        .from('games')
+        .select('status, host_id')
+        .eq('id', gameId)
+        .single()
+
+    if (!game || game.status !== 'waiting') return { error: 'Mesa já não está disponível' }
+    if (game.host_id !== user.id) return { error: 'Apenas o anfitrião pode convidar' }
+
+    const { error } = await supabase
+        .from('table_invites')
+        .upsert(
+            {
+                game_id: gameId,
+                from_user_id: user.id,
+                to_user_id: toUserId,
+                status: 'pending',
+                expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+            },
+            { onConflict: 'game_id,to_user_id' }
+        )
+
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function respondTableInvite(inviteId: string, accept: boolean) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    const { data: invite } = await supabase
+        .from('table_invites')
+        .select('game_id, to_user_id')
+        .eq('id', inviteId)
+        .single()
+
+    if (!invite || invite.to_user_id !== user.id) return { error: 'Convite inválido' }
+
+    await supabase
+        .from('table_invites')
+        .update({ status: accept ? 'accepted' : 'declined' })
+        .eq('id', inviteId)
+
+    if (accept) {
+        // Redirect handled client-side
+        return { success: true, gameId: invite.game_id }
+    }
+    return { success: true }
+}

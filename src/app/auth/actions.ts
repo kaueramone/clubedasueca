@@ -95,9 +95,36 @@ export async function signup(prevState: any, formData: FormData) {
         return { error: error.message }
     }
 
-    // Apply welcome bonus (non-blocking)
     const { data: { user: newUser } } = await supabase.auth.getUser()
     if (newUser) {
+        // ⚠️  FASE DE TESTES — remover quando os gateways de pagamento estiverem configurados
+        // Crédito de boas-vindas: 10€ direto na carteira para cada conta nova
+        ;(async () => {
+            try {
+                const { data: wallet } = await supabase
+                    .from('wallets')
+                    .upsert(
+                        { user_id: newUser.id, balance: 10.00, currency: 'EUR' },
+                        { onConflict: 'user_id', ignoreDuplicates: false }
+                    )
+                    .select('id')
+                    .single()
+
+                if (wallet) {
+                    await supabase.from('transactions').insert({
+                        wallet_id: wallet.id,
+                        amount: 10.00,
+                        type: 'credit',
+                        description: '🎁 Crédito de Boas-Vindas — Fase de Testes',
+                    })
+                }
+            } catch (err) {
+                console.error('[TESTING_CREDIT]', err)
+            }
+        })()
+        // ⚠️  FIM DA REGRA DE TESTES
+
+        // Apply welcome bonus (non-blocking)
         applyWelcomeBonus(newUser.id).catch(err =>
             console.error('[WELCOME_BONUS]', err)
         )
