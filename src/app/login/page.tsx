@@ -2,10 +2,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { LoginForm } from "@/components/auth/login-form";
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ kicked?: string }> }) {
+    const { kicked } = await searchParams
     return (
         <div className="flex min-h-screen items-center justify-center bg-ios-gray6 p-4">
             <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
+                {kicked && (
+                    <div className="mb-6 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 text-center">
+                        <strong>Sessão encerrada.</strong><br />A tua conta foi acedida noutro dispositivo.
+                    </div>
+                )}
                 <div className="mb-8 text-center flex flex-col items-center">
                     <Link href="/">
                         <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca Logo" width={220} height={60} className="mb-6 hover:opacity-90 transition-opacity" />

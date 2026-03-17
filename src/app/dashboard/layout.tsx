@@ -9,6 +9,7 @@ import Image from "next/image";
 import { UserPresence } from "@/components/dashboard/user-presence";
 import { HeaderBalance } from "@/components/dashboard/header-balance";
 import { InviteNotification } from "@/components/dashboard/invite-notification";
+import { SessionGuard } from "@/components/dashboard/session-guard";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,7 @@ export default async function DashboardLayout({
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('avatar_url, username')
+        .select('avatar_url, username, session_id')
         .eq('id', user.id)
         .single();
 
@@ -105,6 +106,7 @@ export default async function DashboardLayout({
             </div>
             <BottomNav pendingCount={totalNotifications} userId={user.id} initialChatUnread={unreadMessagesCount || 0} />
             <InviteNotification userId={user.id} />
+            <SessionGuard userId={user.id} sessionId={profile?.session_id || ''} />
         </div>
     );
 }

@@ -46,13 +46,20 @@ export async function login(prevState: any, formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
     })
 
     if (error) {
         return { error: error.message }
+    }
+
+    // Rotate session_id — any other open session will detect the change and sign out
+    if (data.user) {
+        await supabase.from('profiles')
+            .update({ session_id: crypto.randomUUID() })
+            .eq('id', data.user.id)
     }
 
     revalidatePath('/', 'layout')
