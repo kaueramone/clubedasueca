@@ -38,7 +38,7 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
         const gamesChannel = supabase.channel('public:games')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, (payload) => {
                 if (payload.eventType === 'INSERT' && payload.new.status === 'waiting') {
-                    supabase.from('profiles').select('username, avatar_url').eq('user_id', payload.new.host_id).single().then(({ data }) => {
+                    supabase.from('profiles').select('username, avatar_url').eq('id', payload.new.host_id).single().then(({ data }) => {
                         setGames(prev => {
                             const exists = prev.find(g => g.id === payload.new.id)
                             if (exists) return prev
@@ -46,7 +46,12 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
                         })
                     })
                 } else if (payload.eventType === 'UPDATE') {
-                    setGames(prev => prev.map(g => g.id === payload.new.id ? { ...g, ...payload.new } : g).filter(g => g.status === 'waiting' || g.isDummy))
+                    setGames(prev => prev.map(g => {
+                        if (g.id !== payload.new.id) return g
+                        const updated = { ...g, ...payload.new }
+                        if (updated.status === 'playing') updated.isDummy = true
+                        return updated
+                    }).filter(g => g.status === 'waiting' || g.isDummy || g.status === 'playing'))
                 } else if (payload.eventType === 'DELETE') {
                     setGames(prev => prev.filter(g => g.id !== payload.old.id))
                 }

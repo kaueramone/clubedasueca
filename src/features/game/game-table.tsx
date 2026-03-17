@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { playCard, cancelGame, leaveGame, playTimeoutCard } from './actions'
+import { playCard, cancelGame, leaveGame, playTimeoutCard, getFriendsForInvite, sendTableInvite } from './actions'
 import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Clock, User, PlusCircle, ArrowLeft, LogOut, RotateCcw } from 'lucide-react'
+import { Clock, User, PlusCircle, ArrowLeft, LogOut, RotateCcw, UserPlus, X, Check } from 'lucide-react'
 
 import { PlayerAvatar } from './components/player-avatar'
 import { ScoreBoard } from './components/score-board'
@@ -58,6 +58,11 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [newMessage, setNewMessage] = useState('')
     const [unreadCount, setUnreadCount] = useState(0)
 
+    // Invite Modal State
+    const [showInviteModal, setShowInviteModal] = useState(false)
+    const [inviteFriends, setInviteFriends] = useState<{ id: string, username: string, avatar_url: string | null }[]>([])
+    const [inviteSent, setInviteSent] = useState<Record<string, boolean>>({})
+
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
     const [isFadingOutTrump, setIsFadingOutTrump] = useState(false)
@@ -69,6 +74,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const audioCollectRef = useRef<HTMLAudioElement | null>(null)
 
     const supabase = createClient()
+
+    const openInviteModal = async () => {
+        const friends = await getFriendsForInvite()
+        setInviteFriends(friends)
+        setInviteSent({})
+        setShowInviteModal(true)
+    }
+
+    const handleSendInvite = async (friendId: string) => {
+        const gameId = gameState?.id
+        if (!gameId) return
+        await sendTableInvite(gameId, friendId)
+        setInviteSent(prev => ({ ...prev, [friendId]: true }))
+    }
 
     // --- Sync real user profile into training game state ---
     useEffect(() => {
@@ -790,12 +809,11 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <p className="text-white/70 text-xs mt-1">
                             {gameState.game_players?.length || 1}/4 na mesa
                         </p>
-                        <button onClick={() => {
-                            navigator.clipboard.writeText(window.location.href);
-                            alert('Link da mesa copiado!');
-                        }} className="mt-4 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs font-bold hover:bg-accent/90 transition-colors shadow-lg flex items-center gap-2">
-                            <PlusCircle className="w-4 h-4" /> Convidar
-                        </button>
+                        {game?.host_id === currentUser?.id && (
+                            <button onClick={openInviteModal} className="mt-4 bg-accent text-accent-foreground px-4 py-2 rounded-full text-xs font-bold hover:bg-accent/90 transition-colors shadow-lg flex items-center gap-2">
+                                <UserPlus className="w-4 h-4" /> Convidar Amigo
+                            </button>
+                        )}
                     </div>
                 )}
 
@@ -904,6 +922,49 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     }}
                     onRegister={() => router.push('/register')}
                 />
+            )}
+
+            {/* Invite Friend Modal */}
+            {showInviteModal && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
+                    <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-5">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-foreground text-base">Convidar Amigo</h3>
+                            <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {inviteFriends.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-6">Não tens amigos online para convidar.</p>
+                        ) : (
+                            <ul className="space-y-2 max-h-64 overflow-y-auto">
+                                {inviteFriends.map(friend => (
+                                    <li key={friend.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted transition-colors">
+                                        <div className="w-9 h-9 rounded-full overflow-hidden bg-muted border border-border shrink-0">
+                                            {friend.avatar_url ? (
+                                                <img src={friend.avatar_url} alt={friend.username} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-xs font-bold">
+                                                    {friend.username.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="flex-1 text-sm font-medium text-foreground truncate">{friend.username}</span>
+                                        <button
+                                            onClick={() => handleSendInvite(friend.id)}
+                                            disabled={!!inviteSent[friend.id]}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${inviteSent[friend.id] ? 'bg-success/20 text-success cursor-default' : 'bg-accent text-accent-foreground hover:bg-accent/90'}`}
+                                        >
+                                            {inviteSent[friend.id] ? <><Check className="w-3.5 h-3.5" /> Enviado</> : <><UserPlus className="w-3.5 h-3.5" /> Convidar</>}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
             )}
         </div>
     )

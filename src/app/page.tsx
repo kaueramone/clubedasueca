@@ -27,8 +27,7 @@ export default async function Home() {
                 <section className="relative overflow-hidden py-24 sm:py-32 lg:pb-40">
                     <div className="absolute inset-0 z-0 overflow-hidden">
                         <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="hidden sm:block object-cover opacity-30" priority />
-                        {/* Mobile Background: Rotated 90 degrees vertical */}
-                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="sm:hidden object-cover opacity-30 transform rotate-90 scale-150" priority />
+                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="sm:hidden object-cover opacity-30" priority />
 
                         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
                     </div>
