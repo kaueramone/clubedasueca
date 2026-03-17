@@ -115,6 +115,21 @@ export function isValidMove(card: string, hand: string[], leadSuit: Suit | null)
     return true;
 }
 
+export function sortHand(hand: string[]): string[] {
+    const SUIT_ORDER: Record<Suit, number> = { 'hearts': 0, 'diamonds': 1, 'clubs': 2, 'spades': 3 };
+    const RANK_ORDER: Record<Rank, number> = { '2': 0, '3': 1, '4': 2, '5': 3, '6': 4, 'Q': 5, 'J': 6, 'K': 7, '7': 8, 'A': 9 };
+
+    return [...hand].sort((a, b) => {
+        const suitA = SUIT_ORDER[getCardSuit(a)];
+        const suitB = SUIT_ORDER[getCardSuit(b)];
+        if (suitA !== suitB) return suitA - suitB;
+
+        const rankA = RANK_ORDER[a.split('-')[1] as Rank] ?? 0;
+        const rankB = RANK_ORDER[b.split('-')[1] as Rank] ?? 0;
+        return rankA - rankB;
+    });
+}
+
 export function getCardAssetPath(cardId: string): string {
     if (!cardId) return '/cards/card_back.png';
     const [suit, rank] = cardId.split('-');

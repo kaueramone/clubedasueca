@@ -2,11 +2,20 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 
 import { createClient } from '@/lib/supabase/server'
 import { applyWelcomeBonus } from '@/features/bonuses/actions'
 import { registerReferral } from '@/features/affiliates/actions'
 import { trackUserMetrics } from '@/features/crm/actions'
+
+async function getBaseUrl(): Promise<string> {
+    const headersList = await headers()
+    const host = headersList.get('host')
+    const proto = headersList.get('x-forwarded-proto') || 'https'
+    if (host) return `${proto}://${host}`
+    return process.env.NEXT_PUBLIC_BASE_URL || 'https://clubedasueca.pt'
+}
 
 export async function login(prevState: any, formData: FormData) {
     const supabase = await createClient()
@@ -91,8 +100,9 @@ export async function forgotPassword(formData: FormData) {
     const supabase = await createClient()
     const email = formData.get('email') as string
 
+    const baseUrl = await getBaseUrl()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/callback?next=/update-password`,
+        redirectTo: `${baseUrl}/auth/callback?next=/update-password`,
     })
 
     if (error) {

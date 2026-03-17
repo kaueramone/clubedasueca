@@ -1,18 +1,19 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { playCard, cancelGame, leaveGame, playTimeoutCard } from './actions'
 import { cn } from '@/lib/utils'
-import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue } from './utils'
+import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { Trophy, Home, RotateCcw, Clock, User, PlusCircle, ArrowLeft, LogOut, MessageCircle, X, Send } from 'lucide-react'
+import { Clock, User, PlusCircle, ArrowLeft, LogOut, RotateCcw } from 'lucide-react'
 
-// Portuguese Colors Constants
-const PT_RED = '#CE1126'
-const PT_GREEN = '#006600'
-const PT_YELLOW = '#FFD700' // Gold-ish
+import { PlayerAvatar } from './components/player-avatar'
+import { ScoreBoard } from './components/score-board'
+import { GameChat } from './components/game-chat'
+import { GameResultOverlay } from './components/game-result-overlay'
+import { TrumpAnimation } from './components/trump-animation'
 
 export function GameTable({ game, currentUser, isTraining = false, isDemoGuest = false }: { game?: any, currentUser?: any, isTraining?: boolean, isDemoGuest?: boolean }) {
     const router = useRouter()
@@ -39,7 +40,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [scores, setScores] = useState({ A: 0, B: 0 })
     const [selectedCard, setSelectedCard] = useState<string | null>(null)
 
-    // Detailed Round Recap State
     const [roundRecap, setRoundRecap] = useState<{
         winner: string,
         points: number,
@@ -57,7 +57,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [showChat, setShowChat] = useState(false)
     const [newMessage, setNewMessage] = useState('')
     const [unreadCount, setUnreadCount] = useState(0)
-    const chatEndRef = useRef<HTMLDivElement>(null)
 
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
@@ -81,7 +80,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             try {
                 setGameState(JSON.parse(savedState));
                 setScores(JSON.parse(savedScores));
-                // Only play shuffle if we are starting fresh, not loading from save
             } catch (e) {
                 console.error("Failed to parse saved game state:", e);
                 startTrainingGame();
@@ -105,24 +103,19 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         audioCollectRef.current = new Audio('/audio/chips-stack-1.ogg')
     }, [])
 
-    function playSound(type: 'place' | 'shuffle' | 'collect') {
+    const playSound = useCallback((type: 'place' | 'shuffle' | 'collect') => {
         try {
-            if (type === 'place' && audioPlaceRef.current) {
-                audioPlaceRef.current.currentTime = 0
-                audioPlaceRef.current.play().catch(() => { })
-            } else if (type === 'shuffle' && audioShuffleRef.current) {
-                audioShuffleRef.current.currentTime = 0
-                audioShuffleRef.current.play().catch(() => { })
-            } else if (type === 'collect' && audioCollectRef.current) {
-                audioCollectRef.current.currentTime = 0
-                audioCollectRef.current.play().catch(() => { })
+            const ref = type === 'place' ? audioPlaceRef : type === 'shuffle' ? audioShuffleRef : audioCollectRef
+            if (ref.current) {
+                ref.current.currentTime = 0
+                ref.current.play().catch(() => { })
             }
         } catch (e) {
             console.error(e)
         }
-    }
+    }, [])
 
-    const startTrainingGame = () => {
+    const startTrainingGame = useCallback(() => {
         playSound('shuffle')
         const deck = shuffleDeck(generateDeck())
         const trump = deck[deck.length - 1]
@@ -150,13 +143,11 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         setSelectedCard(null)
         hasShownTrumpRef.current = false
         setShowTrumpAnimation(false)
-    }
+    }, [playSound])
 
     // --- Trump Card Intro Animation Logic ---
     useEffect(() => {
-        // Only show animation freshly if we are at the very beginning of the game to avoid spamming it on refresh
         if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrumpRef.current) {
-            // Check if we just loaded from localStorage where a trick was partially played
             const isFreshStart = gameState.game_players.every((p: any) => p.hand.length === 10);
 
             if (isFreshStart) {
@@ -178,7 +169,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     clearTimeout(removeTimer)
                 }
             } else {
-                // If it's a restored mid-game state, don't show the animation
                 hasShownTrumpRef.current = true
             }
         }
@@ -197,7 +187,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         let interval: NodeJS.Timeout
 
         if (myTurn) {
-            setTurnTimeLeft(15) // Reset on turn start
+            setTurnTimeLeft(15)
             interval = setInterval(() => {
                 setTurnTimeLeft(prev => {
                     if (prev <= 1) {
@@ -218,7 +208,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return () => clearInterval(interval)
     }, [gameState.current_turn, gameResult, isTrickProcessing, roundRecap, gameState.status])
 
-    const autoPlayOnline = async () => {
+    const autoPlayOnline = useCallback(async () => {
         if (!game || isTraining) return
         setLoading(true)
         const res = await playTimeoutCard(game.id)
@@ -226,9 +216,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             console.error('[AUTO_PLAY_ERROR]', res.error)
         }
         setLoading(false)
-    }
+    }, [game, isTraining])
 
-    const autoPlayHuman = () => {
+    const autoPlayHuman = useCallback(() => {
         if (!isTraining) return
 
         const myHand = gameState.game_players[0].hand
@@ -245,7 +235,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 handleTrainingMove('human', cardToPlay)
             }, 300)
         }
-    }
+    }, [isTraining, gameState])
 
     // --- Round Recap Auto-Advance Logic ---
     useEffect(() => {
@@ -278,7 +268,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         }
     }, [gameState, isTraining, isTrickProcessing, gameResult, roundRecap])
 
-    const makeBotMove = (bot: any) => {
+    const makeBotMove = useCallback((bot: any) => {
         const hand = bot.hand
         const leadCard = gameState.current_trick_cards[0]?.card
         const leadSuit = leadCard ? getCardSuit(leadCard) : null
@@ -287,7 +277,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         const cardToPlay = validCards.length > 0 ? validCards[Math.floor(Math.random() * validCards.length)] : hand[0]
 
         handleTrainingMove(bot.user_id, cardToPlay)
-    }
+    }, [gameState])
 
     // --- Bot Chat Simulator Logic ---
     useEffect(() => {
@@ -301,9 +291,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
         const botNames = ["Manel (Bot)", "Zé (Bot)", "Quim (Bot)"]
 
-        // Random chance every 15-30 seconds to say something
         const interval = setInterval(() => {
-            if (Math.random() > 0.7) { // 30% chance to speak on every interval
+            if (Math.random() > 0.7) {
                 const randomBot = botNames[Math.floor(Math.random() * botNames.length)]
                 const randomPhrase = botPhrases[Math.floor(Math.random() * botPhrases.length)]
 
@@ -324,12 +313,11 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     useEffect(() => {
         if (showChat) {
-            chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
             setUnreadCount(0)
         }
-    }, [messages, showChat])
+    }, [showChat])
 
-    const handleTrainingMove = (playerId: string, card: string) => {
+    const handleTrainingMove = useCallback((playerId: string, card: string) => {
         if (isTrickProcessing || roundRecap) return
 
         playSound('place')
@@ -358,9 +346,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 current_turn: (prev.current_turn + 1) % 4
             }
         })
-    }
+    }, [isTrickProcessing, roundRecap, playSound])
 
-    const processTrickEnd = (prevState: any, handAfterMove: string[], fullTrick: any[], playerIndex: number) => {
+    const processTrickEnd = useCallback((prevState: any, handAfterMove: string[], fullTrick: any[], playerIndex: number) => {
         setIsTrickProcessing(true)
 
         const trumpSuit = getCardSuit(prevState.trump_card)
@@ -368,7 +356,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         const winnerPlayer = prevState.game_players.find((p: any) => p.user_id === winnerId) || prevState.game_players[0]
         const points = fullTrick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
 
-        // Generate Explanation
         let explanation = "Carta mais alta vence."
         const winningCard = fullTrick.find((c: any) => c.player_id === winnerId)?.card
         if (winningCard && getCardSuit(winningCard) === trumpSuit) {
@@ -392,9 +379,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             })
 
         }, 1200)
-    }
+    }, [playSound])
 
-    const dismissRecap = () => {
+    const dismissRecap = useCallback(() => {
         if (!roundRecap) return
 
         setIsTrickProcessing(false)
@@ -438,7 +425,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 rounds: newRounds
             }
         })
-    }
+    }, [roundRecap, scores])
 
     // Realtime Subscription & Chat Channel
     const [realtimeChannel, setRealtimeChannel] = useState<any>(null)
@@ -463,7 +450,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return () => { supabase.removeChannel(channel) }
     }, [game?.id, supabase, isTraining, showChat])
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = useCallback((e: React.FormEvent) => {
         e.preventDefault()
         if (!newMessage.trim()) return
 
@@ -476,7 +463,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         if (isTraining) {
             setMessages(prev => [...prev, msg])
         } else if (realtimeChannel) {
-            // Optimistic update
             setMessages(prev => [...prev, msg])
             realtimeChannel.send({
                 type: 'broadcast',
@@ -486,24 +472,24 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         }
 
         setNewMessage('')
-    }
+    }, [newMessage, currentUser, isTraining, realtimeChannel])
 
     // --- Relative Player Positions ---
     const players = gameState?.game_players || []
     const myPlayer = isTraining ? players[0] : players.find((p: any) => p.user_id === currentUser?.id)
-
-    // Safety Fallback (se por alguma razão 'access denied' não triggerar e a vista carregar)
     const myPos = myPlayer?.position ?? 0;
 
-    // offset = 0 (Me), offset = 1 (Left), offset = 2 (Top/Partner), offset = 3 (Right)
-    const getRelativePlayer = (offset: number) => {
-        const targetPos = (myPos + offset) % 4;
-        return players.find((p: any) => p.position === targetPos);
-    }
-
-    const pLeft = getRelativePlayer(1);
-    const pTop = getRelativePlayer(2);
-    const pRight = getRelativePlayer(3);
+    const { pLeft, pTop, pRight } = useMemo(() => {
+        const getRelativePlayer = (offset: number) => {
+            const targetPos = (myPos + offset) % 4;
+            return players.find((p: any) => p.position === targetPos);
+        }
+        return {
+            pLeft: getRelativePlayer(1),
+            pTop: getRelativePlayer(2),
+            pRight: getRelativePlayer(3),
+        }
+    }, [players, myPos])
 
     if (!myPlayer && gameState.status === 'playing') return <div>Acesso Negado ou não é Jogador desta mesa</div>
 
@@ -547,10 +533,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         }
     }
 
-    // --- New Color Logic for Avatars in Portuguese Theme ---
     const getAvatarBorderColor = (p: any) => {
-        if (!p) return 'border-transparent' // Defensive check
-        // Team A = Green (Portugal Green), Team B = Red (Portugal Red)
+        if (!p) return 'border-transparent'
         if (p.team === 'A') return 'border-[#006600]'
         return 'border-[#CE1126]'
     }
@@ -587,7 +571,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             )}>
                 <Image
                     src="/cards/card_back.png"
-                    alt="Back"
+                    alt="Carta virada"
                     fill
                     className="object-cover rounded-md"
                 />
@@ -595,30 +579,19 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         )
     }
 
-    // Helper for compact Trump display
-    const getSuitIcon = (suit: string) => {
-        if (!suit) return null;
-        switch (suit) {
-            case 'H': return <span className="text-red-500 text-xl leading-none">♥</span>
-            case 'D': return <span className="text-red-500 text-xl leading-none">♦</span>
-            case 'C': return <span className="text-gray-900 text-xl leading-none">♣</span>
-            case 'S': return <span className="text-gray-900 text-xl leading-none">♠</span>
-            default: return null
-        }
-    }
-
-    // Helper to generate precise number of cards for opponents
     const getOpponentCards = (player: any) => {
         const count = player?.hand?.length || 0;
         return Array(count).fill(0).map((_, i) => i);
     }
 
+    const currentUsername = currentUser?.profiles?.username || 'Você'
+
     return (
-        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-2 sm:p-4 select-none">
+        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 select-none">
             {/* Background Images */}
             <div className="absolute inset-0 z-0">
-                <Image src="/images/mesa-horizontal.png" alt="Table" fill className="object-cover hidden md:block" priority />
-                <Image src="/images/mesa-vert.png" alt="Table" fill className="object-cover md:hidden" priority />
+                <Image src="/images/mesa-horizontal.png" alt="Mesa de jogo" fill className="object-cover hidden md:block" priority />
+                <Image src="/images/mesa-vert.png" alt="Mesa de jogo" fill className="object-cover md:hidden" priority />
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
@@ -635,6 +608,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                             }
                         }}
                         className="bg-black/40 hover:bg-black/60 text-white p-2 sm:px-4 sm:py-2 flex items-center gap-2 rounded-full sm:rounded-xl backdrop-blur-md border border-white/10 shadow-xl transition-colors"
+                        aria-label="Sair da partida"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         <span className="hidden sm:inline font-bold text-sm">Sair</span>
@@ -654,6 +628,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                             }
                         }}
                         className="bg-black/40 hover:bg-black/60 text-white p-2 sm:px-4 sm:py-2 flex items-center gap-2 rounded-full sm:rounded-xl backdrop-blur-md border border-white/10 shadow-xl transition-colors"
+                        aria-label="Abandonar mesa"
                     >
                         <LogOut className="w-5 h-5 text-red-400" />
                         <span className="hidden sm:inline font-bold text-sm text-red-400">Abandonar Mesa</span>
@@ -666,122 +641,34 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         onClick={handleCancelGame}
                         disabled={cancelling}
                         className="bg-red-500/80 hover:bg-red-600 text-white p-2 sm:px-4 sm:py-2 rounded-full sm:rounded-xl text-sm font-bold flex items-center gap-2 backdrop-blur-md shadow-lg transition-colors border border-red-400"
+                        aria-label="Cancelar mesa"
                     >
                         {cancelling ? <Clock className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />}
                         <span className="hidden sm:inline">Cancelar Mesa</span>
                     </button>
                 )}
 
-                {/* Chat Toggle Button */}
-                <button
-                    onClick={() => setShowChat(true)}
-                    className="relative bg-black/60 hover:bg-black/80 backdrop-blur-md rounded-full sm:rounded-xl p-2 sm:p-3 border border-white/10 shadow-xl transition-colors text-white"
-                >
-                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full shadow-md animate-bounce">
-                            {unreadCount}
-                        </span>
-                    )}
-                </button>
+                {/* Chat Component */}
+                <GameChat
+                    showChat={showChat}
+                    setShowChat={setShowChat}
+                    messages={messages}
+                    newMessage={newMessage}
+                    setNewMessage={setNewMessage}
+                    onSendMessage={handleSendMessage}
+                    currentUsername={currentUsername}
+                    unreadCount={unreadCount}
+                />
             </div>
 
-            {/* Scoreboard - Updated Colors */}
-            <div className="absolute top-4 right-4 z-30 flex items-center gap-3">
-
-                <div className="bg-black/60 backdrop-blur-md rounded-xl p-3 border border-white/10 shadow-xl text-white">
-                    <div className="flex items-center gap-4 text-sm sm:text-base">
-                        <div className="flex flex-col items-center">
-                            <span className="text-white/60 text-xs uppercase font-bold">Nós (A)</span>
-                            <span className="text-xl font-mono font-bold text-[#4ade80]">{scores.A}</span>
-                        </div>
-                        <div className="h-8 w-px bg-white/20" />
-                        <div className="flex flex-col items-center">
-                            <span className="text-white/60 text-xs uppercase font-bold">Eles (B)</span>
-                            <span className="text-xl font-mono font-bold text-[#f87171]">{scores.B}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* In-Game Chat Slide-over Component */}
-            <div className={cn(
-                "absolute z-[100] flex flex-col shadow-2xl transition-all duration-300 ease-in-out border-white/10 overflow-hidden",
-                // Mobile styles: floating window on the right under the scoreboard
-                "top-[88px] right-2 w-[280px] max-h-[350px] sm:max-h-none h-[50vh] bg-black/75 backdrop-blur-md rounded-2xl border",
-                // Desktop styles: full height right sidebar
-                "sm:top-0 sm:right-0 sm:w-[320px] sm:h-full sm:bg-black/80 sm:backdrop-blur-xl sm:rounded-none sm:border-y-0 sm:border-r-0 sm:border-l",
-                // Animation states
-                showChat
-                    ? "opacity-100 translate-x-0 pointer-events-auto"
-                    : "opacity-0 translate-x-8 sm:translate-x-full pointer-events-none"
-            )}>
-                <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
-                    <h3 className="text-white font-bold flex items-center gap-2">
-                        <MessageCircle className="w-5 h-5 text-accent" />
-                        Chat da Mesa
-                    </h3>
-                    <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-white transition-colors p-1 rounded-full hover:bg-white/10">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/20">
-                    {messages.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm text-center px-4">
-                            <MessageCircle className="w-8 h-8 mb-2 opacity-20" />
-                            <p>O chat está vazio.</p>
-                            <p>Quebra o gelo!</p>
-                        </div>
-                    ) : (
-                        messages.map((msg, idx) => {
-                            const isMe = msg.sender === (currentUser?.profiles?.username || 'Você');
-                            return (
-                                <div key={idx} className={cn("flex flex-col max-w-[85%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
-                                    <span className="text-[10px] text-gray-400 mb-0.5 px-1 font-bold">
-                                        {msg.sender} {msg.isBot && <span className="bg-blue-500/20 text-blue-400 text-[8px] px-1 rounded ml-1">BOT</span>}
-                                    </span>
-                                    <div className={cn(
-                                        "px-3 py-2 rounded-2xl text-sm shadow-sm",
-                                        isMe
-                                            ? "bg-primary text-primary-foreground rounded-tr-sm"
-                                            : "bg-white/10 text-white rounded-tl-sm border border-white/5"
-                                    )}>
-                                        {msg.text}
-                                    </div>
-                                    <span className="text-[9px] text-gray-500 mt-0.5 px-1">{msg.time}</span>
-                                </div>
-                            )
-                        })
-                    )}
-                    <div ref={chatEndRef} />
-                </div>
-
-                <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 bg-black/40">
-                    <div className="relative flex items-center">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Escreve uma mensagem..."
-                            className="w-full bg-white/10 border border-white/10 text-white text-sm rounded-full pl-4 pr-10 py-2.5 outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all placeholder:text-gray-500"
-                        />
-                        <button
-                            type="submit"
-                            disabled={!newMessage.trim()}
-                            className="absolute right-1 w-8 h-8 flex items-center justify-center bg-accent text-accent-foreground rounded-full hover:bg-accent/90 disabled:opacity-50 disabled:hover:bg-accent transition-colors"
-                        >
-                            <Send className="w-4 h-4" />
-                        </button>
-                    </div>
-                </form>
-            </div>
+            {/* Scoreboard */}
+            <ScoreBoard scoreA={scores.A} scoreB={scores.B} />
 
             {/* AFK Timer */}
-            {gameState.current_turn === 0 && !roundRecap && !gameResult && (
-                <div className="absolute top-20 right-4 z-30 flex items-center gap-2 bg-yellow-500/20 backdrop-blur-md px-3 py-1 rounded-full border border-yellow-500/50">
-                    <Clock className="w-4 h-4 text-yellow-400 animate-pulse" />
-                    <span className="text-yellow-400 font-mono font-bold">{turnTimeLeft}s</span>
+            {gameState.current_turn === myPos && !roundRecap && !gameResult && gameState.status === 'playing' && (
+                <div className="absolute top-20 right-4 z-30 flex items-center gap-2 bg-yellow-900/40 backdrop-blur-md px-3 py-1 rounded-full border border-yellow-500/50" role="timer" aria-label={`Tempo restante: ${turnTimeLeft} segundos`}>
+                    <Clock className="w-4 h-4 text-yellow-300 animate-pulse" />
+                    <span className="text-yellow-300 font-mono font-bold">{turnTimeLeft}s</span>
                 </div>
             )}
 
@@ -791,19 +678,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             <div className="absolute top-[8%] sm:top-8 flex flex-col items-center z-10 w-full">
                 <div className="flex flex-col items-center mb-[-10px] z-20">
                     <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{pTop?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
-                    <div className={`h-12 w-12 rounded-full border-2 ${getAvatarBorderColor(pTop)} bg-black/20 overflow-hidden shadow-lg relative`}>
-                        {pTop?.profiles?.avatar_url ? (
-                            <Image src={pTop.profiles.avatar_url} alt="P" fill className="object-cover" />
-                        ) : pTop?.profiles?.username ? (
-                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{pTop.profiles.username.charAt(0).toUpperCase()}</div>
-                        ) : gameState.status === 'waiting' ? (
-                            <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
-                        ) : (
-                            <div className="w-full h-full bg-gray-400 flex items-center justify-center text-xs text-white">Bot</div>
-                        )}
-                    </div>
+                    <PlayerAvatar player={pTop} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pTop)} />
                 </div>
-                {/* Fixed Hand Count */}
                 <div className="flex -space-x-[50px] sm:-space-x-[70px] h-20 items-start">
                     {getOpponentCards(pTop).map(i => (
                         <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>
@@ -811,25 +687,14 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 </div>
             </div>
 
-            {/* Left Player (Opponent) - CORRECTED LAYOUT: Avatar on Left (Edge), Cards on Right (Center) */}
+            {/* Left Player (Opponent) */}
             <div className="absolute left-6 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
                 <div className="flex flex-col items-center shrink-0">
-                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(pLeft)} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
-                        {pLeft?.profiles?.avatar_url ? (
-                            <Image src={pLeft.profiles.avatar_url} alt="P" fill className="object-cover" />
-                        ) : pLeft?.profiles?.username ? (
-                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{pLeft.profiles.username.charAt(0).toUpperCase()}</div>
-                        ) : gameState.status === 'waiting' ? (
-                            <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
-                        )}
-                    </div>
+                    <PlayerAvatar player={pLeft} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pLeft)} />
                     <div className="flex flex-col items-center mt-1">
                         <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pLeft?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
                 </div>
-                {/* Lateral stacking deck effect */}
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] ml-2">
                     {getOpponentCards(pLeft).map(i => (
                         <div key={i} className="transform -rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
@@ -837,7 +702,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 </div>
             </div>
 
-            {/* Right Player (Opponent) - CORRECTED LAYOUT: Cards on Left (Center), Avatar on Right (Edge) */}
+            {/* Right Player (Opponent) */}
             <div className="absolute right-6 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] mr-2">
                     {getOpponentCards(pRight).map(i => (
@@ -845,17 +710,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     ))}
                 </div>
                 <div className="flex flex-col items-center shrink-0">
-                    <div className={`w-12 h-12 rounded-full border-2 ${getAvatarBorderColor(pRight)} bg-gray-400 overflow-hidden z-20 shadow-lg relative`}>
-                        {pRight?.profiles?.avatar_url ? (
-                            <Image src={pRight.profiles.avatar_url} alt="P" fill className="object-cover" />
-                        ) : pRight?.profiles?.username ? (
-                            <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">{pRight.profiles.username.charAt(0).toUpperCase()}</div>
-                        ) : gameState.status === 'waiting' ? (
-                            <button onClick={() => alert('Em breve: Partilhar Link!')} className="w-full h-full bg-accent flex items-center justify-center text-white hover:bg-accent/80 transition-colors"><PlusCircle className="w-5 h-5" /></button>
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xs text-white">Bot</div>
-                        )}
-                    </div>
+                    <PlayerAvatar player={pRight} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pRight)} />
                     <div className="flex flex-col items-center mt-1">
                         <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pRight?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
@@ -865,7 +720,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* Center (Table) */}
             <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
-                    <Image src="/images/favicon.png" alt="Watermark" fill className="object-contain p-4" />
+                    <Image src="/images/favicon.png" alt="" fill className="object-contain p-4" aria-hidden="true" />
                 </div>
 
                 {/* Waiting State Overlay */}
@@ -889,6 +744,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <div
                         onClick={dismissRecap}
                         className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 rounded-full cursor-pointer hover:bg-black/70 transition-colors animate-in fade-in"
+                        role="status"
+                        aria-label={`${roundRecap.winner} ganhou ${roundRecap.points} pontos`}
                     >
                         <div className="text-center space-y-1 p-4">
                             <p className="text-xs font-bold text-white/70 uppercase tracking-widest">{roundRecap.explanation}</p>
@@ -905,7 +762,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     {gameState.current_trick_cards?.map((c: any, i: number) => {
                         const player = gameState.game_players.find((p: any) => p.user_id === c.player_id)
                         const pos = player?.position
-                        const myPos = myPlayer.position
                         const relativePos = (pos - myPos + 4) % 4
 
                         let style = {}
@@ -915,7 +771,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         if (relativePos === 3) style = { transform: 'translateX(20px) rotate(-90deg)' }
 
                         return (
-                            <div key={i} className="absolute transition-all duration-300" style={style}>
+                            <div key={`trick-${c.player_id}`} className="absolute transition-all duration-300" style={style}>
                                 {renderCard(c.card, undefined, false)}
                             </div>
                         )
@@ -925,8 +781,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Bottom Player (Me) */}
             <div className="absolute bottom-6 sm:bottom-10 w-full flex flex-col items-center z-20">
-                <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] mb-6 sm:mb-8 px-2 py-2 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center">
-                    {myPlayer.hand?.map((card: string, index: number) => {
+                <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] mb-6 sm:mb-8 px-2 py-2 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center" role="group" aria-label="As suas cartas">
+                    {sortHand(myPlayer.hand || []).map((card: string, index: number) => {
                         const total = myPlayer.hand.length
                         const mid = (total - 1) / 2
                         const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
@@ -947,7 +803,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 <div className="flex items-center gap-3 bg-black/40 px-6 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
                     <div className="h-10 w-10 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
                         {myPlayer.profiles?.avatar_url ? (
-                            <Image src={myPlayer.profiles.avatar_url} alt="Me" fill className="object-cover" />
+                            <Image src={myPlayer.profiles.avatar_url} alt={myPlayer.profiles?.username || 'Eu'} fill className="object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400"><User className="w-6 h-6" /></div>
                         )}
@@ -958,7 +814,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-300 px-3 py-0.5 sm:py-1 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.4)] relative mt-[-2px]">
                             <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest drop-shadow-md pr-1">Trunfo</span>
                             <div className="relative w-6 h-8 sm:w-7 sm:h-10 overflow-hidden rounded-[4px] shadow-sm border border-white/50 bg-white transform rotate-3">
-                                <Image src={getCardAssetPath(gameState.trump_card)} alt="Trunfo" fill className="object-cover" />
+                                <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill className="object-cover" />
                             </div>
                         </div>
                     )}
@@ -967,99 +823,28 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Trump Card Intro Animation */}
             {showTrumpAnimation && gameState.trump_card && (
-                <div className={cn(
-                    "absolute inset-0 z-[60] flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm pointer-events-none transition-opacity duration-700 ease-in-out",
-                    isFadingOutTrump ? "opacity-0" : "opacity-100"
-                )}>
-                    <div className={cn(
-                        "text-center flex flex-col items-center transition-all duration-700 ease-in-out",
-                        isFadingOutTrump
-                            ? "transform translate-y-32 scale-75 opacity-0"
-                            : "animate-in zoom-in duration-500 fill-mode-backwards"
-                    )}>
-                        <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-widest drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] mb-8">
-                            O Trunfo
-                        </h2>
-                        <div className="transform scale-[1.1] sm:scale-[1.4] shadow-[0_0_40px_rgba(255,215,0,0.6)] rounded-xl relative">
-                            <div className="absolute inset-0 bg-[#FFD700] rounded-xl blur-md opacity-40 animate-pulse"></div>
-                            {renderCard(gameState.trump_card)}
-                        </div>
-                    </div>
-                </div>
+                <TrumpAnimation trumpCard={gameState.trump_card} isFadingOut={isFadingOutTrump} />
             )}
 
             {/* Game Result Overlay */}
             {gameResult && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-accent/20">
-                        <div className="mb-6 flex justify-center">
-                            <div className={cn("p-4 rounded-full", gameResult.winnerTeam === 'A' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")}>
-                                <Trophy className="h-12 w-12" />
-                            </div>
-                        </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                            {gameResult.winnerTeam === 'A' ? 'Vitória!' : 'Derrota!'}
-                        </h2>
-                        <p className="text-gray-500 mb-6">
-                            {gameResult.winnerTeam === 'A' ? 'Parabéns, a sua equipa venceu.' : 'Não foi desta vez.'}
-                        </p>
-
-                        {!isTraining && gameState.stake > 0 && (
-                            <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-xl text-center shadow-sm">
-                                <p className="text-sm font-bold text-gray-800">Pote da Equipa Vencedora: <span className="text-green-600">€{(gameState.stake * 4 * 0.8).toFixed(2)}</span></p>
-                                <p className="text-xs text-gray-500 mt-1">Taxa de Mesa (Rake do Clube): 20%</p>
-                            </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-4 mb-8 bg-gray-50 p-4 rounded-xl">
-                            <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase">Nós (Team A)</p>
-                                <p className="text-2xl font-bold text-gray-900">{gameResult.scoreA}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase">Eles (Team B)</p>
-                                <p className="text-2xl font-bold text-gray-900">{gameResult.scoreB}</p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3">
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        localStorage.removeItem('sueca_training_state');
-                                        localStorage.removeItem('sueca_training_scores');
-                                        router.push(isDemoGuest ? '/' : '/dashboard');
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-3 rounded-xl transition-colors"
-                                >
-                                    <Home className="h-5 w-5" />
-                                    Sair
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        localStorage.removeItem('sueca_training_state');
-                                        localStorage.removeItem('sueca_training_scores');
-                                        startTrainingGame()
-                                    }}
-                                    className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold py-3 rounded-xl transition-colors"
-                                >
-                                    <RotateCcw className="h-5 w-5" />
-                                    Nova Partida
-                                </button>
-                            </div>
-
-                            {isDemoGuest && (
-                                <button
-                                    onClick={() => router.push('/register')}
-                                    className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-bold py-3 rounded-xl transition-colors shadow-premium animate-pulse"
-                                >
-                                    <Trophy className="h-5 w-5" />
-                                    Gostou? Crie a sua Conta e Jogue a Dinheiro!
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                <GameResultOverlay
+                    gameResult={gameResult}
+                    stake={gameState.stake || 0}
+                    isTraining={isTraining}
+                    isDemoGuest={isDemoGuest}
+                    onExit={() => {
+                        localStorage.removeItem('sueca_training_state');
+                        localStorage.removeItem('sueca_training_scores');
+                        router.push(isDemoGuest ? '/' : '/dashboard');
+                    }}
+                    onNewGame={() => {
+                        localStorage.removeItem('sueca_training_state');
+                        localStorage.removeItem('sueca_training_scores');
+                        startTrainingGame()
+                    }}
+                    onRegister={() => router.push('/register')}
+                />
             )}
         </div>
     )

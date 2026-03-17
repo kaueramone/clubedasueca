@@ -35,48 +35,48 @@ export default function AdminAffiliatesPage() {
         else { setMessage('✅ Pagamento processado!'); setPayingId(null); setPayAmount(''); loadData() }
     }
 
-    if (loading) return <div className="flex items-center justify-center py-20 text-gray-500">A carregar...</div>
+    if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">A carregar...</div>
 
     const statusColors: Record<string, string> = {
-        pending: 'bg-yellow-100 text-yellow-700',
-        approved: 'bg-green-100 text-green-700',
-        rejected: 'bg-red-100 text-red-700',
-        suspended: 'bg-gray-100 text-gray-700',
+        pending: 'bg-yellow-500/10 text-yellow-500',
+        approved: 'bg-success/10 text-success',
+        rejected: 'bg-red-500/10 text-red-400',
+        suspended: 'bg-muted text-muted-foreground',
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="min-h-screen bg-background p-4 md:p-8">
             <div className="mx-auto max-w-6xl space-y-6">
                 <div>
                     <Link href="/admin" className="text-sm text-accent hover:underline">← Admin</Link>
-                    <h1 className="text-2xl font-bold text-gray-900 mt-1">🤝 Gestão de Afiliados</h1>
+                    <h1 className="text-2xl font-bold text-foreground mt-1">🤝 Gestão de Afiliados</h1>
                 </div>
 
                 {message && (
-                    <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-blue-700">
+                    <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-sm text-accent">
                         {message} <button onClick={() => setMessage('')} className="ml-2 font-bold">×</button>
                     </div>
                 )}
 
-                <div className="rounded-2xl bg-white shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="border-b bg-gray-50 px-6 py-4">
-                        <h2 className="font-semibold text-gray-700 flex items-center gap-2">
+                <div className="rounded-2xl bg-card shadow-sm border border-border overflow-hidden">
+                    <div className="border-b bg-background px-6 py-4">
+                        <h2 className="font-semibold text-foreground/80 flex items-center gap-2">
                             <Users className="h-5 w-5" /> Afiliados ({affiliates.length})
                         </h2>
                     </div>
                     <div className="divide-y">
                         {affiliates.length === 0 ? (
-                            <div className="py-12 text-center text-gray-500">Nenhum afiliado registado.</div>
+                            <div className="py-12 text-center text-muted-foreground">Nenhum afiliado registado.</div>
                         ) : (
                             affiliates.map(aff => (
-                                <div key={aff.id} className="p-4 hover:bg-gray-50 transition-colors">
+                                <div key={aff.id} className="p-4 hover:bg-muted/30 transition-colors">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div>
-                                                <span className="font-semibold text-gray-900">
+                                                <span className="font-semibold text-foreground">
                                                     {(aff.profile as any)?.username || 'Utilizador'}
                                                 </span>
-                                                <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[aff.status] || 'bg-gray-100'}`}>
+                                                <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[aff.status] || 'bg-muted'}`}>
                                                     {aff.status}
                                                 </span>
                                             </div>
@@ -85,11 +85,11 @@ export default function AdminAffiliatesPage() {
                                             {aff.status === 'pending' && (
                                                 <>
                                                     <button onClick={() => handleStatusChange(aff.id, 'approved')}
-                                                        className="p-2 rounded-lg text-green-600 hover:bg-green-50" title="Aprovar">
+                                                        className="p-2 rounded-lg text-green-600 hover:bg-success/10" title="Aprovar">
                                                         <Check className="h-4 w-4" />
                                                     </button>
                                                     <button onClick={() => handleStatusChange(aff.id, 'rejected')}
-                                                        className="p-2 rounded-lg text-red-600 hover:bg-red-50" title="Rejeitar">
+                                                        className="p-2 rounded-lg text-red-600 hover:bg-destructive/10" title="Rejeitar">
                                                         <X className="h-4 w-4" />
                                                     </button>
                                                 </>
@@ -97,18 +97,18 @@ export default function AdminAffiliatesPage() {
                                             {aff.status === 'approved' && (
                                                 <>
                                                     <button onClick={() => setPayingId(payingId === aff.id ? null : aff.id)}
-                                                        className="p-2 rounded-lg text-green-600 hover:bg-green-50" title="Pagar">
+                                                        className="p-2 rounded-lg text-green-600 hover:bg-success/10" title="Pagar">
                                                         <DollarSign className="h-4 w-4" />
                                                     </button>
                                                     <button onClick={() => handleStatusChange(aff.id, 'suspended')}
-                                                        className="p-2 rounded-lg text-gray-600 hover:bg-gray-100" title="Suspender">
+                                                        className="p-2 rounded-lg text-muted-foreground hover:bg-muted" title="Suspender">
                                                         <Ban className="h-4 w-4" />
                                                     </button>
                                                 </>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="mt-2 text-xs text-gray-500 flex gap-4">
+                                    <div className="mt-2 text-xs text-muted-foreground flex gap-4">
                                         <span>Modelo: {aff.commission_model === 'revenue_share' ? `Rev Share ${aff.revenue_share_pct}%` : `CPA €${aff.cpa_amount}`}</span>
                                         <span>Ganhos: €{aff.total_earned?.toFixed(2)}</span>
                                         <span>Pago: €{aff.total_paid?.toFixed(2)}</span>
@@ -124,7 +124,7 @@ export default function AdminAffiliatesPage() {
                                                 value={payAmount}
                                                 onChange={(e) => setPayAmount(e.target.value)}
                                                 placeholder="Montante a pagar..."
-                                                className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                                className="flex-1 rounded-lg border border-border bg-background text-foreground px-3 py-2 text-sm"
                                             />
                                             <button onClick={() => handlePay(aff.id)}
                                                 className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">

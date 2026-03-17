@@ -83,11 +83,11 @@ export default function AdminChatPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row h-screen">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row h-screen">
 
             {/* Sidebar (Conversations List) */}
-            <div className="w-full md:w-96 bg-white border-r border-gray-200 flex flex-col h-full shrink-0">
-                <div className="p-4 border-b border-gray-200">
+            <div className="w-full md:w-96 bg-card border-r border-border flex flex-col h-full shrink-0">
+                <div className="p-4 border-b border-border">
                     <Link href="/admin" className="text-sm text-accent hover:underline mb-2 inline-block">← Admin Hub</Link>
                     <h1 className="text-xl font-bold flex items-center gap-2 text-primary">
                         <MessageSquare className="w-5 h-5 text-primary" /> Support Desk
@@ -96,7 +96,7 @@ export default function AdminChatPage() {
                     <select
                         value={filter}
                         onChange={e => setFilter(e.target.value)}
-                        className="mt-4 w-full rounded-xl border border-gray-300 p-2 text-sm text-gray-700 font-medium"
+                        className="mt-4 w-full rounded-xl border border-border bg-background text-foreground p-2 text-sm font-medium"
                     >
                         <option value="all">Todas as conversas</option>
                         <option value="waiting_agent">A aguardar Agente ⚠️</option>
@@ -108,31 +108,31 @@ export default function AdminChatPage() {
 
                 <div className="flex-1 overflow-y-auto w-full">
                     {loading ? (
-                        <div className="p-8 text-center text-sm text-gray-500">A carregar...</div>
+                        <div className="p-8 text-center text-sm text-muted-foreground">A carregar...</div>
                     ) : conversations.length === 0 ? (
-                        <div className="p-8 text-center text-sm text-gray-500">Nenhuma conversa encontrada.</div>
+                        <div className="p-8 text-center text-sm text-muted-foreground">Nenhuma conversa encontrada.</div>
                     ) : (
                         <div className="divide-y">
                             {conversations.map(conv => (
                                 <button
                                     key={conv.id}
                                     onClick={() => openConversation(conv)}
-                                    className={`w-full text-left p-4 hover:bg-gray-50 transition-colors flex flex-col select-none ${activeConv?.id === conv.id ? 'bg-muted border-l-4 border-primary' : 'border-l-4 border-transparent'}`}
+                                    className={`w-full text-left p-4 hover:bg-muted/30 transition-colors flex flex-col select-none ${activeConv?.id === conv.id ? 'bg-muted border-l-4 border-primary' : 'border-l-4 border-transparent'}`}
                                 >
                                     <div className="flex justify-between items-start w-full mb-1">
-                                        <span className="font-bold text-sm text-gray-900 truncate">{(conv.user as any)?.username || (conv.user as any)?.email}</span>
-                                        <span className="text-xs text-gray-500 shrink-0">
+                                        <span className="font-bold text-sm text-foreground truncate">{(conv.user as any)?.username || (conv.user as any)?.email}</span>
+                                        <span className="text-xs text-muted-foreground shrink-0">
                                             {new Date(conv.updated_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                                         </span>
                                     </div>
-                                    <div className="text-xs text-gray-600 mb-2 truncate">Assunto: {conv.subject}</div>
+                                    <div className="text-xs text-muted-foreground mb-2 truncate">Assunto: {conv.subject}</div>
                                     <div className="flex items-center gap-2">
-                                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${conv.status === 'waiting_agent' ? 'bg-red-100 text-red-700' :
-                                            conv.status === 'active' ? 'bg-green-100 text-green-700' :
-                                                conv.status === 'resolved' ? 'bg-gray-100 text-gray-600' :
-                                                    'bg-yellow-100 text-yellow-800'
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${conv.status === 'waiting_agent' ? 'bg-red-500/10 text-red-400' :
+                                            conv.status === 'active' ? 'bg-success/10 text-success' :
+                                                conv.status === 'resolved' ? 'bg-muted text-muted-foreground' :
+                                                    'bg-yellow-500/10 text-yellow-500'
                                             }`}>{conv.status.replace('_', ' ')}</span>
-                                        {conv.agent && <span className="text-[10px] text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">{(conv.agent as any).username}</span>}
+                                        {conv.agent && <span className="text-[10px] text-muted-foreground font-medium bg-muted px-2 py-0.5 rounded-full">{(conv.agent as any).username}</span>}
                                     </div>
                                 </button>
                             ))}
@@ -142,14 +142,14 @@ export default function AdminChatPage() {
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col h-full bg-white relative">
+            <div className="flex-1 flex flex-col h-full bg-card relative">
                 {activeConv ? (
                     <>
                         {/* Chat Header */}
-                        <div className="p-4 border-b border-gray-200 bg-white flex justify-between items-center shrink-0">
+                        <div className="p-4 border-b border-border bg-card flex justify-between items-center shrink-0">
                             <div>
-                                <h2 className="font-bold text-lg text-gray-900">{(activeConv.user as any)?.username}</h2>
-                                <p className="text-xs text-gray-500">{(activeConv.user as any)?.email}</p>
+                                <h2 className="font-bold text-lg text-foreground">{(activeConv.user as any)?.username}</h2>
+                                <p className="text-xs text-muted-foreground">{(activeConv.user as any)?.email}</p>
                             </div>
 
                             <div className="flex gap-2">
@@ -164,7 +164,7 @@ export default function AdminChatPage() {
                                     </button>
                                 )}
                                 {activeConv.status === 'resolved' && (
-                                    <span className="text-sm font-semibold text-gray-500 flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
+                                    <span className="text-sm font-semibold text-muted-foreground flex items-center gap-2 bg-muted px-4 py-2 rounded-lg">
                                         <CheckCircle className="w-4 h-4" /> Resolvido
                                     </span>
                                 )}
@@ -172,7 +172,7 @@ export default function AdminChatPage() {
                         </div>
 
                         {/* Messages Area */}
-                        <div className="flex-1 p-6 overflow-y-auto bg-gray-50 flex flex-col gap-4">
+                        <div className="flex-1 p-6 overflow-y-auto bg-background flex flex-col gap-4">
                             {messages.map((msg, i) => {
                                 const isAdmin = !msg.is_bot && msg.sender_id !== activeConv.user_id
                                 const isUser = !msg.is_bot && msg.sender_id === activeConv.user_id
@@ -181,12 +181,12 @@ export default function AdminChatPage() {
                                 return (
                                     <div key={msg.id || i} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[75%] rounded-2xl px-5 py-3 text-sm shadow-sm ${isAdmin ? 'bg-primary text-white rounded-br-sm' :
-                                            isBot ? 'bg-white border border-yellow-200 text-gray-800 rounded-bl-sm relative' :
-                                                'bg-white border border-gray-200 text-gray-800 rounded-bl-sm'
+                                            isBot ? 'bg-card border border-yellow-500/30 text-foreground rounded-bl-sm relative' :
+                                                'bg-card border border-border text-foreground rounded-bl-sm'
                                             }`}>
-                                            {isBot && <div className="text-[10px] font-bold text-yellow-600 mb-1 uppercase tracking-wider">Bot Automatizado</div>}
+                                            {isBot && <div className="text-[10px] font-bold text-yellow-500 mb-1 uppercase tracking-wider">Bot Automatizado</div>}
                                             <p className="whitespace-pre-wrap leading-relaxed">{msg.message}</p>
-                                            <div className={`text-[10px] mt-2 text-right ${isAdmin ? 'text-primary-foreground/80' : 'text-gray-400'}`}>
+                                            <div className={`text-[10px] mt-2 text-right ${isAdmin ? 'text-primary-foreground/80' : 'text-muted-foreground/70'}`}>
                                                 {new Date(msg.created_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </div>
@@ -198,7 +198,7 @@ export default function AdminChatPage() {
 
                         {/* Input Area */}
                         {(activeConv.status !== 'resolved') && (
-                            <div className="p-4 bg-white border-t border-gray-200 shrink-0">
+                            <div className="p-4 bg-card border-t border-border shrink-0">
                                 {activeConv.status === 'active' ? (
                                     <form onSubmit={handleSendMessage} className="flex gap-3">
                                         <input
@@ -206,7 +206,7 @@ export default function AdminChatPage() {
                                             value={newMessage}
                                             onChange={e => setNewMessage(e.target.value)}
                                             placeholder="Escreva a resposta para o utilizador..."
-                                            className="flex-1 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                                            className="flex-1 rounded-xl border border-border bg-background text-foreground px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                                         />
                                         <button
                                             type="submit"
@@ -217,7 +217,7 @@ export default function AdminChatPage() {
                                         </button>
                                     </form>
                                 ) : (
-                                    <div className="text-center p-4 bg-yellow-50 text-yellow-800 rounded-xl text-sm border border-yellow-200">
+                                    <div className="text-center p-4 bg-yellow-500/10 text-yellow-500 rounded-xl text-sm border border-yellow-500/30">
                                         Apenas pode enviar mensagens após "Atender Utilizador" e assinalar esta conversa à sua conta de administrador.
                                     </div>
                                 )}
@@ -225,8 +225,8 @@ export default function AdminChatPage() {
                         )}
                     </>
                 ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
-                        <MessageSquare className="w-16 h-16 mb-4 text-gray-200" />
+                    <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground/70">
+                        <MessageSquare className="w-16 h-16 mb-4 text-muted-foreground/30" />
                         <p className="text-lg font-medium">Selecione uma conversa para iniciar o atendimento</p>
                     </div>
                 )}
