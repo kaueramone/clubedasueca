@@ -11,7 +11,7 @@ import { Clock, User, PlusCircle, ArrowLeft, LogOut, RotateCcw } from 'lucide-re
 
 import { PlayerAvatar } from './components/player-avatar'
 import { ScoreBoard } from './components/score-board'
-import { GameChat } from './components/game-chat'
+import { GameChat, GameChatToggle } from './components/game-chat'
 import { GameResultOverlay } from './components/game-result-overlay'
 import { TrumpAnimation } from './components/trump-animation'
 
@@ -69,6 +69,26 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const audioCollectRef = useRef<HTMLAudioElement | null>(null)
 
     const supabase = createClient()
+
+    // --- Sync real user profile into training game state ---
+    useEffect(() => {
+        if (!isTraining) return
+        const realUsername = currentUser?.profiles?.username
+        const realAvatar = currentUser?.profiles?.avatar_url || currentUser?.user_metadata?.avatar_url
+        if (!realUsername || realUsername === 'Você') return
+
+        setGameState((prev: any) => {
+            if (!prev?.game_players) return prev
+            const human = prev.game_players[0]
+            if (human?.profiles?.username === realUsername) return prev // already synced
+            return {
+                ...prev,
+                game_players: prev.game_players.map((p: any, i: number) =>
+                    i === 0 ? { ...p, profiles: { ...p.profiles, username: realUsername, avatar_url: realAvatar || null } } : p
+                )
+            }
+        })
+    }, [isTraining, currentUser?.profiles?.username, currentUser?.profiles?.avatar_url, currentUser?.user_metadata?.avatar_url])
 
     // --- Training/Demo State Persistence ---
     useEffect(() => {
@@ -348,6 +368,42 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         })
     }, [isTrickProcessing, roundRecap, playSound])
 
+    const buildTrickExplanation = useCallback((fullTrick: any[], winnerId: string, trumpSuit: string) => {
+        const SUIT_NAMES: Record<string, string> = { hearts: 'Copas', diamonds: 'Ouros', clubs: 'Paus', spades: 'Espadas' }
+        const RANK_NAMES: Record<string, string> = { '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', 'Q': 'Dama', 'J': 'Valete', 'K': 'Rei', '7': '7', 'A': 'Ás' }
+
+        const winnerEntry = fullTrick.find((c: any) => c.player_id === winnerId)
+        if (!winnerEntry) return "Carta mais alta vence."
+
+        const winnerCard = winnerEntry.card
+        const winnerSuit = getCardSuit(winnerCard)
+        const winnerRank = winnerCard.split('-')[1]
+        const leadCard = fullTrick[0].card
+        const leadSuit = getCardSuit(leadCard)
+        const trumpsPlayed = fullTrick.filter((c: any) => getCardSuit(c.card) === trumpSuit)
+        const leadSuitCards = fullTrick.filter((c: any) => getCardSuit(c.card) === leadSuit)
+
+        if (winnerSuit === trumpSuit) {
+            if (trumpsPlayed.length === 1) {
+                // Only one trump played — it beats everything
+                return `${RANK_NAMES[winnerRank] || winnerRank} de ${SUIT_NAMES[winnerSuit] || winnerSuit} foi o único trunfo jogado.`
+            } else {
+                // Multiple trumps — highest wins
+                return `${RANK_NAMES[winnerRank] || winnerRank} de ${SUIT_NAMES[winnerSuit] || winnerSuit} foi o trunfo mais alto da vaza.`
+            }
+        } else if (winnerSuit === leadSuit) {
+            if (leadSuitCards.length === fullTrick.length) {
+                // No trump, all lead suit — highest lead suit card wins
+                return `${RANK_NAMES[winnerRank] || winnerRank} de ${SUIT_NAMES[winnerSuit] || winnerSuit} foi a carta mais alta do naipe de saída.`
+            } else {
+                // Some didn't follow suit (they played other non-trump suits) — highest lead suit wins
+                return `${RANK_NAMES[winnerRank] || winnerRank} de ${SUIT_NAMES[winnerSuit] || winnerSuit} foi a mais alta do naipe de saída (${SUIT_NAMES[leadSuit] || leadSuit}).`
+            }
+        }
+
+        return "Carta mais alta vence."
+    }, [])
+
     const processTrickEnd = useCallback((prevState: any, handAfterMove: string[], fullTrick: any[], playerIndex: number) => {
         setIsTrickProcessing(true)
 
@@ -356,11 +412,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         const winnerPlayer = prevState.game_players.find((p: any) => p.user_id === winnerId) || prevState.game_players[0]
         const points = fullTrick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
 
-        let explanation = "Carta mais alta vence."
-        const winningCard = fullTrick.find((c: any) => c.player_id === winnerId)?.card
-        if (winningCard && getCardSuit(winningCard) === trumpSuit) {
-            explanation = "Trunfo ganha!"
-        }
+        const explanation = buildTrickExplanation(fullTrick, winnerId, trumpSuit)
 
         setTimeout(() => {
             playSound('collect')
@@ -379,7 +431,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             })
 
         }, 1200)
-    }, [playSound])
+    }, [playSound, buildTrickExplanation])
 
     const dismissRecap = useCallback(() => {
         if (!roundRecap) return
@@ -455,7 +507,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         if (!newMessage.trim()) return
 
         const msg = {
-            sender: currentUser?.profiles?.username || 'Você',
+            sender: isTraining ? (gameState?.game_players?.[0]?.profiles?.username || 'Você') : (currentUser?.profiles?.username || 'Você'),
             text: newMessage.trim(),
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
@@ -584,7 +636,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return Array(count).fill(0).map((_, i) => i);
     }
 
-    const currentUsername = currentUser?.profiles?.username || 'Você'
+    const currentUsername = isTraining
+        ? (gameState?.game_players?.[0]?.profiles?.username || 'Você')
+        : (currentUser?.profiles?.username || 'Você')
 
     return (
         <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 select-none">
@@ -648,18 +702,23 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     </button>
                 )}
 
-                {/* Chat Component */}
-                <GameChat
-                    showChat={showChat}
-                    setShowChat={setShowChat}
-                    messages={messages}
-                    newMessage={newMessage}
-                    setNewMessage={setNewMessage}
-                    onSendMessage={handleSendMessage}
-                    currentUsername={currentUsername}
+                {/* Chat Toggle Button */}
+                <GameChatToggle
+                    onClick={() => setShowChat(true)}
                     unreadCount={unreadCount}
                 />
             </div>
+
+            {/* Chat Panels (positioned relative to game container, outside controls div) */}
+            <GameChat
+                showChat={showChat}
+                setShowChat={setShowChat}
+                messages={messages}
+                newMessage={newMessage}
+                setNewMessage={setNewMessage}
+                onSendMessage={handleSendMessage}
+                currentUsername={currentUsername}
+            />
 
             {/* Scoreboard */}
             <ScoreBoard scoreA={scores.A} scoreB={scores.B} />
