@@ -65,6 +65,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [inviteTeam, setInviteTeam] = useState<'A' | 'B' | null>(null)
     const [shareCopied, setShareCopied] = useState(false)
 
+    const [gameCancelled, setGameCancelled] = useState(false)
+
     // Trump Card Intro Animation State
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
     const [isFadingOutTrump, setIsFadingOutTrump] = useState(false)
@@ -519,10 +521,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         const channel = supabase
             .channel(`game-${game.id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${game.id}` }, (payload) => {
-                setGameState((prev: any) => {
-                    const newState = { ...prev, ...payload.new }
-                    return newState
-                })
+                if (payload.eventType === 'DELETE') {
+                    setGameCancelled(true)
+                    return
+                }
+                setGameState((prev: any) => ({ ...prev, ...payload.new }))
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players', filter: `game_id=eq.${game.id}` }, async () => {
+                const { data: players } = await supabase
+                    .from('game_players')
+                    .select('*, profiles(username, avatar_url)')
+                    .eq('game_id', game.id)
+                if (players) {
+                    setGameState((prev: any) => ({ ...prev, game_players: players }))
+                }
             })
             .on('broadcast', { event: 'chat_message' }, (payload) => {
                 setMessages(prev => [...prev, payload.payload])
@@ -986,6 +998,25 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                                 ))}
                             </ul>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Game Cancelled Overlay */}
+            {gameCancelled && (
+                <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                    <div className="bg-card rounded-2xl p-8 text-center max-w-sm w-full shadow-2xl border border-border animate-in zoom-in-95 fade-in duration-300">
+                        <div className="text-5xl mb-4">🚫</div>
+                        <h2 className="text-xl font-bold text-foreground mb-2">Mesa Cancelada</h2>
+                        <p className="text-muted-foreground text-sm mb-6">
+                            O anfitrião cancelou a mesa. O teu saldo foi devolvido automaticamente.
+                        </p>
+                        <button
+                            onClick={() => router.push('/dashboard/play')}
+                            className="w-full bg-accent text-accent-foreground py-3 rounded-xl font-bold hover:bg-accent/90 transition-colors"
+                        >
+                            Voltar ao Lobby
+                        </button>
                     </div>
                 </div>
             )}

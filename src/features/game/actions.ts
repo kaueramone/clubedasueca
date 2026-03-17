@@ -280,6 +280,38 @@ export async function playTimeoutCard(gameId: string) {
 
 
 // ============================================
+// DEAL CARDS (shared helper)
+// ============================================
+
+export async function dealCardsForGame(gameId: string) {
+    const { generateDeck, shuffleDeck } = await import('./utils')
+    const supabase = await createClient()
+    const deck = shuffleDeck(generateDeck())
+
+    const { data: players } = await supabase
+        .from('game_players')
+        .select('id, position')
+        .eq('game_id', gameId)
+        .order('position', { ascending: true })
+
+    if (!players || players.length !== 4) return
+
+    for (let i = 0; i < 4; i++) {
+        await supabase.from('game_players').update({ hand: deck.slice(i * 10, (i + 1) * 10) }).eq('id', players[i].id)
+    }
+
+    const trumpSuit = deck[9].split('-')[0]
+    await supabase.from('games').update({
+        trump_suit: trumpSuit,
+        current_turn: 1,
+        current_trick: 1,
+        current_round: 1,
+        score_a: 0,
+        score_b: 0,
+    }).eq('id', gameId)
+}
+
+// ============================================
 // TABLE INVITES
 // ============================================
 
@@ -329,19 +361,18 @@ export async function sendTableInvite(gameId: string, toUserId: string, team?: '
     if (!game || game.status !== 'waiting') return { error: 'Mesa já não está disponível' }
     if (game.host_id !== user.id) return { error: 'Apenas o anfitrião pode convidar' }
 
-    const { error } = await supabase
-        .from('table_invites')
-        .upsert(
-            {
-                game_id: gameId,
-                from_user_id: user.id,
-                to_user_id: toUserId,
-                team: team || null,
-                status: 'pending',
-                expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
-            },
-            { onConflict: 'game_id,to_user_id' }
-        )
+    // Delete any existing invite to guarantee a fresh INSERT (so realtime fires)
+    await supabase.from('table_invites').delete()
+        .eq('game_id', gameId).eq('to_user_id', toUserId)
+
+    const { error } = await supabase.from('table_invites').insert({
+        game_id: gameId,
+        from_user_id: user.id,
+        to_user_id: toUserId,
+        team: team || null,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+    })
 
     if (error) return { error: error.message }
     return { success: true }
@@ -354,7 +385,7 @@ export async function respondTableInvite(inviteId: string, accept: boolean) {
 
     const { data: invite } = await supabase
         .from('table_invites')
-        .select('game_id, to_user_id, games(stake)')
+        .select('game_id, to_user_id, team, games(stake)')
         .eq('id', inviteId)
         .single()
 
@@ -376,6 +407,22 @@ export async function respondTableInvite(inviteId: string, accept: boolean) {
                     balance: wallet?.balance || 0,
                 }
             }
+        }
+
+        // Actually join the game with the correct team from the invite
+        const { data: joinData, error: joinError } = await supabase.rpc('process_join_game', {
+            p_user_id: user.id,
+            p_game_id: invite.game_id,
+            p_preferred_team: invite.team || null,
+        })
+
+        if (joinError && !joinData?.already_joined) {
+            return { error: joinError.message || 'Erro ao entrar na mesa.' }
+        }
+
+        // If 4th player joined, deal cards
+        if (joinData?.game_started) {
+            await dealCardsForGame(invite.game_id)
         }
     }
 

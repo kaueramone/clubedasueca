@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { generateDeck, shuffleDeck } from '@/features/game/utils'
+import { dealCardsForGame } from '@/features/game/actions'
 
 export async function createGame(prevState: any, formData: FormData) {
     const supabase = await createClient()
@@ -63,56 +63,10 @@ export async function joinGame(gameId: string, formData?: FormData) {
 
     // If this was the 4th player + game just started → deal cards
     if (data?.game_started) {
-        await dealCards(supabase, gameId)
+        await dealCardsForGame(gameId)
     }
 
     revalidatePath(`/dashboard/play/${gameId}`)
     redirect(`/dashboard/play/${gameId}`)
 }
 
-/**
- * Distribui as cartas: gera baralho, baralha, distribui 10 cartas por jogador,
- * e define o naipe trunfo (última carta do dealer).
- */
-async function dealCards(supabase: any, gameId: string) {
-    // Generate and shuffle deck
-    const deck = shuffleDeck(generateDeck())
-
-    // Get all players ordered by position
-    const { data: players } = await supabase
-        .from('game_players')
-        .select('id, position')
-        .eq('game_id', gameId)
-        .order('position', { ascending: true })
-
-    if (!players || players.length !== 4) {
-        console.error('[DEAL] Expected 4 players, got', players?.length)
-        return
-    }
-
-    // Deal 10 cards to each player
-    for (let i = 0; i < 4; i++) {
-        const hand = deck.slice(i * 10, (i + 1) * 10)
-        await supabase
-            .from('game_players')
-            .update({ hand })
-            .eq('id', players[i].id)
-    }
-
-    // Trump suit: determined by the last card of the dealer (position 0)
-    const lastCard = deck[9] // Last card of player 0's hand
-    const trumpSuit = lastCard.split('-')[0] // e.g. 'hearts-A' → 'hearts'
-
-    // Update game with trump suit and set turn to position 1 (right of dealer)
-    await supabase
-        .from('games')
-        .update({
-            trump_suit: trumpSuit,
-            current_turn: 1,
-            current_trick: 1,
-            current_round: 1,
-            score_a: 0,
-            score_b: 0,
-        })
-        .eq('id', gameId)
-}
