@@ -288,23 +288,30 @@ export async function getFriendsForInvite() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return []
 
-    const { data } = await supabase
+    const { data: friendships } = await supabase
         .from('friendships')
-        .select('friend_id, user_id, profiles!friendships_friend_id_fkey(id, username, avatar_url), profiles2:profiles!friendships_user_id_fkey(id, username, avatar_url)')
+        .select('user_id, friend_id')
         .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
         .eq('status', 'accepted')
 
-    if (!data) return []
+    if (!friendships || friendships.length === 0) return []
 
-    return data.map((f: any) => {
-        const isSender = f.user_id === user.id
-        const friend = isSender ? f.profiles : f.profiles2
-        return {
-            id: friend?.id,
-            username: friend?.username || 'Jogador',
-            avatar_url: friend?.avatar_url || null,
-        }
-    }).filter((f: any) => f.id)
+    const friendIds = friendships.map((f: any) =>
+        f.user_id === user.id ? f.friend_id : f.user_id
+    )
+
+    const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', friendIds)
+
+    if (!profiles) return []
+
+    return profiles.map((p: any) => ({
+        id: p.id,
+        username: p.username || 'Jogador',
+        avatar_url: p.avatar_url || null,
+    }))
 }
 
 export async function sendTableInvite(gameId: string, toUserId: string, team?: 'A' | 'B') {
