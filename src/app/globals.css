@@ -1,8 +1,5 @@
 @import "tailwindcss";
 
-/* Custom variant: telas de baixa altura (telemovel em landscape) */
-@custom-variant short (@media (max-height: 480px));
-
 /* Custom variant: telas de baixa altura (telemóvel em landscape) */
 @custom-variant short (@media (max-height: 480px));
 
@@ -117,7 +114,11 @@
     @apply border-border;
   }
 
-  bo
+  body {
+    @apply bg-background text-foreground antialiased font-sans selection:bg-accent/30 selection:text-foreground;
+  }
+}
+
 @layer utilities {
   /* Safe-area helpers (require viewport-fit=cover, set in layout.tsx) */
   .pt-safe { padding-top: env(safe-area-inset-top); }
