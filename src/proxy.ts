@@ -8,11 +8,21 @@ const ALLOWED_HOSTS = [
     'www.clubedasueca.com.br',
     'clubedasueca.com',
     'www.clubedasueca.com',
+    'clubedasueca.co.mz',
+    'www.clubedasueca.co.mz',
+    'vercel.app',
     'localhost',
 ]
 
 export async function proxy(request: NextRequest) {
     const host = request.headers.get('host') || ''
+
+    // A rota interna do watchdog (chamada pelo cron) é isenta do bloqueio de
+    // host — ela já é protegida pelo segredo CRON_SECRET na própria rota.
+    if (request.nextUrl.pathname.startsWith('/api/games/tick')) {
+        return NextResponse.next()
+    }
+
     if (process.env.NODE_ENV === 'production' && !ALLOWED_HOSTS.some(h => host.includes(h))) {
         return new NextResponse('Not Found', { status: 404 })
     }
