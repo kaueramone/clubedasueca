@@ -799,7 +799,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pLeft?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     </div>
                 </div>
-                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] short:-space-y-[112px] ml-2">
+                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] short:-space-y-[44px] ml-2">
                     {getOpponentCards(pLeft).map(i => (
                         <div key={i} className="transform -rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
@@ -808,7 +808,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Right Player (Opponent) */}
             <div className="absolute right-6 short:right-8 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-right">
-                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] short:-space-y-[112px] mr-2">
+                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] short:-space-y-[44px] mr-2">
                     {getOpponentCards(pRight).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
                     ))}
