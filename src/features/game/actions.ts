@@ -53,10 +53,17 @@ export async function leaveGame(gameId: string) {
     redirect('/dashboard/play')
 }
 
-export async function playCard(gameId: string, card: string) {
+export async function playCard(gameId: string, card: string, actingUserId?: string) {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Não autenticado' }
+    // actingUserId permite que o watchdog server-side jogue por um jogador AFK.
+    // Quando ausente, resolve o utilizador autenticado normalmente.
+    let userId = actingUserId
+    if (!userId) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return { error: 'Não autenticado' }
+        userId = user.id
+    }
+    const user = { id: userId }
 
     // 1. Fetch Game State
     const { data: game, error: gameError } = await supabase
@@ -224,6 +231,7 @@ export async function playCard(gameId: string, card: string) {
                 current_trick: currentTrick + 1,
                 score_a: newScoreA,
                 score_b: newScoreB,
+                turn_started_at: new Date().toISOString(),
             }).eq('id', gameId)
         }
     } else {
@@ -231,6 +239,7 @@ export async function playCard(gameId: string, card: string) {
         const nextPosition = (currentPlayer.position + 1) % 4
         await supabase.from('games').update({
             current_turn: nextPosition,
+            turn_started_at: new Date().toISOString(),
         }).eq('id', gameId)
     }
 
@@ -278,6 +287,48 @@ export async function playTimeoutCard(gameId: string) {
     return { error: 'Não podes forçar timeout noutros, apenas podias jogar a tua e passaste do tempo.' }
 }
 
+// ============================================
+// WATCHDOG SERVER-SIDE: joga automaticamente pelo jogador da vez.
+// Usado pela rota /api/games/tick quando um turno fica parado tempo demais,
+// independentemente de qualquer client estar conectado.
+// Reaproveita a lógica de regras (isValidMove) e o playCard existente.
+// ============================================
+export async function autoPlayForPlayer(gameId: string) {
+    const supabase = await createClient()
+
+    const { data: game } = await supabase.from('games').select('*').eq('id', gameId).single()
+    if (!game || game.status !== 'playing') return { error: 'Jogo inativo' }
+
+    const { data: players } = await supabase.from('game_players').select('*').eq('game_id', gameId)
+    if (!players) return { error: 'Jogadores não encontrados' }
+
+    const currentPlayer = players.find(p => p.position === game.current_turn)
+    if (!currentPlayer) return { error: 'Jogador da vez não encontrado' }
+
+    const hand: string[] = currentPlayer.hand || []
+    if (hand.length === 0) return { error: 'Sem cartas na mão' }
+
+    // Descobre o naipe de saída da vaza atual
+    const { data: moves } = await supabase
+        .from('game_moves')
+        .select('*')
+        .eq('game_id', gameId)
+        .eq('round_number', game.current_round || 1)
+        .eq('trick_number', game.current_trick || 1)
+        .order('played_at', { ascending: true })
+
+    const leadCard = moves && moves.length > 0 ? moves[0] : null
+    const leadSuit = leadCard ? getCardSuit(leadCard.card) : null
+
+    const validCards = hand.filter((c: string) => isValidMove(c, hand, leadSuit))
+    const cardToPlay = validCards.length > 0
+        ? validCards[Math.floor(Math.random() * validCards.length)]
+        : hand[0]
+
+    // Joga POR ESTE jogador (actingUserId), reusando toda a lógica de playCard
+    return playCard(gameId, cardToPlay, currentPlayer.user_id)
+}
+
 
 // ============================================
 // DEAL CARDS (shared helper)
@@ -308,6 +359,7 @@ export async function dealCardsForGame(gameId: string) {
         current_round: 1,
         score_a: 0,
         score_b: 0,
+        turn_started_at: new Date().toISOString(),
     }).eq('id', gameId)
 }
 
