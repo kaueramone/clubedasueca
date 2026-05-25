@@ -686,7 +686,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         : (currentUser?.profiles?.username || 'Você')
 
     return (
-        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 short:p-1 select-none">
+        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 short:p-1 short:px-safe select-none">
             {/* Background Images */}
             <div className="absolute inset-0 z-0">
                 <Image src="/images/mesa-horizontal.png" alt="Mesa de jogo" fill className="object-cover hidden md:block" priority />
@@ -784,7 +784,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{pTop?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     <PlayerAvatar player={pTop} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pTop)} onInvite={isHost && !pTop ? () => openSeatInvite((myPos + 2) % 4) : undefined} />
                 </div>
-                <div className="flex -space-x-[50px] sm:-space-x-[70px] h-20 items-start">
+                <div className="flex -space-x-[50px] sm:-space-x-[70px] short:-space-x-[60px] h-20 short:h-12 items-start justify-center">
                     {getOpponentCards(pTop).map(i => (
                         <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>
                     ))}
@@ -792,7 +792,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Left Player (Opponent) */}
-            <div className="absolute left-6 short:left-1 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-left">
+            <div className="absolute left-6 short:left-8 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-left">
                 <div className="flex flex-col items-center shrink-0">
                     <PlayerAvatar player={pLeft} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pLeft)} onInvite={isHost && !pLeft ? () => openSeatInvite((myPos + 1) % 4) : undefined} />
                     <div className="flex flex-col items-center mt-1">
@@ -807,7 +807,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Right Player (Opponent) */}
-            <div className="absolute right-6 short:right-1 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-right">
+            <div className="absolute right-6 short:right-8 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-right">
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] mr-2">
                     {getOpponentCards(pRight).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
