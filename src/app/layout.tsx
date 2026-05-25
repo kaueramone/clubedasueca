@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
@@ -23,6 +23,13 @@ export const metadata: Metadata = {
         locale: 'pt_PT',
         alternateLocale: ['pt_BR'],
     },
+};
+
+export const viewport: Viewport = {
+    width: 'device-width',
+    initialScale: 1,
+    viewportFit: 'cover',
+    themeColor: '#0B1F1A',
 };
 
 export default async function RootLayout({

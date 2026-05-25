@@ -57,7 +57,7 @@ export default async function DashboardLayout({
     const totalNotifications = (pendingCount || 0) + (unreadMessagesCount || 0);
 
     return (
-        <div className="flex h-screen bg-ios-gray6">
+        <div className="flex h-[100dvh] bg-ios-gray6">
             <UserPresence userId={user.id} email={user.email || ''} />
             <Sidebar userEmail={user.email} pendingCount={totalNotifications} userId={user.id} initialChatUnread={unreadMessagesCount || 0} />
             <div className="flex flex-1 flex-col overflow-hidden">

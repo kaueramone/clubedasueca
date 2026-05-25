@@ -644,7 +644,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 className={cn(
                     "relative transition-all select-none filter drop-shadow-md",
                     onClick ? "cursor-pointer active:scale-95 z-0" : "",
-                    isOpponent ? "w-14 h-20 sm:w-20 sm:h-28" : "w-[5.2rem] h-[7.8rem] sm:w-[6.5rem] sm:h-[9.75rem] lg:w-32 lg:h-48"
+                    isOpponent ? "w-14 h-20 sm:w-20 sm:h-28 short:w-10 short:h-14" : "w-[5.2rem] h-[7.8rem] short:w-14 short:h-20 sm:w-[6.5rem] sm:h-[9.75rem] lg:w-32 lg:h-48"
                 )}
             >
                 <Image
@@ -663,7 +663,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return (
             <div className={cn(
                 "relative filter drop-shadow-sm",
-                "w-14 h-20 sm:w-20 sm:h-28",
+                "w-14 h-20 sm:w-20 sm:h-28 short:w-9 short:h-12",
                 rotate ? "rotate-90" : ""
             )}>
                 <Image
@@ -686,7 +686,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         : (currentUser?.profiles?.username || 'Você')
 
     return (
-        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 select-none">
+        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 short:p-1 select-none">
             {/* Background Images */}
             <div className="absolute inset-0 z-0">
                 <Image src="/images/mesa-horizontal.png" alt="Mesa de jogo" fill className="object-cover hidden md:block" priority />
@@ -779,7 +779,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {/* --- Players --- */}
 
             {/* Top Player (Partner) */}
-            <div className="absolute top-[8%] sm:top-8 flex flex-col items-center z-10 w-full">
+            <div className="absolute top-[8%] sm:top-8 short:top-0 flex flex-col items-center z-10 w-full short:scale-75 short:origin-top">
                 <div className="flex flex-col items-center mb-[-10px] z-20">
                     <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{pTop?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
                     <PlayerAvatar player={pTop} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pTop)} onInvite={isHost && !pTop ? () => openSeatInvite((myPos + 2) % 4) : undefined} />
@@ -792,7 +792,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Left Player (Opponent) */}
-            <div className="absolute left-6 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
+            <div className="absolute left-6 short:left-1 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-left">
                 <div className="flex flex-col items-center shrink-0">
                     <PlayerAvatar player={pLeft} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pLeft)} onInvite={isHost && !pLeft ? () => openSeatInvite((myPos + 1) % 4) : undefined} />
                     <div className="flex flex-col items-center mt-1">
@@ -807,7 +807,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Right Player (Opponent) */}
-            <div className="absolute right-6 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4">
+            <div className="absolute right-6 short:right-1 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-right">
                 <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] mr-2">
                     {getOpponentCards(pRight).map(i => (
                         <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
@@ -822,7 +822,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Center (Table) */}
-            <div className="relative w-48 h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+            <div className="relative w-48 h-48 short:w-28 short:h-28 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
                     <Image src="/images/favicon.png" alt="" fill className="object-contain p-4" aria-hidden="true" />
                 </div>
@@ -885,8 +885,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Bottom Player (Me) */}
-            <div className="absolute bottom-6 sm:bottom-10 w-full flex flex-col items-center z-20">
-                <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] mb-6 sm:mb-8 px-2 py-2 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center" role="group" aria-label="As suas cartas">
+            <div className="absolute bottom-6 sm:bottom-10 short:bottom-1 w-full flex flex-col items-center z-20">
+                <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] short:-space-x-[2rem] mb-6 sm:mb-8 short:mb-1 px-2 py-2 short:py-0 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center" role="group" aria-label="As suas cartas">
                     {sortHand(myPlayer.hand || []).map((card: string, index: number) => {
                         const total = myPlayer.hand.length
                         const mid = (total - 1) / 2
@@ -905,8 +905,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     })}
                 </div>
 
-                <div className="flex items-center gap-3 bg-black/40 px-6 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
+                <div className="flex items-center gap-3 short:gap-1.5 bg-black/40 px-6 py-2 short:px-3 short:py-0.5 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
+                    <div className="h-10 w-10 short:h-7 short:w-7 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
                         {myPlayer.profiles?.avatar_url ? (
                             <Image src={myPlayer.profiles.avatar_url} alt={myPlayer.profiles?.username || 'Eu'} fill className="object-cover" />
                         ) : (
@@ -954,9 +954,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Invite Friend Modal */}
             {showInviteModal && (
-                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
-                    <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-5">
+                <div className="fixed inset-0 z-[300] flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowInviteModal(false)} />
+                    <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-5 my-auto max-h-[90dvh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-1">
                             <h3 className="font-bold text-foreground text-base">Convidar Amigo</h3>
                             <button onClick={() => setShowInviteModal(false)} className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted transition-colors">
@@ -1004,8 +1004,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
             {/* Game Cancelled Overlay */}
             {gameCancelled && (
-                <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-                    <div className="bg-card rounded-2xl p-8 text-center max-w-sm w-full shadow-2xl border border-border animate-in zoom-in-95 fade-in duration-300">
+                <div className="fixed inset-0 z-[500] flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
+                    <div className="bg-card rounded-2xl p-8 text-center max-w-sm w-full my-auto max-h-[90dvh] overflow-y-auto shadow-2xl border border-border animate-in zoom-in-95 fade-in duration-300">
                         <div className="text-5xl mb-4">🚫</div>
                         <h2 className="text-xl font-bold text-foreground mb-2">Mesa Cancelada</h2>
                         <p className="text-muted-foreground text-sm mb-6">

@@ -22,8 +22,8 @@ export const GameResultOverlay = memo(function GameResultOverlay({
     onRegister,
 }: GameResultOverlayProps) {
     return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500" role="dialog" aria-label="Resultado do jogo">
-            <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-md w-full mx-4 border-4 border-accent/20">
+        <div className="absolute inset-0 z-50 flex items-start sm:items-center justify-center bg-black/80 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto p-4" role="dialog" aria-label="Resultado do jogo">
+            <div className="bg-white p-8 short:p-5 rounded-3xl shadow-2xl text-center max-w-md w-full my-auto max-h-[90dvh] overflow-y-auto border-4 border-accent/20">
                 <div className="mb-6 flex justify-center">
                     <div className={cn("p-4 rounded-full", gameResult.winnerTeam === 'A' ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600")}>
                         <Trophy className="h-12 w-12" />

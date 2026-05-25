@@ -37,7 +37,7 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
     }
 
     return (
-        <div className="h-[calc(100vh-6rem)] w-full overflow-hidden bg-ios-gray6">
+        <div className="h-[calc(100dvh-4rem)] -m-4 md:-m-8 overflow-hidden bg-ios-gray6">
             <GameTable game={game} currentUser={user} />
         </div>
     );
