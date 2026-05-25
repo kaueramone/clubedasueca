@@ -13,6 +13,10 @@ export default async function LobbyPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Reforco best-effort: expira mesas estagnadas (>10min) ao abrir o lobby.
+    // A garantia principal vem do pg_cron; isto so acelera quando ha trafego.
+    await supabase.rpc("expire_stale_games", { p_timeout_minutes: 10 });
+
     const { data: games } = await supabase
         .from("games")
         .select("*, profiles:host_id(username, avatar_url), game_players(count)")
