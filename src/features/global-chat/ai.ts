@@ -119,7 +119,7 @@ export async function getBotReply(userMessage: string): Promise<string | null> {
                     { role: 'system', content: SYSTEM_PROMPT },
                     { role: 'user', content: userMessage },
                 ],
-                max_tokens: 150,
+                max_tokens: 100,
                 temperature: 0.5,
             }),
         })
@@ -130,7 +130,10 @@ export async function getBotReply(userMessage: string): Promise<string | null> {
         }
 
         const json = await res.json()
-        return json.choices?.[0]?.message?.content?.trim() ?? null
+        const text: string = json.choices?.[0]?.message?.content?.trim() ?? null
+        if (!text) return null
+        // Enforce 200 char limit to match global_messages check constraint
+        return text.length <= 200 ? text : text.slice(0, 197) + '…'
     } catch (err) {
         console.error('[Bot] fetch error:', err)
         return null

@@ -43,10 +43,12 @@ export async function POST(req: NextRequest) {
                 if (!reply) return
 
                 const supabase = createServiceClient()
-                await supabase.from('global_messages').insert({
+                const { error } = await supabase.from('global_messages').insert({
                     user_id: BOT_USER_ID,
                     content: reply,
                 })
+                if (error) console.error('[community/respond] insert error:', JSON.stringify(error))
+                else console.log('[community/respond] bot reply inserted OK')
             } catch (err) {
                 console.error('[community/respond] background error:', err)
             }
