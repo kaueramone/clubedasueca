@@ -299,4 +299,77 @@ export async function sendTableInvite(gameId: string, toUserId: string, team?: '
     if (game.host_id !== user.id) return { error: 'Apenas o anfitrião pode convidar' }
 
     // Delete any existing invite to guarantee a fresh INSERT (so realtime fires)
-    await supabase.from('table_in
+    await supabase.from('table_invites').delete()
+        .eq('game_id', gameId).eq('to_user_id', toUserId)
+
+    const { error } = await supabase.from('table_invites').insert({
+        game_id: gameId,
+        from_user_id: user.id,
+        to_user_id: toUserId,
+        team: team || null,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+    })
+
+    if (error) return { error: error.message }
+    return { success: true }
+}
+
+export async function respondTableInvite(inviteId: string, accept: boolean) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+
+    const { data: invite } = await supabase
+        .from('table_invites')
+        .select('game_id, to_user_id, team, games(stake)')
+        .eq('id', inviteId)
+        .single()
+
+    if (!invite || invite.to_user_id !== user.id) return { error: 'Convite inválido' }
+
+    if (accept) {
+        const stake = (invite.games as any)?.stake || 0
+        if (stake > 0) {
+            const { data: wallet } = await supabase
+                .from('wallets')
+                .select('balance')
+                .eq('user_id', user.id)
+                .single()
+
+            if (!wallet || wallet.balance < stake) {
+                return {
+                    error: 'Saldo insuficiente',
+                    required: stake,
+                    balance: wallet?.balance || 0,
+                }
+            }
+        }
+
+        // Actually join the game with the correct team from the invite
+        const { data: joinData, error: joinError } = await supabase.rpc('process_join_game', {
+            p_user_id: user.id,
+            p_game_id: invite.game_id,
+            p_preferred_team: invite.team || null,
+        })
+
+        if (joinError && !joinData?.already_joined) {
+            return { error: joinError.message || 'Erro ao entrar na mesa.' }
+        }
+
+        // If 4th player joined, deal cards
+        if (joinData?.game_started) {
+            await dealCardsForGame(invite.game_id)
+        }
+    }
+
+    await supabase
+        .from('table_invites')
+        .update({ status: accept ? 'accepted' : 'declined' })
+        .eq('id', inviteId)
+
+    if (accept) {
+        return { success: true, gameId: invite.game_id }
+    }
+    return { success: true }
+}
