@@ -83,12 +83,16 @@ export function GlobalChat({
                     'postgres_changes',
                     { event: 'INSERT', schema: 'public', table: 'global_messages' },
                     async (payload) => {
-                        const incomingId = payload.new.id
-                        const incomingUserId = payload.new.user_id
+                        const incomingId = payload.new.id as string
 
-                        // Own messages are already shown optimistically — skip
-                        if (incomingUserId === currentUserId) return
+                        // Skip if already in state (own optimistic already confirmed, or duplicate event)
+                        setMessages(prev => {
+                            if (prev.some(m => m.id === incomingId)) return prev
+                            // Will be populated by the fetch below — return prev for now
+                            return prev
+                        })
 
+                        // Check synchronously via ref to avoid race
                         // Fetch full message with profile info
                         const { data } = await supabase
                             .from('global_messages')
