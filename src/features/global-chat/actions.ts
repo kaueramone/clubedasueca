@@ -64,24 +64,31 @@ export async function sendGlobalMessage(content: string) {
 
     if (error) return { error: error.message }
 
-    // Trigger bot server-side — avoids any client-side fetch issues (CORS, middleware, etc.)
-    // Uses waitUntil-style: we don't await so the user gets the response immediately,
-    // but in Vercel Edge/Node the async work completes before the function tears down.
-    if (user.id !== BOT_USER_ID) {
-        // Intentionally not awaited — fire and complete within the same serverless invocation
-        getBotReply(text).then(async (reply) => {
-            if (!reply) return
-            const service = createServiceClient()
-            await service.from('global_messages').insert({
-                user_id: BOT_USER_ID,
-                content: reply,
-            })
-        }).catch(err => console.error('[Bot]', err))
-    }
-
     return {
         success: true,
         id: inserted.id,
         created_at: inserted.created_at,
+        shouldTriggerBot: user.id !== BOT_USER_ID,
+        message: text,
+    }
+}
+
+// Separate Server Action for the bot — called by the client after confirming
+// the user message. Runs as its own full serverless invocation on Vercel,
+// so it won't be killed prematurely like a fire-and-forget Promise would be.
+export async function triggerBotReply(message: string) {
+    if (!message?.trim()) return
+
+    try {
+        const reply = await getBotReply(message)
+        if (!reply) return
+
+        const service = createServiceClient()
+        await service.from('global_messages').insert({
+            user_id: BOT_USER_ID,
+            content: reply,
+        })
+    } catch (err) {
+        console.error('[Bot]', err)
     }
 }

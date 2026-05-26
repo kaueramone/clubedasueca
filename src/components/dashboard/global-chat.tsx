@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getGlobalMessages, sendGlobalMessage } from '@/features/global-chat/actions'
+import { getGlobalMessages, sendGlobalMessage, triggerBotReply } from '@/features/global-chat/actions'
 import { Send, MessageSquare, Gamepad2 } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -156,13 +156,18 @@ export function GlobalChat({
             setMessages(prev => prev.filter(m => m.id !== tempId))
         } else if (result?.success) {
             // Confirm optimistic message immediately with the real id/timestamp
-            // Bot is triggered server-side inside sendGlobalMessage — no client fetch needed
             setMessages(prev => prev.map(m =>
                 m.id === tempId
                     ? { ...m, id: result.id, optimistic: false, created_at: result.created_at }
                     : m
             ))
             pendingTempId.current = null
+
+            // Trigger bot as a separate Server Action invocation — this runs as its own
+            // full Vercel function call and won't be killed prematurely
+            if (result.shouldTriggerBot) {
+                triggerBotReply(result.message).catch(() => {})
+            }
         }
 
         setSending(false)
