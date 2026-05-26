@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getGlobalMessages, sendGlobalMessage } from '@/features/global-chat/actions'
-import { Send, Gamepad2 } from 'lucide-react'
+import { Send, Gamepad2, MessageSquare } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
@@ -35,23 +35,18 @@ export function GlobalChat({
     const messagesContainerRef = useRef<HTMLDivElement>(null)
     const supabaseRef = useRef(createClient())
     const supabase = supabaseRef.current
-    // Track last optimistic temp id so Realtime can confirm it precisely
     const pendingTempId = useRef<string | null>(null)
-    // Track whether initial messages have loaded — only auto-scroll after that
     const initialLoadDone = useRef(false)
 
-    // Scroll the chat container (not the viewport) to the bottom
     const scrollToBottom = useCallback((smooth = true) => {
         const el = messagesContainerRef.current
         if (!el) return
         el.scrollTo({ top: el.scrollHeight, behavior: smooth ? 'smooth' : 'instant' })
     }, [])
 
-    // Load initial messages — scroll instantly so viewport stays at top
     useEffect(() => {
         getGlobalMessages().then(msgs => {
             setMessages(msgs)
-            // Use rAF to wait for the DOM to paint before scrolling the inner container
             requestAnimationFrame(() => {
                 scrollToBottom(false)
                 initialLoadDone.current = true
@@ -59,19 +54,16 @@ export function GlobalChat({
         })
     }, [scrollToBottom])
 
-    // Scroll smoothly when a new message arrives (after initial load)
     useEffect(() => {
         if (!initialLoadDone.current) return
         scrollToBottom(true)
     }, [messages, scrollToBottom])
 
-    // Realtime subscription — receives messages from other users and the bot
     useEffect(() => {
         let retryTimeout: ReturnType<typeof setTimeout>
         let channelRef: ReturnType<typeof supabase.channel> | null = null
 
         const subscribe = async () => {
-            // Ensure we have a valid session token before subscribing
             const { data: { session } } = await supabase.auth.getSession()
             if (!session) return
 
@@ -85,15 +77,11 @@ export function GlobalChat({
                     async (payload) => {
                         const incomingId = payload.new.id as string
 
-                        // Skip if already in state (own optimistic already confirmed, or duplicate event)
                         setMessages(prev => {
                             if (prev.some(m => m.id === incomingId)) return prev
-                            // Will be populated by the fetch below — return prev for now
                             return prev
                         })
 
-                        // Check synchronously via ref to avoid race
-                        // Fetch full message with profile info
                         const { data } = await supabase
                             .from('global_messages')
                             .select('id, content, created_at, user_id, profiles!inner(username, avatar_url)')
@@ -119,7 +107,6 @@ export function GlobalChat({
                 )
                 .subscribe((status) => {
                     if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-                        // Retry after 3s on failure
                         retryTimeout = setTimeout(() => {
                             supabase.removeChannel(channel)
                             subscribe()
@@ -146,7 +133,6 @@ export function GlobalChat({
         setSending(true)
         setNewMessage('')
 
-        // Optimistic update — show message instantly
         const tempId = `optimistic-${Date.now()}`
         pendingTempId.current = tempId
         const optimisticMsg: GlobalMessage = {
@@ -161,14 +147,11 @@ export function GlobalChat({
         }
         setMessages(prev => [...prev, optimisticMsg].slice(-10))
 
-        // Send to server
         const result = await sendGlobalMessage(text)
 
         if (result?.error) {
-            // Rollback optimistic message on error
             setMessages(prev => prev.filter(m => m.id !== tempId))
         } else if (result?.success) {
-            // Confirm optimistic message immediately with the real id/timestamp
             setMessages(prev => prev.map(m =>
                 m.id === tempId
                     ? { ...m, id: result.id, optimistic: false, created_at: result.created_at }
@@ -187,7 +170,7 @@ export function GlobalChat({
 
     return (
         <div className="flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-            {/* Header */}
+            {/* Header — sem título, apenas indicador online */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border bg-primary/5">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 <span className="ml-auto text-[10px] text-muted-foreground font-medium">últimas 10 mensagens</span>
@@ -271,7 +254,6 @@ export function GlobalChat({
                         onChange={e => setNewMessage(e.target.value)}
                         placeholder="Diz olá à comunidade..."
                         maxLength={200}
-                        // text-[16px] prevents iOS auto-zoom on focus (zoom triggers below 16px)
                         className="flex-1 min-w-0 bg-muted border border-border text-foreground text-[16px] leading-tight rounded-full px-4 py-2 outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all placeholder:text-muted-foreground"
                     />
                     <button
