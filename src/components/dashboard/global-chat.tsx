@@ -170,9 +170,11 @@ export function GlobalChat({
 
     return (
         <div className="flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-            {/* Header — sem título, apenas indicador online */}
+            {/* Header */}
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border bg-primary/5">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <MessageSquare className="w-4 h-4 text-accent" />
+                <h3 className="font-bold text-foreground text-sm">Chat da Comunidade</h3>
                 <span className="ml-auto text-[10px] text-muted-foreground font-medium">últimas 10 mensagens</span>
             </div>
 
