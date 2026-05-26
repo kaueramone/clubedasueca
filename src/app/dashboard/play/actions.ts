@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { dealCardsForGame } from '@/features/game/actions'
 
 export async function createGame(prevState: any, formData: FormData) {
     const supabase = await createClient()
@@ -61,10 +60,9 @@ export async function joinGame(gameId: string, formData?: FormData) {
         return { error: error.message || 'Erro ao entrar na mesa.' }
     }
 
-    // If this was the 4th player + game just started → deal cards
-    if (data?.game_started) {
-        await dealCardsForGame(gameId)
-    }
+    // Nota: a distribuição de cartas é feita atomicamente DENTRO do RPC
+    // process_join_game quando o 4º jogador entra (migration 099). Não
+    // chamar dealCardsForGame aqui — re-embaralharia as mãos.
 
     revalidatePath(`/dashboard/play/${gameId}`)
     redirect(`/dashboard/play/${gameId}`)

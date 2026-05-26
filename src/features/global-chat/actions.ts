@@ -1,6 +1,10 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
+import { getBotReply } from './ai'
+
+const BOT_USER_ID = process.env.NEXT_PUBLIC_BOT_USER_ID ?? '00000000-0000-0000-0000-000000000001'
 
 export async function getGlobalMessages() {
     const supabase = await createClient()
@@ -58,5 +62,24 @@ export async function sendGlobalMessage(content: string) {
         .insert({ user_id: user.id, content: text })
 
     if (error) return { error: error.message }
+
+    // Trigger bot reply asynchronously (fire-and-forget — don't block the user)
+    // Anti-loop: only trigger when the sender is NOT the bot
+    if (user.id !== BOT_USER_ID) {
+        void (async () => {
+            try {
+                const reply = await getBotReply(text)
+                if (!reply) return
+
+                const service = createServiceClient()
+                await service
+                    .from('global_messages')
+                    .insert({ user_id: BOT_USER_ID, content: reply })
+            } catch (err) {
+                console.error('[Bot] failed to insert reply:', err)
+            }
+        })()
+    }
+
     return { success: true }
 }
