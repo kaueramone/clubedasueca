@@ -65,64 +65,73 @@ export function GlobalChat({
         scrollToBottom(true)
     }, [messages, scrollToBottom])
 
-    // Realtime subscription — only adds messages from OTHER users (own msgs already optimistic)
+    // Realtime subscription — receives messages from other users and the bot
     useEffect(() => {
-        const channel = supabase
-            .channel('global-chat')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'global_messages' },
-                async (payload) => {
-                    const incomingId = payload.new.id
-                    const incomingUserId = payload.new.user_id
+        let retryTimeout: ReturnType<typeof setTimeout>
+        let channelRef: ReturnType<typeof supabase.channel> | null = null
 
-                    // For own messages: confirm the optimistic entry using the tracked tempId
-                    if (incomingUserId === currentUserId) {
-                        const tid = pendingTempId.current
-                        setMessages(prev => {
-                            // If we have a pending optimistic msg, confirm it
-                            if (tid && prev.some(m => m.id === tid)) {
-                                return prev.map(m =>
-                                    m.id === tid
-                                        ? { ...m, id: incomingId, optimistic: false, created_at: payload.new.created_at }
-                                        : m
-                                )
+        const subscribe = async () => {
+            // Ensure we have a valid session token before subscribing
+            const { data: { session } } = await supabase.auth.getSession()
+            if (!session) return
+
+            const channel = supabase
+                .channel('global-chat', {
+                    config: { broadcast: { self: false } },
+                })
+                .on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'global_messages' },
+                    async (payload) => {
+                        const incomingId = payload.new.id
+                        const incomingUserId = payload.new.user_id
+
+                        // Own messages are already shown optimistically — skip
+                        if (incomingUserId === currentUserId) return
+
+                        // Fetch full message with profile info
+                        const { data } = await supabase
+                            .from('global_messages')
+                            .select('id, content, created_at, user_id, profiles!inner(username, avatar_url)')
+                            .eq('id', incomingId)
+                            .single()
+
+                        if (data) {
+                            const newMsg: GlobalMessage = {
+                                id: data.id,
+                                content: data.content,
+                                created_at: data.created_at,
+                                user_id: data.user_id,
+                                username: (data.profiles as any)?.username || 'Jogador',
+                                avatar_url: (data.profiles as any)?.avatar_url || null,
+                                game_count: 0,
                             }
-                            // Fallback: avoid duplicate if already confirmed
-                            if (prev.some(m => m.id === incomingId)) return prev
-                            return prev
-                        })
-                        pendingTempId.current = null
-                        return
-                    }
-
-                    // Fetch full message with profile info
-                    const { data } = await supabase
-                        .from('global_messages')
-                        .select('id, content, created_at, user_id, profiles!inner(username, avatar_url)')
-                        .eq('id', incomingId)
-                        .single()
-
-                    if (data) {
-                        const newMsg: GlobalMessage = {
-                            id: data.id,
-                            content: data.content,
-                            created_at: data.created_at,
-                            user_id: data.user_id,
-                            username: (data.profiles as any)?.username || 'Jogador',
-                            avatar_url: (data.profiles as any)?.avatar_url || null,
-                            game_count: 0,
+                            setMessages(prev => {
+                                if (prev.some(m => m.id === newMsg.id)) return prev
+                                return [...prev, newMsg].slice(-10)
+                            })
                         }
-                        setMessages(prev => {
-                            if (prev.some(m => m.id === newMsg.id)) return prev
-                            return [...prev, newMsg].slice(-10)
-                        })
                     }
-                }
-            )
-            .subscribe()
+                )
+                .subscribe((status) => {
+                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        // Retry after 3s on failure
+                        retryTimeout = setTimeout(() => {
+                            supabase.removeChannel(channel)
+                            subscribe()
+                        }, 3000)
+                    }
+                })
 
-        return () => { supabase.removeChannel(channel) }
+            channelRef = channel
+        }
+
+        subscribe()
+
+        return () => {
+            clearTimeout(retryTimeout)
+            if (channelRef) supabase.removeChannel(channelRef)
+        }
     }, [supabase, currentUserId])
 
     const handleSend = useCallback(async (e: React.FormEvent) => {
