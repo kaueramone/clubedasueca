@@ -71,6 +71,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
     const [isFadingOutTrump, setIsFadingOutTrump] = useState(false)
     const [showTrumpExpanded, setShowTrumpExpanded] = useState(false)
+    const trumpBadgeRef = useRef<HTMLDivElement>(null)
     const hasShownTrumpRef = useRef(false)
 
     // Audio refs
@@ -916,28 +917,44 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     </div>
                     <span className="text-white font-bold text-shadow-sm">{myPlayer.profiles?.username || 'Eu'}</span>
                     <div className="h-full w-px bg-white/20 mx-2" />
-                    {gameState.trump_card && (
-                        <div
-                            className="group flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-300 px-3 py-0.5 sm:py-1 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.4)] relative mt-[-2px] cursor-pointer select-none"
-                            onMouseEnter={() => setShowTrumpExpanded(true)}
-                            onMouseLeave={() => setShowTrumpExpanded(false)}
-                            onTouchStart={() => setShowTrumpExpanded(prev => !prev)}
-                        >
-                            <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest drop-shadow-md pr-1">Trunfo</span>
-                            <div className="relative w-6 h-8 sm:w-7 sm:h-10 overflow-hidden rounded-[4px] shadow-sm border border-white/50 bg-white transform rotate-3">
-                                <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill className="object-cover" />
-                            </div>
-                            {/* Expanded trump card — shown on hover (desktop) or tap (mobile) */}
-                            {showTrumpExpanded && (
-                                <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1 pointer-events-none">
-                                    <div className="relative w-20 h-28 rounded-lg shadow-2xl border-2 border-yellow-300 bg-white overflow-hidden">
+                    {gameState.trump_card && (() => {
+                        // Compute fixed position from badge ref so the popover escapes all stacking contexts
+                        const rect = trumpBadgeRef.current?.getBoundingClientRect()
+                        const popoverStyle: React.CSSProperties = rect ? {
+                            position: 'fixed',
+                            bottom: window.innerHeight - rect.top + 12,
+                            left: rect.left + rect.width / 2,
+                            transform: 'translateX(-50%)',
+                            zIndex: 9999,
+                            pointerEvents: 'none',
+                        } : { display: 'none' }
+
+                        return (
+                            <>
+                                <div
+                                    ref={trumpBadgeRef}
+                                    className="flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-300 px-3 py-0.5 sm:py-1 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.4)] mt-[-2px] cursor-pointer select-none"
+                                    onMouseEnter={() => setShowTrumpExpanded(true)}
+                                    onMouseLeave={() => setShowTrumpExpanded(false)}
+                                    onTouchStart={() => setShowTrumpExpanded(prev => !prev)}
+                                >
+                                    <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest drop-shadow-md pr-1">Trunfo</span>
+                                    <div className="relative w-6 h-8 sm:w-7 sm:h-10 overflow-hidden rounded-[4px] shadow-sm border border-white/50 bg-white transform rotate-3">
                                         <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill className="object-cover" />
                                     </div>
-                                    <span className="text-[9px] font-bold text-yellow-200 uppercase tracking-widest drop-shadow">Trunfo</span>
                                 </div>
-                            )}
-                        </div>
-                    )}
+                                {/* Popover rendered with fixed position — escapes all stacking contexts */}
+                                {showTrumpExpanded && (
+                                    <div style={popoverStyle} className="flex flex-col items-center gap-1">
+                                        <div className="relative w-20 h-28 rounded-lg shadow-2xl border-2 border-yellow-300 bg-white overflow-hidden">
+                                            <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill className="object-cover" />
+                                        </div>
+                                        <span className="text-[9px] font-bold text-yellow-200 uppercase tracking-widest drop-shadow">Trunfo</span>
+                                    </div>
+                                )}
+                            </>
+                        )
+                    })()}
                 </div>
             </div>
 
