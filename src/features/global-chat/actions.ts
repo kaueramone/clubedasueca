@@ -1,6 +1,8 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { getBotReply } from './ai'
+import { createServiceClient } from '@/lib/supabase/service'
 
 const BOT_USER_ID = process.env.NEXT_PUBLIC_BOT_USER_ID ?? '00000000-0000-0000-0000-000000000001'
 
@@ -62,14 +64,24 @@ export async function sendGlobalMessage(content: string) {
 
     if (error) return { error: error.message }
 
-    // Return the real id + timestamp so the client can confirm the optimistic msg
-    // without depending on Realtime (which can be unreliable on desktop)
+    // Trigger bot server-side — avoids any client-side fetch issues (CORS, middleware, etc.)
+    // Uses waitUntil-style: we don't await so the user gets the response immediately,
+    // but in Vercel Edge/Node the async work completes before the function tears down.
+    if (user.id !== BOT_USER_ID) {
+        // Intentionally not awaited — fire and complete within the same serverless invocation
+        getBotReply(text).then(async (reply) => {
+            if (!reply) return
+            const service = createServiceClient()
+            await service.from('global_messages').insert({
+                user_id: BOT_USER_ID,
+                content: reply,
+            })
+        }).catch(err => console.error('[Bot]', err))
+    }
+
     return {
         success: true,
         id: inserted.id,
         created_at: inserted.created_at,
-        triggerBot: user.id !== BOT_USER_ID,
-        message: text,
-        userId: user.id,
     }
 }

@@ -17,9 +17,11 @@ const ALLOWED_HOSTS = [
 export async function proxy(request: NextRequest) {
     const host = request.headers.get('host') || ''
 
-    // A rota interna do watchdog (chamada pelo cron) é isenta do bloqueio de
-    // host — ela já é protegida pelo segredo CRON_SECRET na própria rota.
-    if (request.nextUrl.pathname.startsWith('/api/games/tick')) {
+    // Rotas internas isentas do bloqueio de host
+    if (
+        request.nextUrl.pathname.startsWith('/api/games/tick') ||
+        request.nextUrl.pathname.startsWith('/api/community/respond')
+    ) {
         return NextResponse.next()
     }
 

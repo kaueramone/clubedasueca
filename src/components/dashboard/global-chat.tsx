@@ -156,22 +156,13 @@ export function GlobalChat({
             setMessages(prev => prev.filter(m => m.id !== tempId))
         } else if (result?.success) {
             // Confirm optimistic message immediately with the real id/timestamp
-            // Do NOT wait for Realtime — it's unreliable on desktop browsers
+            // Bot is triggered server-side inside sendGlobalMessage — no client fetch needed
             setMessages(prev => prev.map(m =>
                 m.id === tempId
                     ? { ...m, id: result.id, optimistic: false, created_at: result.created_at }
                     : m
             ))
             pendingTempId.current = null
-
-            // Trigger bot via Route Handler (fire-and-forget from client)
-            if (result.triggerBot) {
-                fetch('/api/community/respond', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text, userId: currentUserId }),
-                }).catch(() => {})
-            }
         }
 
         setSending(false)
