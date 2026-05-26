@@ -142,7 +142,6 @@ export default async function DashboardPage() {
 
                 {/* RIGHT: Global Chat */}
                 <div className="lg:sticky lg:top-4">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Chat da Comunidade</h2>
                     <div className="h-[420px] lg:h-[500px]">
                         <GlobalChat
                             currentUserId={user.id}

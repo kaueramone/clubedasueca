@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { after } from 'next/server'
 import { getBotReply } from '@/features/global-chat/ai'
 import { createServiceClient } from '@/lib/supabase/service'
 
@@ -7,16 +8,13 @@ const WEBHOOK_SECRET = process.env.COMMUNITY_WEBHOOK_SECRET
 
 export async function POST(req: NextRequest) {
     try {
-        // Support both Supabase Database Webhook format and direct call format
         const body = await req.json()
 
-        // Supabase webhook sends: { type, table, schema, record, old_record }
-        // Direct call sends: { message, userId }
+        // Supabase Database Webhook format: { type, table, schema, record, old_record }
         let message: string
         let userId: string
 
         if (body.type === 'INSERT' && body.record) {
-            // Supabase Database Webhook format
             // Verify webhook secret if configured
             if (WEBHOOK_SECRET) {
                 const authHeader = req.headers.get('authorization')
@@ -27,7 +25,7 @@ export async function POST(req: NextRequest) {
             message = body.record.content
             userId = body.record.user_id
         } else {
-            // Direct call format (legacy / from client)
+            // Legacy direct call format
             message = body.message
             userId = body.userId
         }
@@ -37,13 +35,21 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ ok: true })
         }
 
-        const reply = await getBotReply(message)
-        if (!reply) return NextResponse.json({ ok: true })
+        // Respond immediately so Supabase webhook doesn't timeout (5s limit)
+        // then process in background via after()
+        after(async () => {
+            try {
+                const reply = await getBotReply(message)
+                if (!reply) return
 
-        const supabase = createServiceClient()
-        await supabase.from('global_messages').insert({
-            user_id: BOT_USER_ID,
-            content: reply,
+                const supabase = createServiceClient()
+                await supabase.from('global_messages').insert({
+                    user_id: BOT_USER_ID,
+                    content: reply,
+                })
+            } catch (err) {
+                console.error('[community/respond] background error:', err)
+            }
         })
 
         return NextResponse.json({ ok: true })
