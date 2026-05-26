@@ -21,7 +21,6 @@ export async function getGlobalMessages() {
 
     if (!data) return []
 
-    // Fetch multiplayer game count for each user
     const userIds = [...new Set(data.map(m => m.user_id))]
     const { data: gameCounts } = await supabase
         .from('game_players')
@@ -55,13 +54,22 @@ export async function sendGlobalMessage(content: string) {
     const text = content.trim().slice(0, 200)
     if (!text) return { error: 'Mensagem vazia' }
 
-    const { error } = await supabase
+    const { data: inserted, error } = await supabase
         .from('global_messages')
         .insert({ user_id: user.id, content: text })
+        .select('id, created_at')
+        .single()
 
     if (error) return { error: error.message }
 
-    // Trigger bot via Route Handler (fire-and-forget from client — Server Actions
-    // don't support true async background work in Next.js App Router)
-    return { success: true, triggerBot: user.id !== BOT_USER_ID, message: text, userId: user.id }
+    // Return the real id + timestamp so the client can confirm the optimistic msg
+    // without depending on Realtime (which can be unreliable on desktop)
+    return {
+        success: true,
+        id: inserted.id,
+        created_at: inserted.created_at,
+        triggerBot: user.id !== BOT_USER_ID,
+        message: text,
+        userId: user.id,
+    }
 }

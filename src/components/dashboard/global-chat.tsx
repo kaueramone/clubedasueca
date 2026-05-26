@@ -154,13 +154,24 @@ export function GlobalChat({
         if (result?.error) {
             // Rollback optimistic message on error
             setMessages(prev => prev.filter(m => m.id !== tempId))
-        } else if (result?.triggerBot) {
-            // Call bot route handler — true fire-and-forget from client
-            fetch('/api/community/respond', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text, userId: currentUserId }),
-            }).catch(() => {})
+        } else if (result?.success) {
+            // Confirm optimistic message immediately with the real id/timestamp
+            // Do NOT wait for Realtime — it's unreliable on desktop browsers
+            setMessages(prev => prev.map(m =>
+                m.id === tempId
+                    ? { ...m, id: result.id, optimistic: false, created_at: result.created_at }
+                    : m
+            ))
+            pendingTempId.current = null
+
+            // Trigger bot via Route Handler (fire-and-forget from client)
+            if (result.triggerBot) {
+                fetch('/api/community/respond', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, userId: currentUserId }),
+                }).catch(() => {})
+            }
         }
 
         setSending(false)
@@ -198,16 +209,15 @@ export function GlobalChat({
                                 {/* Avatar */}
                                 <div className={cn(
                                     "shrink-0 w-8 h-8 rounded-full overflow-hidden border",
-                                    bot ? "bg-accent/10 border-accent/30" : "bg-muted border-border"
+                                    bot ? "bg-[#0B1F1A] border-accent/40" : "bg-muted border-border"
                                 )}>
-                                    {msg.avatar_url ? (
+                                    {bot ? (
+                                        <Image src="/images/clubedasueca-fundoescuro-perfil.png" alt="Sueca Bot" width={32} height={32} className="object-cover w-full h-full p-0.5" />
+                                    ) : msg.avatar_url ? (
                                         <Image src={msg.avatar_url} alt={msg.username} width={32} height={32} className="object-cover w-full h-full" />
                                     ) : (
-                                        <div className={cn(
-                                            "w-full h-full flex items-center justify-center text-xs font-bold",
-                                            bot ? "bg-accent/20 text-accent" : "bg-primary/10 text-primary"
-                                        )}>
-                                            {bot ? '🃏' : msg.username.charAt(0).toUpperCase()}
+                                        <div className="w-full h-full flex items-center justify-center text-xs font-bold bg-primary/10 text-primary">
+                                            {msg.username.charAt(0).toUpperCase()}
                                         </div>
                                     )}
                                 </div>
