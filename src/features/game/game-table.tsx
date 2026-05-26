@@ -886,7 +886,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Bottom Player (Me) */}
-            <div className="absolute bottom-6 sm:bottom-10 short:bottom-1 w-full flex flex-col items-center z-20">
+            <div className="absolute bottom-6 sm:bottom-10 short:bottom-1 w-full flex flex-col items-center z-30 overflow-visible">
                 <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] short:-space-x-[2rem] mb-6 sm:mb-8 short:mb-1 px-2 py-2 short:py-0 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center" role="group" aria-label="As suas cartas">
                     {sortHand(myPlayer.hand || []).map((card: string, index: number) => {
                         const total = myPlayer.hand.length
