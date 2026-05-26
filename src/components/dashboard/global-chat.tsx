@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getGlobalMessages, sendGlobalMessage, triggerBotReply } from '@/features/global-chat/actions'
+import { getGlobalMessages, sendGlobalMessage } from '@/features/global-chat/actions'
 import { Send, MessageSquare, Gamepad2 } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -175,12 +175,6 @@ export function GlobalChat({
                     : m
             ))
             pendingTempId.current = null
-
-            // Trigger bot as a separate Server Action invocation — this runs as its own
-            // full Vercel function call and won't be killed prematurely
-            if (result.shouldTriggerBot) {
-                triggerBotReply(result.message).catch(() => {})
-            }
         }
 
         setSending(false)

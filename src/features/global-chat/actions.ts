@@ -1,10 +1,6 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getBotReply } from './ai'
-import { createServiceClient } from '@/lib/supabase/service'
-
-const BOT_USER_ID = process.env.NEXT_PUBLIC_BOT_USER_ID ?? '00000000-0000-0000-0000-000000000001'
 
 export async function getGlobalMessages() {
     const supabase = await createClient()
@@ -68,27 +64,5 @@ export async function sendGlobalMessage(content: string) {
         success: true,
         id: inserted.id,
         created_at: inserted.created_at,
-        shouldTriggerBot: user.id !== BOT_USER_ID,
-        message: text,
-    }
-}
-
-// Separate Server Action for the bot — called by the client after confirming
-// the user message. Runs as its own full serverless invocation on Vercel,
-// so it won't be killed prematurely like a fire-and-forget Promise would be.
-export async function triggerBotReply(message: string) {
-    if (!message?.trim()) return
-
-    try {
-        const reply = await getBotReply(message)
-        if (!reply) return
-
-        const service = createServiceClient()
-        await service.from('global_messages').insert({
-            user_id: BOT_USER_ID,
-            content: reply,
-        })
-    } catch (err) {
-        console.error('[Bot]', err)
     }
 }
