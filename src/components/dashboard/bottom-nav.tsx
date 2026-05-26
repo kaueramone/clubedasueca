@@ -44,7 +44,7 @@ export function BottomNav({ pendingCount = 0, userId, initialChatUnread = 0 }: {
     const friendPending = Math.max(0, pendingCount - initialChatUnread)
 
     return (
-        <div className="fixed bottom-0 z-50 flex w-full border-t border-[#123F33] bg-[#0B1F1A] shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.3)] backdrop-blur-lg md:hidden pb-safe">
+        <div className="fixed bottom-0 z-50 flex w-full border-t border-[#123F33] bg-[#0B1F1A] shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.3)] backdrop-blur-lg md:hidden pb-safe" style={{ touchAction: 'none' }}>
             <div className="flex w-full justify-around py-2">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;

@@ -823,7 +823,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Center (Table) */}
-            <div className="relative w-48 h-48 short:w-28 short:h-28 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+            <div className="relative w-48 h-48 short:w-36 short:h-36 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden short:-translate-y-[10%]">
                 <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
                     <Image src="/images/favicon.png" alt="" fill className="object-contain p-4" aria-hidden="true" />
                 </div>

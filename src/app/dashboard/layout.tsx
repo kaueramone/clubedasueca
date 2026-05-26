@@ -63,16 +63,19 @@ export default async function DashboardLayout({
             <Sidebar userEmail={user.email} pendingCount={totalNotifications} userId={user.id} initialChatUnread={unreadMessagesCount || 0} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
-                <header className="relative flex h-16 items-center justify-between border-b border-[#123F33] bg-[#0B1F1A] px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20">
-                    <div className="flex items-center gap-4">
-                        {/* Mobile Menu Toggle could go here later if needed */}
+                <header className="relative flex h-16 items-center justify-between border-b border-[#123F33] bg-[#0B1F1A] px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20" style={{ touchAction: 'none' }}>
+                    <div className="flex items-center gap-3">
                         <div className="relative w-32 h-8 md:hidden">
                             <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain" priority />
                         </div>
+                        {/* Mobile: counter next to logo. Desktop: centered absolutely */}
+                        <div className="md:hidden">
+                            <OnlineCounter />
+                        </div>
                     </div>
 
-                    {/* Online counter — centered absolutely so it doesn't shift the two side blocks */}
-                    <div className="absolute left-1/2 -translate-x-1/2">
+                    {/* Desktop only — centered absolutely so it doesn't shift the two side blocks */}
+                    <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
                         <OnlineCounter />
                     </div>
 
