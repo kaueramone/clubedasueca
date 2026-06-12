@@ -67,7 +67,7 @@ export default function AdminTransactions() {
                                                 <ArrowDownRight className="h-4 w-4 text-danger" />
                                             )}
                                             <span className={tx.amount > 0 ? 'text-success' : 'text-danger'}>
-                                                €{Math.abs(tx.amount).toFixed(2)}
+                                                MT{Math.abs(tx.amount).toFixed(2)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-xs">

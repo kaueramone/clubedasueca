@@ -170,7 +170,7 @@ export async function processWagerForBonuses(userId: string, wagerAmount: number
         p_amount: wagerAmount,
     })
 
-    // Add VIP points (1 point per 1€ wagered)
+    // Add VIP points (1 point per 1MT wagered)
     const points = Math.floor(wagerAmount)
     if (points > 0) {
         await supabase.rpc('add_vip_points', {

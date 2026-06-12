@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 export async function getGlobalMessages() {
     const supabase = await createClient()
@@ -20,7 +21,10 @@ export async function getGlobalMessages() {
     if (!data) return []
 
     const userIds = [...new Set(data.map(m => m.user_id))]
-    const { data: gameCounts } = await supabase
+    // Service role: contagem de jogos por utilizador. Com RLS (migração 103) o
+    // cliente do utilizador só veria as suas próprias linhas de game_players.
+    const svc = createServiceClient()
+    const { data: gameCounts } = await svc
         .from('game_players')
         .select('user_id')
         .in('user_id', userIds)

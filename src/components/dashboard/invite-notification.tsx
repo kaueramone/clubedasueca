@@ -152,8 +152,8 @@ export function InviteNotification({ userId }: { userId: string }) {
                             </p>
                             {invite.stake > 0 && (
                                 <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                    <span className="text-success">€</span>
-                                    Aposta da mesa: <span className="text-success font-bold">€{invite.stake.toFixed(2)}</span>
+                                    <span className="text-success">MT</span>
+                                    Aposta da mesa: <span className="text-success font-bold">MT{invite.stake.toFixed(2)}</span>
                                 </p>
                             )}
                         </div>
@@ -164,7 +164,7 @@ export function InviteNotification({ userId }: { userId: string }) {
                                 <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-xs font-bold text-danger">Saldo insuficiente</p>
-                                    <p className="text-[11px] text-muted-foreground">Tens €{balErr.balance.toFixed(2)}, precisas de €{balErr.required.toFixed(2)}.</p>
+                                    <p className="text-[11px] text-muted-foreground">Tens MT{balErr.balance.toFixed(2)}, precisas de MT{balErr.required.toFixed(2)}.</p>
                                 </div>
                             </div>
                         )}

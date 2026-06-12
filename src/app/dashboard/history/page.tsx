@@ -41,7 +41,7 @@ export default async function HistoryPage() {
                                     <p className="text-sm text-muted-foreground">{new Date(tx.created_at).toLocaleString()}</p>
                                 </div>
                                 <span className={`font-mono font-bold ${tx.amount > 0 ? 'text-success' : 'text-danger'}`}>
-                                    {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}€
+                                    {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)}MT
                                 </span>
                             </div>
                         ))

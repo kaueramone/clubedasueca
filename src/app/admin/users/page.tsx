@@ -92,7 +92,7 @@ export default function AdminUsers() {
                                             <span className="font-semibold text-foreground">{user.username || 'Sem Nome'}</span>
                                         </td>
                                         <td className="px-6 py-4 font-semibold text-foreground">
-                                            €{((user.wallets?.[0]?.balance) ?? 0).toFixed(2)}
+                                            MT{((user.wallets?.[0]?.balance) ?? 0).toFixed(2)}
                                         </td>
                                         <td className="px-6 py-4">
                                             <Badge variant={user.role === 'admin' ? 'secondary' : 'outline'}>

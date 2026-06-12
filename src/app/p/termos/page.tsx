@@ -2,7 +2,7 @@ import DocumentStaticPage from '@/components/layout/document-static-page';
 
 export default function TermosPage() {
     return (
-        <DocumentStaticPage title="Termos e Condições" lastUpdated="Outubro de 2024">
+        <DocumentStaticPage title="Termos e Condições" lastUpdated="Junho de 2026">
             <p>
                 Bem-vindo ao Clube da Sueca. Estes termos e condições delineiam as regras e regulamentos
                 para a utilização do website e serviços da nossa plataforma.
@@ -24,7 +24,7 @@ export default function TermosPage() {
 
             <h2>3. Financiamento e Prémios</h2>
             <ul>
-                <li>O Clube opera em Euros (€). As conversões, quando aplicáveis, são da responsabilidade da entidade bancária.</li>
+                <li>O Clube opera em Meticais (MZN). O saldo é em créditos, sendo 1 crédito equivalente a 1 MZN (1:1).</li>
                 <li>As mesas a dinheiro real têm um valor estipulado à entrada (Buy-in / Stake). O valor é deduzido do saldo assim que o jogo inicia.</li>
                 <li>A equipa vencedora (que alcance 61 ou mais pontos na partida) recebe o Pote Acumulado subtraído de uma <strong>Taxa Administrativa (Rake) de 20%</strong>.</li>
             </ul>

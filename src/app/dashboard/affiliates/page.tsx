@@ -84,8 +84,8 @@ export default function AffiliateDashboardPage() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total Ganho" value={`€${summary.total_earned.toFixed(2)}`} color="text-green-600" />
-                <StatCard icon={<Clock className="h-5 w-5" />} label="Pendente" value={`€${summary.pending.toFixed(2)}`} color="text-yellow-600" />
+                <StatCard icon={<DollarSign className="h-5 w-5" />} label="Total Ganho" value={`MT${summary.total_earned.toFixed(2)}`} color="text-green-600" />
+                <StatCard icon={<Clock className="h-5 w-5" />} label="Pendente" value={`MT${summary.pending.toFixed(2)}`} color="text-yellow-600" />
                 <StatCard icon={<Users className="h-5 w-5" />} label="Referidos" value={summary.total_referrals} color="text-accent" />
                 <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Clicks" value={summary.total_clicks} color="text-primary" />
             </div>
@@ -172,7 +172,7 @@ export default function AffiliateDashboardPage() {
                     {commissions.slice(0, 20).map((c: any) => (
                         <div key={c.id} className="flex items-center justify-between p-4 text-sm">
                             <div>
-                                <span className="font-medium text-gray-900">€{c.amount.toFixed(2)}</span>
+                                <span className="font-medium text-gray-900">MT{c.amount.toFixed(2)}</span>
                                 <span className="ml-2 text-xs text-gray-500">{c.source_type}</span>
                                 <span className="ml-2 text-xs text-gray-400">{new Date(c.created_at).toLocaleDateString('pt-PT')}</span>
                             </div>

@@ -40,7 +40,7 @@ export function HeaderBalance({ initialBalance, userId }: { initialBalance: numb
     return (
         <div className="flex flex-col items-end">
             <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Saldo</span>
-            <span className="text-sm font-bold text-accent">€ {balance.toFixed(2)}</span>
+            <span className="text-sm font-bold text-accent">{balance.toFixed(2)} MT</span>
         </div>
     )
 }

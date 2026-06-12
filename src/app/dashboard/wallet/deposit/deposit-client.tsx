@@ -2,38 +2,46 @@
 
 import { useState } from 'react'
 import { deposit } from '../actions'
-import { ArrowLeft, Smartphone, Check, CreditCard, Banknote } from 'lucide-react'
+import { ArrowLeft, Smartphone, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 
-const REGIONS = [
-    { id: 'PT', name: 'Portugal', currency: 'EUR', symbol: '€', rate: 1, icon: '🇵🇹', method: 'MB Way' },
-    { id: 'BR', name: 'Brasil', currency: 'BRL', symbol: 'R$', rate: 6.10, icon: '🇧🇷', method: 'PIX' }, // Fake rate for demo
-    { id: 'MZ', name: 'Moçambique', currency: 'MZN', symbol: 'MT', rate: 68.5, icon: '🇲🇿', method: 'M-Pesa' } // Fake rate for demo
+// Carteiras móveis de Moçambique (FICTÍCIO — sem gateway real ligado).
+// 1 crédito = 1 MZN (1:1). Depósito mínimo: 50 MZN.
+const METHODS = [
+    { id: 'mpesa', name: 'M-Pesa', operator: 'Vodacom', color: 'text-red-600', prefix: '84 / 85' },
+    { id: 'emola', name: 'e-Mola', operator: 'Movitel', color: 'text-yellow-600', prefix: '86 / 87' },
+    { id: 'mkesh', name: 'mKesh', operator: 'Tmcel', color: 'text-blue-600', prefix: '82 / 83' },
 ]
 
-const PRESET_AMOUNTS = [10, 20, 50, 100] // Base amounts in EUR
+const PRESET_AMOUNTS = [50, 100, 250, 500] // MZN
+const MIN_DEPOSIT = 50
 
 export function DepositPageClient() {
-    const [region, setRegion] = useState(REGIONS[0])
-    const [amountEur, setAmountEur] = useState<string>('10')
+    const [method, setMethod] = useState(METHODS[0])
+    const [amount, setAmount] = useState<string>('100')
+    const [phone, setPhone] = useState('')
     const [step, setStep] = useState(1)
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
-    const localAmount = amountEur ? Math.ceil(parseFloat(amountEur) * region.rate).toString() : '0'
-
     const handleGenerateRef = (e: React.FormEvent) => {
         e.preventDefault()
-        if (!amountEur || parseFloat(amountEur) <= 0) return
+        if (!amount || parseFloat(amount) < MIN_DEPOSIT) {
+            alert(`O valor mínimo de depósito é ${MIN_DEPOSIT} MZN.`)
+            return
+        }
+        if (!phone.trim()) {
+            alert('Indique o número da sua carteira móvel.')
+            return
+        }
         setStep(2)
     }
 
     const handleConfirmPayment = async () => {
         setLoading(true)
         const formData = new FormData()
-        formData.append('amount', amountEur) // Always send EUR to backend
+        formData.append('amount', amount) // MZN = créditos (1:1)
 
         const res = await deposit(formData)
 
@@ -63,19 +71,19 @@ export function DepositPageClient() {
 
             {step === 1 && (
                 <form onSubmit={handleGenerateRef} className="space-y-6">
-                    {/* Region Selector */}
+                    {/* Method Selector */}
                     <div>
-                        <label className="block text-sm font-semibold text-foreground mb-3">Escolha o seu País / Método</label>
+                        <label className="block text-sm font-semibold text-foreground mb-3">Escolha a carteira móvel</label>
                         <div className="grid grid-cols-3 gap-2">
-                            {REGIONS.map(r => (
+                            {METHODS.map(m => (
                                 <button
-                                    key={r.id}
+                                    key={m.id}
                                     type="button"
-                                    onClick={() => setRegion(r)}
-                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${region.id === r.id ? 'border-accent bg-accent/5' : 'border-border bg-muted/30 hover:bg-muted'}`}
+                                    onClick={() => setMethod(m)}
+                                    className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${method.id === m.id ? 'border-accent bg-accent/5' : 'border-border bg-muted/30 hover:bg-muted'}`}
                                 >
-                                    <span className="text-2xl mb-1">{r.icon}</span>
-                                    <span className={`text-[10px] font-bold ${region.id === r.id ? 'text-accent' : 'text-muted-foreground'}`}>{r.name}</span>
+                                    <Smartphone className={`h-6 w-6 mb-1 ${m.color}`} />
+                                    <span className={`text-[11px] font-bold ${method.id === m.id ? 'text-accent' : 'text-muted-foreground'}`}>{m.name}</span>
                                 </button>
                             ))}
                         </div>
@@ -83,55 +91,58 @@ export function DepositPageClient() {
 
                     {/* Amount Selector */}
                     <div>
-                        <label className="block text-sm font-semibold text-foreground mb-3">Valor a depositar (Clube da Sueca = €)</label>
+                        <label className="block text-sm font-semibold text-foreground mb-3">Valor a depositar (MZN)</label>
                         <div className="grid grid-cols-4 gap-2 mb-4">
                             {PRESET_AMOUNTS.map(val => (
                                 <button
                                     key={val}
                                     type="button"
-                                    onClick={() => setAmountEur(val.toString())}
-                                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${amountEur === val.toString() ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-primary/20'}`}
+                                    onClick={() => setAmount(val.toString())}
+                                    className={`py-2 rounded-lg text-sm font-bold transition-colors ${amount === val.toString() ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-primary/20'}`}
                                 >
-                                    {val}€
+                                    {val}
                                 </button>
                             ))}
                         </div>
 
                         <div className="relative mt-1">
-                            <span className="absolute left-3 top-3.5 text-muted-foreground text-sm font-bold">EUR €</span>
+                            <span className="absolute left-3 top-3.5 text-muted-foreground text-sm font-bold">MZN</span>
                             <input
                                 type="number"
-                                min="1"
-                                step="0.01"
+                                min={MIN_DEPOSIT}
+                                step="1"
                                 required
-                                value={amountEur}
-                                onChange={(e) => setAmountEur(e.target.value)}
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
                                 className="block w-full rounded-xl border border-border bg-background pl-[60px] p-3 text-lg font-bold focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent text-foreground"
-                                placeholder="10.00"
+                                placeholder="100"
                             />
                         </div>
-                        <p className="mt-2 text-xs text-muted-foreground">O saldo no jogo será sempre em Euros (EUR).</p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                            Mínimo {MIN_DEPOSIT} MZN. 100 MZN = 100 créditos (1:1) para jogar nas mesas.
+                        </p>
                     </div>
 
-                    {/* Conversion Display */}
-                    {region.id !== 'PT' && parseFloat(amountEur) > 0 && (
-                        <div className="bg-yellow-50 dark:bg-yellow-900/10 p-4 rounded-xl space-y-2 border border-yellow-200 dark:border-yellow-800/30">
-                            <p className="text-xs text-yellow-800 dark:text-yellow-600 font-semibold uppercase tracking-wider">Cotação Estimada</p>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total a pagar ({region.currency})</span>
-                                <span className="text-lg font-bold text-gray-900 dark:text-white">{region.symbol} {localAmount}</span>
-                            </div>
-                        </div>
-                    )}
+                    {/* Phone Input */}
+                    <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Número {method.name} ({method.operator})</label>
+                        <input
+                            type="tel"
+                            inputMode="numeric"
+                            required
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                            placeholder={`Ex: ${method.id === 'mpesa' ? '84xxxxxxx' : method.id === 'emola' ? '86xxxxxxx' : '82xxxxxxx'}`}
+                        />
+                    </div>
 
                     <button
                         type="submit"
                         className="w-full rounded-xl bg-accent py-4 font-bold text-white shadow-md active:scale-[0.98] hover:brightness-110 transition-all flex items-center justify-center gap-2"
                     >
-                        {region.id === 'PT' && <Smartphone className="w-5 h-5" />}
-                        {region.id === 'BR' && <Banknote className="w-5 h-5" />}
-                        {region.id === 'MZ' && <CreditCard className="w-5 h-5" />}
-                        Avançar ({region.method})
+                        <Smartphone className="w-5 h-5" />
+                        Avançar ({method.name})
                     </button>
                 </form>
             )}
@@ -139,61 +150,29 @@ export function DepositPageClient() {
             {step === 2 && (
                 <div className="space-y-6 text-center animate-in slide-in-from-right-4">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-accent/10 text-accent">
-                        {region.id === 'PT' && <Smartphone className="h-8 w-8" />}
-                        {region.id === 'BR' && <Banknote className="h-8 w-8" />}
-                        {region.id === 'MZ' && <CreditCard className="h-8 w-8" />}
+                        <Smartphone className="h-8 w-8" />
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-foreground">Aguardando Pagamento</h3>
                         <p className="text-sm text-muted-foreground">
-                            {region.id === 'PT' && "Aceite a notificação no seu MB Way"}
-                            {region.id === 'BR' && "Escaneie o QR Code no seu App do Banco"}
-                            {region.id === 'MZ' && "Confirme o PIN no seu M-Pesa"}
+                            Confirme o PIN no seu telemóvel ({method.name}) para autorizar o pagamento.
                         </p>
                     </div>
 
                     <div className="rounded-xl bg-muted/50 p-4 text-left space-y-3">
-                        {region.id === 'PT' && (
-                            <>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground text-sm">Entidade</span>
-                                    <span className="font-mono font-bold text-foreground">11249</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground text-sm">Referência</span>
-                                    <span className="font-mono font-bold text-foreground">123 456 789</span>
-                                </div>
-                            </>
-                        )}
-                        {region.id === 'BR' && (
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-40 h-40 bg-white p-2 rounded-xl flex items-center justify-center border-2 border-dashed border-gray-300">
-                                    <div className="grid grid-cols-4 gap-1 w-full h-full opacity-50">
-                                        {Array(16).fill(0).map((_, i) => <div key={i} className="bg-black rounded-sm"></div>)}
-                                    </div>
-                                    <span className="absolute text-xs font-bold text-accent bg-white px-2">PIX FAKE</span>
-                                </div>
-                                <p className="text-xs text-center text-muted-foreground">00020126440014br.gov.bcb.pix0122suporte@oclubedasueca...</p>
-                            </div>
-                        )}
-                        {region.id === 'MZ' && (
-                            <>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground text-sm">Entidade M-Pesa</span>
-                                    <span className="font-mono font-bold text-foreground">12345</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground text-sm">Referência</span>
-                                    <span className="font-mono font-bold text-foreground">SUECA</span>
-                                </div>
-                            </>
-                        )}
-
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground text-sm">Carteira</span>
+                            <span className={`font-bold ${method.color}`}>{method.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground text-sm">Número</span>
+                            <span className="font-mono font-bold text-foreground">{phone}</span>
+                        </div>
                         <div className="flex justify-between border-t border-border pt-3 mt-2">
-                            <span className="text-muted-foreground font-semibold">Valor Final</span>
+                            <span className="text-muted-foreground font-semibold">Total a pagar</span>
                             <div className="text-right">
-                                <p className="font-bold text-lg text-accent">{region.symbol} {localAmount}</p>
-                                {region.id !== 'PT' && <p className="text-xs text-muted-foreground">Sera creditado €{amountEur} EUR</p>}
+                                <p className="font-bold text-lg text-accent">{parseFloat(amount || '0').toFixed(0)} MZN</p>
+                                <p className="text-xs text-muted-foreground">Serão creditados {parseFloat(amount || '0').toFixed(0)} créditos</p>
                             </div>
                         </div>
                     </div>
@@ -221,7 +200,7 @@ export function DepositPageClient() {
                         <Check className="w-12 h-12" />
                     </div>
                     <h3 className="text-2xl font-bold text-foreground mb-2">Depósito Confirmado!</h3>
-                    <p className="text-muted-foreground">O saldo de €{amountEur} EUR está na sua carteira.</p>
+                    <p className="text-muted-foreground">{parseFloat(amount || '0').toFixed(0)} créditos estão na sua carteira.</p>
                     <p className="text-sm text-muted-foreground mt-8 animate-pulse text-accent">A redirecionar para o painel...</p>
                 </div>
             )}

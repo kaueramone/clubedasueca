@@ -85,7 +85,7 @@ export default function AdminBannersPage() {
                             </div>
                             <div className="md:col-span-2">
                                 <label className="block text-sm font-medium text-foreground/80 mb-1">Descrição</label>
-                                <input name="description" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground font-medium placeholder:text-muted-foreground" placeholder="Participe já e ganhe 500€ em bónus..." />
+                                <input name="description" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground font-medium placeholder:text-muted-foreground" placeholder="Participe já e ganhe 500MT em bónus..." />
                             </div>
                             <div className="md:col-span-2 grid gap-4 grid-cols-1 md:grid-cols-2 p-4 bg-background rounded-xl border border-border">
                                 <div className="space-y-3">

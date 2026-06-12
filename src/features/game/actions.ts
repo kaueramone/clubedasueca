@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { isValidMove, getTrickWinner, getCardSuit, getCardValue } from './utils'
 import { logAudit } from '@/lib/audit'
@@ -86,7 +87,11 @@ export async function playCard(gameId: string, card: string, actingUserId?: stri
     // Efeitos colaterais de fim de jogo (nao-transacionais) ficam em TS,
     // disparados so quando o RPC sinaliza game_over.
     if (result?.game_over) {
-        const { data: players } = await supabase
+        // Service role: com RLS (migração 103), o cliente do utilizador só vê a
+        // sua própria linha de game_players. Para os efeitos de fim de jogo
+        // (bónus/CRM/afiliados) precisamos de TODOS os jogadores.
+        const svc = createServiceClient()
+        const { data: players } = await svc
             .from('game_players')
             .select('*')
             .eq('game_id', gameId)
@@ -109,7 +114,8 @@ export async function playCard(gameId: string, card: string, actingUserId?: stri
 
         for (const p of (players || [])) {
             const isWinner = winnerTeam !== 'Draw' && p.team === winnerTeam
-            const wonAmount = isWinner ? (wagerAmount * 4 * 0.90) / 2 : 0
+            // Rake 20%: a dupla vencedora divide os 80% do pote (pote = 4 x stake).
+            const wonAmount = isWinner ? (wagerAmount * 4 * 0.80) / 2 : 0
 
             processWagerForBonuses(p.user_id, wagerAmount).catch(err =>
                 console.error('[WAGER_BONUS]', err)
@@ -122,7 +128,7 @@ export async function playCard(gameId: string, card: string, actingUserId?: stri
             }).catch(err => console.error('[GAME_CRM]', err))
         }
 
-        const houseFee = wagerAmount * 4 * 0.10
+        const houseFee = wagerAmount * 4 * 0.20
         processGameAffiliateCommissions(gameId, houseFee).catch(err =>
             console.error('[AFFILIATE_COMMISSION]', err)
         )
@@ -137,12 +143,17 @@ export async function playTimeoutCard(gameId: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
 
+    // Service role para LER o estado completo da mesa (com RLS, o cliente do
+    // utilizador só veria a sua própria linha). A jogada continua a passar pelo
+    // RPC autoritativo via playCard.
+    const svc = createServiceClient()
+
     // 1. Fetch Game State to see whose turn it is
-    const { data: game } = await supabase.from('games').select('*').eq('id', gameId).single()
+    const { data: game } = await svc.from('games').select('*').eq('id', gameId).single()
     if (!game || game.status !== 'playing') return { error: 'Jogo inativo' }
 
     // 2. Fetch Players
-    const { data: players } = await supabase.from('game_players').select('*').eq('game_id', gameId)
+    const { data: players } = await svc.from('game_players').select('*').eq('game_id', gameId)
     if (!players) return { error: 'Jogadores não encontrados' }
 
     const currentPlayer = players.find(p => p.position === game.current_turn)
@@ -152,7 +163,7 @@ export async function playTimeoutCard(gameId: string) {
         if (hand.length === 0) return { error: 'Sem cartas na mão' }
 
         // Find what lead suit is
-        const { data: moves } = await supabase
+        const { data: moves } = await svc
             .from('game_moves')
             .select('*')
             .eq('game_id', gameId)
@@ -179,7 +190,9 @@ export async function playTimeoutCard(gameId: string) {
 // Reaproveita a lógica de regras (isValidMove) e o playCard existente.
 // ============================================
 export async function autoPlayForPlayer(gameId: string) {
-    const supabase = await createClient()
+    // Watchdog: corre sem sessão. Service role para ler o estado completo da
+    // mesa sob RLS (migração 103). A jogada vai pelo RPC autoritativo via playCard.
+    const supabase = createServiceClient()
 
     const { data: game } = await supabase.from('games').select('*').eq('id', gameId).single()
     if (!game || game.status !== 'playing') return { error: 'Jogo inativo' }
@@ -221,7 +234,10 @@ export async function autoPlayForPlayer(gameId: string) {
 
 export async function dealCardsForGame(gameId: string) {
     const { generateDeck, shuffleDeck } = await import('./utils')
-    const supabase = await createClient()
+    // Service role: distribui/atualiza as mãos de TODOS os jogadores. Com RLS
+    // (migração 103) não há política de UPDATE, por isso estas escritas só
+    // passam com a service role (ou pelas RPCs SECURITY DEFINER).
+    const supabase = createServiceClient()
     const deck = shuffleDeck(generateDeck())
 
     const { data: players } = await supabase

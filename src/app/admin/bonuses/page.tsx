@@ -136,7 +136,7 @@ export default function AdminBonusesPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground/80 mb-1">Valor Fixo (€)</label>
+                                <label className="block text-sm font-medium text-foreground/80 mb-1">Valor Fixo (MT)</label>
                                 <input name="amount" type="number" step="0.01" min="0" className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 text-sm" placeholder="5.00" />
                             </div>
                             <div>
@@ -144,11 +144,11 @@ export default function AdminBonusesPage() {
                                 <input name="percentage" type="number" step="0.01" min="0" className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 text-sm" placeholder="100" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground/80 mb-1">Máximo (€)</label>
+                                <label className="block text-sm font-medium text-foreground/80 mb-1">Máximo (MT)</label>
                                 <input name="max_amount" type="number" step="0.01" min="0" className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 text-sm" placeholder="50.00" />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-foreground/80 mb-1">Depósito Mínimo (€)</label>
+                                <label className="block text-sm font-medium text-foreground/80 mb-1">Depósito Mínimo (MT)</label>
                                 <input name="min_deposit" type="number" step="0.01" min="0" className="w-full rounded-lg border border-border bg-background text-foreground px-3 py-2 text-sm" placeholder="10.00" />
                             </div>
                             <div>
@@ -253,9 +253,9 @@ export default function AdminBonusesPage() {
                                                     }`}>{bonus.status}</span>
                                             </div>
                                             <div className="mt-1 text-xs text-muted-foreground space-x-3">
-                                                {bonus.amount && <span>Fixo: €{bonus.amount}</span>}
+                                                {bonus.amount && <span>Fixo: MT{bonus.amount}</span>}
                                                 {bonus.percentage && <span>Match: {bonus.percentage}%</span>}
-                                                {bonus.max_amount && <span>Máx: €{bonus.max_amount}</span>}
+                                                {bonus.max_amount && <span>Máx: MT{bonus.max_amount}</span>}
                                                 <span>Rollover: {bonus.rollover_multiplier}x</span>
                                                 <span>Usos: {bonus.current_uses}{bonus.max_uses ? `/${bonus.max_uses}` : ''}</span>
                                             </div>

@@ -43,7 +43,7 @@ export default async function DashboardPage() {
     if (!wallet) {
         const { data: newWallet, error: walletError } = await supabase
             .from("wallets")
-            .insert({ user_id: user.id, balance: 0.00, currency: 'EUR' })
+            .insert({ user_id: user.id, balance: 0.00, currency: 'MZN' })
             .select()
             .single();
         if (!walletError) wallet = newWallet;

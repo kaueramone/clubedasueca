@@ -31,7 +31,7 @@ async function getBaseUrl(): Promise<string> {
     const host = headersList.get('host')
     const proto = headersList.get('x-forwarded-proto') || 'https'
     if (host) return `${proto}://${host}`
-    return process.env.NEXT_PUBLIC_BASE_URL || 'https://clubedasueca.pt'
+    return process.env.NEXT_PUBLIC_BASE_URL || 'https://clubedasueca.co.mz'
 }
 
 export async function login(prevState: any, formData: FormData) {
@@ -105,13 +105,13 @@ export async function signup(prevState: any, formData: FormData) {
     const { data: { user: newUser } } = await supabase.auth.getUser()
     if (newUser) {
         // ⚠️  FASE DE TESTES — remover quando os gateways de pagamento estiverem configurados
-        // Crédito de boas-vindas: 10€ direto na carteira para cada conta nova
+        // Crédito de boas-vindas: 100 créditos (100 MZN) direto na carteira para cada conta nova
         ;(async () => {
             try {
                 const { data: wallet } = await supabase
                     .from('wallets')
                     .upsert(
-                        { user_id: newUser.id, balance: 10.00, currency: 'EUR' },
+                        { user_id: newUser.id, balance: 100.00, currency: 'MZN' },
                         { onConflict: 'user_id', ignoreDuplicates: false }
                     )
                     .select('id')
@@ -120,9 +120,9 @@ export async function signup(prevState: any, formData: FormData) {
                 if (wallet) {
                     await supabase.from('transactions').insert({
                         wallet_id: wallet.id,
-                        amount: 10.00,
+                        amount: 100.00,
                         type: 'credit',
-                        description: '🎁 Crédito de Boas-Vindas — Fase de Testes',
+                        description: '🎁 Crédito de Boas-Vindas (100 créditos) — Fase de Testes',
                     })
                 }
             } catch (err) {
@@ -172,7 +172,6 @@ export async function forgotPassword(formData: FormData) {
         return { error: error.message }
     }
 
-    // usually redirect to a confirmation page or show a generic message
     redirect('/login?message=Verifique o seu email para recuperar a password')
 }
 

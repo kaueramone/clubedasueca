@@ -74,7 +74,7 @@ export default function AdminDashboard() {
                     />
                     <StatCard
                         title="Saldo em Circulação (Pot)"
-                        value={`€${stats.balance.toFixed(2)}`}
+                        value={`MT${stats.balance.toFixed(2)}`}
                         icon={DollarSign}
                         colorClass="bg-accent/10 text-accent border border-accent/20"
                     />

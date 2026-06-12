@@ -10,8 +10,9 @@ export const metadata: Metadata = {
     title: "Clube da Sueca | O Seu Clube Privado Desta Tradição Portuguesa",
     description: "Jogue Sueca Online num ambiente premium e confiável.",
     alternates: {
-        canonical: 'https://clubedasueca.pt',
+        canonical: 'https://clubedasueca.co.mz',
         languages: {
+            'pt-MZ': 'https://clubedasueca.co.mz',
             'pt-PT': 'https://clubedasueca.pt',
             'pt-BR': 'https://clubedasueca.com.br',
             'x-default': 'https://clubedasueca.com',
@@ -20,8 +21,8 @@ export const metadata: Metadata = {
     openGraph: {
         siteName: 'Clube da Sueca',
         type: 'website',
-        locale: 'pt_PT',
-        alternateLocale: ['pt_BR'],
+        locale: 'pt_MZ',
+        alternateLocale: ['pt_PT', 'pt_BR'],
     },
 };
 

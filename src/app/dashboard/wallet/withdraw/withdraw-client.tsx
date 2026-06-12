@@ -2,44 +2,45 @@
 
 import { useState } from 'react'
 import { requestWithdrawal } from '../actions'
-import { ArrowLeft, Landmark, Send, Loader2, Smartphone, Banknote, CreditCard } from 'lucide-react'
+import { ArrowLeft, Landmark, Loader2, Smartphone } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
-const REGIONS = [
-    { id: 'PT', name: 'Portugal', currency: 'EUR', symbol: '€', rate: 1, icon: '🇵🇹', method: 'MB Way / IBAN', placeholder: 'Ex: 910000000 ou PT50...' },
-    { id: 'BR', name: 'Brasil', currency: 'BRL', symbol: 'R$', rate: 6.10, icon: '🇧🇷', method: 'PIX', placeholder: 'Ex: CPF, Email ou Chave Aleatória' },
-    { id: 'MZ', name: 'Moçambique', currency: 'MZN', symbol: 'MT', rate: 68.5, icon: '🇲🇿', method: 'M-Pesa', placeholder: 'Ex: 840000000' }
+// Saque para carteira móvel de Moçambique (FICTÍCIO — sem gateway real ligado).
+// 1 crédito = 1 MZN (1:1). Saque mínimo: 250 MZN.
+const METHODS = [
+    { id: 'mpesa', name: 'M-Pesa', operator: 'Vodacom', color: 'text-red-600', placeholder: 'Ex: 84xxxxxxx' },
+    { id: 'emola', name: 'e-Mola', operator: 'Movitel', color: 'text-yellow-600', placeholder: 'Ex: 86xxxxxxx' },
+    { id: 'mkesh', name: 'mKesh', operator: 'Tmcel', color: 'text-blue-600', placeholder: 'Ex: 82xxxxxxx' },
 ]
 
-const PRESET_AMOUNTS = [10, 20, 50, 100] // Base amounts in EUR
+const PRESET_AMOUNTS = [250, 500, 1000, 2000] // MZN
+const MIN_WITHDRAW = 250
 
 export function WithdrawPageClient() {
-    const [region, setRegion] = useState(REGIONS[0])
-    const [amountEur, setAmountEur] = useState<string>('10')
-    const [paymentKey, setPaymentKey] = useState('')
+    const [method, setMethod] = useState(METHODS[0])
+    const [amount, setAmount] = useState<string>('250')
+    const [phone, setPhone] = useState('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
 
-    const localAmount = amountEur ? Math.ceil(parseFloat(amountEur) * region.rate).toString() : '0'
-
     const handleWithdraw = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!amountEur || parseFloat(amountEur) < 10) {
-            alert("O montante mínimo de levantamento é 10€.")
+        if (!amount || parseFloat(amount) < MIN_WITHDRAW) {
+            alert(`O montante mínimo de levantamento é ${MIN_WITHDRAW} MZN.`)
             return
         }
-        if (!paymentKey.trim()) {
-            alert("Por favor preencha a sua Chave de Pagamento/Destino.")
+        if (!phone.trim()) {
+            alert('Por favor indique o número da carteira móvel de destino.')
             return
         }
 
         setLoading(true)
 
         const formData = new FormData()
-        formData.append('amount', amountEur)
-        // Store the details appending the region for admin ease
-        formData.append('pixKey', `[${region.name}] ${region.method}: ${paymentKey}`)
+        formData.append('amount', amount)
+        // Guarda o destino para facilitar a aprovação manual no admin.
+        formData.append('pixKey', `${method.name} (${method.operator}): ${phone}`)
 
         const res = await requestWithdrawal(formData)
 
@@ -47,7 +48,7 @@ export function WithdrawPageClient() {
             alert(res.error)
             setLoading(false)
         } else {
-            alert("Pedido de levantamento enviado com sucesso! Aguarde aprovação.")
+            alert('Pedido de levantamento enviado com sucesso! Aguarde aprovação.')
             router.push('/dashboard')
         }
     }
@@ -63,24 +64,24 @@ export function WithdrawPageClient() {
 
             <div className="mb-6 rounded-xl bg-yellow-50 dark:bg-yellow-900/10 p-4 text-sm text-yellow-800 dark:text-yellow-600 border border-yellow-200 dark:border-yellow-800/30 flex items-start gap-3">
                 <Landmark className="w-5 h-5 shrink-0 mt-0.5" />
-                <p>O levantamento pode demorar até 24 horas para aprovação via o nosso Apoio ao Cliente Misto.</p>
+                <p>O levantamento pode demorar até 24 horas para aprovação pelo nosso Apoio ao Cliente.</p>
             </div>
 
             <form onSubmit={handleWithdraw} className="space-y-6">
 
-                {/* Region Selector */}
+                {/* Method Selector */}
                 <div>
-                    <label className="block text-sm font-semibold text-foreground mb-3">Escolha o País de Destino</label>
+                    <label className="block text-sm font-semibold text-foreground mb-3">Carteira móvel de destino</label>
                     <div className="grid grid-cols-3 gap-2">
-                        {REGIONS.map(r => (
+                        {METHODS.map(m => (
                             <button
-                                key={r.id}
+                                key={m.id}
                                 type="button"
-                                onClick={() => setRegion(r)}
-                                className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${region.id === r.id ? 'border-accent bg-accent/5' : 'border-border bg-muted/30 hover:bg-muted'}`}
+                                onClick={() => setMethod(m)}
+                                className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${method.id === m.id ? 'border-accent bg-accent/5' : 'border-border bg-muted/30 hover:bg-muted'}`}
                             >
-                                <span className="text-2xl mb-1">{r.icon}</span>
-                                <span className={`text-[10px] font-bold ${region.id === r.id ? 'text-accent' : 'text-muted-foreground'}`}>{r.name}</span>
+                                <Smartphone className={`h-6 w-6 mb-1 ${m.color}`} />
+                                <span className={`text-[11px] font-bold ${method.id === m.id ? 'text-accent' : 'text-muted-foreground'}`}>{m.name}</span>
                             </button>
                         ))}
                     </div>
@@ -88,57 +89,47 @@ export function WithdrawPageClient() {
 
                 {/* Amount Selector */}
                 <div>
-                    <label className="block text-sm font-semibold text-foreground mb-3">Valor a levantar da Carteira (€)</label>
+                    <label className="block text-sm font-semibold text-foreground mb-3">Valor a levantar (créditos · 1 = 1 MZN)</label>
                     <div className="grid grid-cols-4 gap-2 mb-4">
                         {PRESET_AMOUNTS.map(val => (
                             <button
                                 key={val}
                                 type="button"
-                                onClick={() => setAmountEur(val.toString())}
-                                className={`py-2 rounded-lg text-sm font-bold transition-colors ${amountEur === val.toString() ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-primary/20'}`}
+                                onClick={() => setAmount(val.toString())}
+                                className={`py-2 rounded-lg text-sm font-bold transition-colors ${amount === val.toString() ? 'bg-primary text-white' : 'bg-muted text-muted-foreground hover:bg-primary/20'}`}
                             >
-                                {val}€
+                                {val}
                             </button>
                         ))}
                     </div>
 
                     <div className="relative mt-1">
-                        <span className="absolute left-3 top-3.5 text-muted-foreground text-sm font-bold">EUR €</span>
+                        <span className="absolute left-3 top-3.5 text-muted-foreground text-sm font-bold">MZN</span>
                         <input
                             type="number"
-                            min="10"
-                            step="0.01"
+                            min={MIN_WITHDRAW}
+                            step="1"
                             required
-                            value={amountEur}
-                            onChange={(e) => setAmountEur(e.target.value)}
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
                             className="block w-full rounded-xl border border-border bg-background pl-[60px] p-3 text-lg font-bold focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent text-foreground"
-                            placeholder="10.00"
+                            placeholder="250"
                         />
                     </div>
-                    <p className="mt-2 text-xs text-muted-foreground">Mínimo para saque: €10.00 EUR</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Mínimo para saque: {MIN_WITHDRAW} MZN.</p>
                 </div>
 
-                {/* Conversion Display */}
-                {region.id !== 'PT' && parseFloat(amountEur) > 0 && (
-                    <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-xl space-y-2 border border-green-200 dark:border-green-800/30">
-                        <p className="text-xs text-green-800 dark:text-green-600 font-semibold uppercase tracking-wider">Cotação Projetada na Sua Conta</p>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Recebe em {region.name} ({region.currency})</span>
-                            <span className="text-lg font-bold text-green-700 dark:text-green-400">{region.symbol} {localAmount}</span>
-                        </div>
-                    </div>
-                )}
-
-                {/* Destination Key Input */}
+                {/* Destination Phone Input */}
                 <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Chave {region.method}</label>
+                    <label className="block text-sm font-medium text-foreground mb-2">Número {method.name} ({method.operator})</label>
                     <input
-                        type="text"
+                        type="tel"
+                        inputMode="numeric"
                         required
-                        value={paymentKey}
-                        onChange={(e) => setPaymentKey(e.target.value)}
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
                         className="block w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-                        placeholder={region.placeholder}
+                        placeholder={method.placeholder}
                     />
                 </div>
 
@@ -151,9 +142,7 @@ export function WithdrawPageClient() {
                         <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
                         <>
-                            {region.id === 'PT' && <Smartphone className="w-5 h-5" />}
-                            {region.id === 'BR' && <Banknote className="w-5 h-5" />}
-                            {region.id === 'MZ' && <CreditCard className="w-5 h-5" />}
+                            <Smartphone className="w-5 h-5" />
                             Confirmar Pedido de Saque
                         </>
                     )}

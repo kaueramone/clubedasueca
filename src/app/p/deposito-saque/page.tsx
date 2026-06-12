@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Banknote, CreditCard, Clock, Lock } from 'lucide-react';
+import { Banknote, CreditCard, Clock, Lock, ArrowRightLeft } from 'lucide-react';
 
 export default function DepositoSaquePage() {
     return (
@@ -27,9 +27,9 @@ export default function DepositoSaquePage() {
                         </div>
                         <h2 className="text-3xl font-bold text-foreground mb-4">Depósitos</h2>
                         <ul className="space-y-4 text-left w-full text-muted-foreground mb-8">
-                            <li className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-success" /> MB Way Direto (Recomendado)</li>
-                            <li className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-blue-500" /> Referência Multibanco</li>
-                            <li className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-purple-500" /> Transferência PIX (Brasil)</li>
+                            <li className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-red-600" /> M-Pesa (Vodacom)</li>
+                            <li className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-yellow-600" /> e-Mola (Movitel)</li>
+                            <li className="flex items-center gap-2"><CreditCard className="w-5 h-5 text-blue-600" /> mKesh (Tmcel)</li>
                         </ul>
                         <div className="mt-auto bg-background p-4 rounded-xl border border-border w-full flex items-center justify-between">
                             <span className="text-sm font-semibold text-foreground">Tempo de Entrada:</span>
@@ -44,9 +44,9 @@ export default function DepositoSaquePage() {
                         </div>
                         <h2 className="text-3xl font-bold text-foreground mb-4">Levantamentos</h2>
                         <ul className="space-y-4 text-left w-full text-muted-foreground mb-8">
-                            <li className="flex items-center gap-2"><ArrowRightLeft className="w-5 h-5 text-accent" /> Transferência Bancária IBAN</li>
-                            <li className="flex items-center gap-2"><ArrowRightLeft className="w-5 h-5 text-accent" /> Transferência PIX</li>
-                            <li className="flex items-center gap-2"><ArrowRightLeft className="w-5 h-5 text-accent" /> MB Way App</li>
+                            <li className="flex items-center gap-2"><ArrowRightLeft className="w-5 h-5 text-accent" /> M-Pesa (Vodacom)</li>
+                            <li className="flex items-center gap-2"><ArrowRightLeft className="w-5 h-5 text-accent" /> e-Mola (Movitel)</li>
+                            <li className="flex items-center gap-2"><ArrowRightLeft className="w-5 h-5 text-accent" /> mKesh (Tmcel)</li>
                         </ul>
                         <div className="mt-auto bg-background p-4 rounded-xl border border-border w-full flex items-center justify-between">
                             <span className="text-sm font-semibold text-foreground">Tempo de Saída:</span>
@@ -70,6 +70,3 @@ export default function DepositoSaquePage() {
         </div>
     );
 }
-
-// Need to import ArrowRightLeft above
-import { ArrowRightLeft } from 'lucide-react';

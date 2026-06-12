@@ -57,7 +57,7 @@ Regras gerais:
 
 **Modos de jogo:**
 - Treino: joga grátis contra bots para praticar. Sem apostas, sem limite.
-- Mesas reais: mesas de 1€ a 20€ de entrada. Precisas de saldo na carteira.
+- Mesas reais: mesas de 50 a 1000 créditos de entrada. Precisas de saldo na carteira.
 - Demo: partida de demonstração sem conta, acessível pela landing page.
 
 **Entrar numa mesa:**
@@ -70,19 +70,19 @@ Regras gerais:
 - O tutorial ensina passo a passo: estrutura, naipes, trunfo, pontuação e estratégia.
 
 **Carteira e pagamentos:**
-- Depósitos: PIX (Brasil), MB Way / Transferência (Portugal), M-Pesa (Moçambique).
-- Levantamentos: mesmo método do depósito, processados em até 48h.
+- O saldo é em créditos. 1 crédito = 1 MZN (Metical). Depósito mínimo 50 MZN; saque mínimo 250 MZN.
+- Depósitos: carteiras móveis de Moçambique — M-Pesa (Vodacom), e-Mola (Movitel) e mKesh (Tmcel).
+- Levantamentos: para a mesma carteira móvel, processados em até 24h.
 - Bónus: disponíveis no dashboard em "Bónus". Consulta os termos de cada bónus.
-- O saldo é em Euros (EUR) para PT/MZ e pode variar por câmbio para BR.
 
 **Prémios e rake:**
 - A equipa vencedora recebe o pote da mesa (soma das 4 entradas).
 - A plataforma retém 20% de rake para manutenção e desenvolvimento.
-- Ex: mesa de 5€ → pote de 20€ → equipa vencedora recebe 16€ (8€ por jogador).
+- Ex: mesa de 100 créditos → pote de 400 → equipa vencedora recebe 320 (160 por jogador).
 - O saldo é creditado automaticamente na carteira após o fim da partida.
 
 **Segurança e fair play:**
-- Embaralhamento criptográfico (RNG). Deteção de conluio ativa.
+- Baralhamento aleatório das cartas. Deteção de conluio ativa.
 - Sessão única: logins em outro dispositivo desligam a sessão anterior.
 - KYC/AML: verificação de identidade exigida para levantamentos.
 
@@ -96,7 +96,7 @@ Regras gerais:
 - Problemas com pagamentos ou conta: usa o chat de suporte.
 
 **Domínios da plataforma:**
-- clubedasueca.pt (principal), clubedasueca.com.br, clubedasueca.com, clubedasueca.co.mz
+- clubedasueca.co.mz (Moçambique), clubedasueca.pt, clubedasueca.com.br, clubedasueca.com
 `
 
 export async function getBotReply(userMessage: string): Promise<string | null> {

@@ -1,11 +1,11 @@
 export const botFaqResponses = [
     {
-        keywords: ['deposito', 'depositar', 'pix', 'pagamento', 'saldo', 'carteira', 'dinheiro'],
-        response: 'Para fazer um depósito, vá à página "Carteira" no seu Dashboard. Pode escolher MBWay, Referência Multibanco ou Cartão. Os depósitos normais são processados instantaneamente.'
+        keywords: ['deposito', 'depositar', 'mpesa', 'm-pesa', 'emola', 'e-mola', 'mkesh', 'pagamento', 'saldo', 'carteira', 'dinheiro'],
+        response: 'Para fazer um depósito, vá à página "Carteira" no seu Dashboard. Pode pagar por M-Pesa, e-Mola ou mKesh. O mínimo é 50 MZN (1 crédito = 1 MZN) e os depósitos são processados instantaneamente.'
     },
     {
         keywords: ['levantamento', 'levantar', 'saque', 'sacar', 'receber'],
-        response: 'Para levantar os seus ganhos, vá à página "Carteira", clique no separador "Levantar" e siga as instruções. O valor mínimo é de 20€ e demora entre 1 a 3 dias úteis.'
+        response: 'Para levantar os seus ganhos, vá à página "Carteira", clique no separador "Levantar" e siga as instruções. O valor mínimo é de 250 MZN e é enviado para a sua carteira móvel em até 24h.'
     },
     {
         keywords: ['bonus', 'bónus', 'promo', 'promocao', 'codigo', 'rollover'],
@@ -26,7 +26,7 @@ export const botFaqResponses = [
 ]
 
 export function getBotResponse(userMessage: string): string | null {
-    const msg = userMessage.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    const msg = userMessage.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
 
     // Procura por keywords
     for (const faq of botFaqResponses) {

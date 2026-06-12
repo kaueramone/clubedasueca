@@ -19,11 +19,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Client simples (anon key). As tabelas de jogo não têm RLS, então os
-    // updates de jogada funcionam sem sessão de utilizador.
+    // Service role: as tabelas de jogo têm RLS (migração 103). O watchdog corre
+    // sem sessão de utilizador, por isso precisa da service role para LER as
+    // mesas paradas e jogar pelos jogadores AFK (ignora RLS).
     const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
         { auth: { persistSession: false } }
     )
 

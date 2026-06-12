@@ -38,7 +38,7 @@ export const GameResultOverlay = memo(function GameResultOverlay({
 
                 {!isTraining && stake > 0 && (
                     <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-xl text-center shadow-sm">
-                        <p className="text-sm font-bold text-gray-800">Pote da Equipa Vencedora: <span className="text-green-600">€{(stake * 4 * 0.8).toFixed(2)}</span></p>
+                        <p className="text-sm font-bold text-gray-800">Pote da Equipa Vencedora: <span className="text-green-600">MT{(stake * 4 * 0.8).toFixed(2)}</span></p>
                         <p className="text-xs text-gray-500 mt-1">Taxa de Mesa (Rake do Clube): 20%</p>
                     </div>
                 )}

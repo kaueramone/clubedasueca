@@ -15,7 +15,7 @@ CREATE TABLE public.wallets (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL UNIQUE,
   balance DECIMAL(12, 2) DEFAULT 0.00 NOT NULL CHECK (balance >= 0),
-  currency TEXT DEFAULT 'EUR' NOT NULL,
+  currency TEXT DEFAULT 'MZN' NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

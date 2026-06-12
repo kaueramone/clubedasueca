@@ -109,10 +109,10 @@ export default function AdminAffiliatesPage() {
                                         </div>
                                     </div>
                                     <div className="mt-2 text-xs text-muted-foreground flex gap-4">
-                                        <span>Modelo: {aff.commission_model === 'revenue_share' ? `Rev Share ${aff.revenue_share_pct}%` : `CPA €${aff.cpa_amount}`}</span>
-                                        <span>Ganhos: €{aff.total_earned?.toFixed(2)}</span>
-                                        <span>Pago: €{aff.total_paid?.toFixed(2)}</span>
-                                        <span>Pendente: €{((aff.total_earned || 0) - (aff.total_paid || 0)).toFixed(2)}</span>
+                                        <span>Modelo: {aff.commission_model === 'revenue_share' ? `Rev Share ${aff.revenue_share_pct}%` : `CPA MT${aff.cpa_amount}`}</span>
+                                        <span>Ganhos: MT{aff.total_earned?.toFixed(2)}</span>
+                                        <span>Pago: MT{aff.total_paid?.toFixed(2)}</span>
+                                        <span>Pendente: MT{((aff.total_earned || 0) - (aff.total_paid || 0)).toFixed(2)}</span>
                                     </div>
 
                                     {payingId === aff.id && (

@@ -204,7 +204,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     // --- Trump Card Intro Animation Logic ---
     useEffect(() => {
         if (gameState?.status === 'playing' && gameState?.trump_card && gameState.rounds?.length === 0 && gameState.current_trick_cards?.length === 0 && !hasShownTrumpRef.current) {
-            const isFreshStart = gameState.game_players.every((p: any) => p.hand.length === 10);
+            // Usa hand_count quando existe (multiplayer; a mão dos adversários
+            // vem vazia por segurança) e cai para hand.length no treino.
+            const isFreshStart = gameState.game_players.every((p: any) => (p.hand_count ?? p.hand?.length ?? 0) === 10);
 
             if (isFreshStart) {
                 hasShownTrumpRef.current = true
@@ -520,6 +522,18 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     useEffect(() => {
         if (isTraining) return
+
+        // Recarrega os jogadores via get_table_state: devolve a mão SÓ do
+        // próprio utilizador (+ hand_count dos restantes). As cartas dos
+        // adversários nunca chegam ao cliente (migração 103 / RLS).
+        const refreshPlayers = async () => {
+            const { data } = await supabase.rpc('get_table_state', { p_game_id: game.id })
+            const players = (data as any)?.players
+            if (players) {
+                setGameState((prev: any) => ({ ...prev, game_players: players }))
+            }
+        }
+
         const channel = supabase
             .channel(`game-${game.id}`)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${game.id}` }, (payload) => {
@@ -528,15 +542,15 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     return
                 }
                 setGameState((prev: any) => ({ ...prev, ...payload.new }))
+                // Cada jogada altera a linha de games (vez/pontos). Sob RLS, os
+                // eventos da linha de outro jogador não chegam aqui, por isso é
+                // este evento que dispara o refresh das mãos/contagens.
+                refreshPlayers()
             })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players', filter: `game_id=eq.${game.id}` }, async () => {
-                const { data: players } = await supabase
-                    .from('game_players')
-                    .select('*, profiles(username, avatar_url)')
-                    .eq('game_id', game.id)
-                if (players) {
-                    setGameState((prev: any) => ({ ...prev, game_players: players }))
-                }
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players', filter: `game_id=eq.${game.id}` }, () => {
+                // Dispara quando a própria linha muda (e, na fase "waiting", quando
+                // entram/saem jogadores). Recarrega sempre via get_table_state.
+                refreshPlayers()
             })
             .on('broadcast', { event: 'chat_message' }, (payload) => {
                 setMessages(prev => [...prev, payload.payload])
@@ -679,7 +693,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     }
 
     const getOpponentCards = (player: any) => {
-        const count = player?.hand?.length || 0;
+        // Em multiplayer, get_table_state devolve hand_count (a mão real dos
+        // adversários nunca chega ao cliente). No treino, usa o tamanho da mão local.
+        const count = player?.hand_count ?? player?.hand?.length ?? 0;
         return Array(count).fill(0).map((_, i) => i);
     }
 

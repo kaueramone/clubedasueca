@@ -102,11 +102,11 @@ export default function DesignSystemShowcase() {
                         <CardContent className="space-y-2">
                             <div className="flex justify-between items-center py-2 border-b border-border">
                                 <span className="text-muted-foreground">Prémio Base</span>
-                                <span className="font-bold text-accent">€ 5.000,00</span>
+                                <span className="font-bold text-accent">MT 5.000,00</span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-border">
                                 <span className="text-muted-foreground">Entrada</span>
-                                <span>€ 50,00</span>
+                                <span>MT 50,00</span>
                             </div>
                             <div className="flex justify-between items-center py-2">
                                 <span className="text-muted-foreground">Jogadores</span>

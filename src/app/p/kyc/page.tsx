@@ -2,7 +2,7 @@ import DocumentStaticPage from '@/components/layout/document-static-page';
 
 export default function KYCPage() {
     return (
-        <DocumentStaticPage title="Política KYC (Conheça o seu Cliente)" lastUpdated="Outubro de 2024">
+        <DocumentStaticPage title="Política KYC (Conheça o seu Cliente)" lastUpdated="Junho de 2026">
             <p>
                 Em conformidade direta com os regulamentos mundiais de jogo e de combate ao branqueamento
                 de capitais (AML), o Clube da Sueca aplica ativamente uma política KYC ("Know Your Customer",

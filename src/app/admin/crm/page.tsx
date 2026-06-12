@@ -113,8 +113,8 @@ export default function AdminCrmPage() {
                                                                     'bg-muted text-muted-foreground'
                                                         }`}>{u.segment}</span>
                                                 </td>
-                                                <td className="px-6 py-4 font-bold text-foreground">€{u.ltv?.toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-muted-foreground">€{u.total_deposited?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 font-bold text-foreground">MT{u.ltv?.toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-muted-foreground">MT{u.total_deposited?.toFixed(2)}</td>
                                                 <td className="px-6 py-4 text-muted-foreground">{u.games_played} jogados<br /><span className="text-xs">{u.games_won} vitórias</span></td>
                                                 <td className="px-6 py-4 text-muted-foreground">
                                                     {u.last_game_at ? new Date(u.last_game_at).toLocaleDateString('pt-PT') : 'Nunca'}

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { logAudit } from '@/lib/audit'
 
@@ -14,8 +15,10 @@ export async function getAdminStats() {
     const { data: wallets } = await supabase.from('wallets').select('balance')
     const totalBalance = wallets?.reduce((acc, w) => acc + (w.balance || 0), 0) || 0
 
-    // Total Games
-    const { count: gamesCount } = await supabase.from('games').select('*', { count: 'exact', head: true })
+    // Total Games — service role: com RLS (migração 103), o cliente do utilizador
+    // só contaria os jogos em que participa. Admin precisa do total global.
+    const svc = createServiceClient()
+    const { count: gamesCount } = await svc.from('games').select('*', { count: 'exact', head: true })
 
     // House Revenue
     const { data: revenue } = await supabase.from('house_revenue').select('amount')

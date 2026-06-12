@@ -49,9 +49,9 @@ export function WalletOverview({
     return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/90 p-6 text-white shadow-xl shadow-accent/20">
             <div className="relative z-10">
-                <p className="text-sm font-medium opacity-80">Saldo Disponível</p>
+                <p className="text-sm font-medium opacity-80">Saldo Disponível (créditos · 1 = 1 MZN)</p>
                 <p className="mt-2 text-4xl font-bold tracking-tight">
-                    €{balance.toFixed(2)}
+                    {balance.toFixed(2)} MT
                 </p>
             </div>
             <div className="mt-8 flex gap-3">

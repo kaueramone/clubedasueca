@@ -122,7 +122,7 @@ export default async function Home() {
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-border">
                             <h3 className="text-lg font-bold text-foreground mb-2">É seguro?</h3>
-                            <p className="text-muted-foreground">O Clube da Sueca garante um jogo justo (Fair Play). Usamos tecnologia de embaralhamento criptográfico RNG e algoritmos de deteção de conluio para manter a integridade total do jogo.</p>
+                            <p className="text-muted-foreground">O Clube da Sueca garante um jogo justo (Fair Play). Usamos baralhamento aleatório das cartas no servidor e algoritmos de deteção de conluio para manter a integridade total do jogo.</p>
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-border">
                             <h3 className="text-lg font-bold text-foreground mb-2">Existe taxa?</h3>

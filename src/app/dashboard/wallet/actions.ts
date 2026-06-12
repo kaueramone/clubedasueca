@@ -10,8 +10,9 @@ export async function deposit(formData: FormData) {
     const supabase = await createClient()
     const amount = parseFloat(formData.get('amount') as string)
 
-    if (isNaN(amount) || amount <= 0) {
-        return { error: 'Valor inválido' }
+    // 1 crédito = 1 MZN. Depósito mínimo: 50 MZN.
+    if (isNaN(amount) || amount < 50) {
+        return { error: 'O valor mínimo de depósito é 50 MZN' }
     }
 
     const {
@@ -52,8 +53,8 @@ export async function requestWithdrawal(formData: FormData) {
     const amount = parseFloat(formData.get('amount') as string)
     const pixKey = formData.get('pixKey') as string
 
-    if (isNaN(amount) || amount < 10) {
-        return { error: 'O valor mínimo de levantamento é 10€' }
+    if (isNaN(amount) || amount < 250) {
+        return { error: 'O valor mínimo de levantamento é 250 MZN' }
     }
 
     const {

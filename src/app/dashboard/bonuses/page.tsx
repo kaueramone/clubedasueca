@@ -143,7 +143,7 @@ export default function UserBonusesPage() {
                                             {(ub.bonus as any)?.name || 'Bónus'}
                                         </h4>
                                         <p className="text-sm text-gray-500">
-                                            Valor: <span className="font-bold text-green-600">€{ub.amount}</span>
+                                            Valor: <span className="font-bold text-green-600">MT{ub.amount}</span>
                                         </p>
                                     </div>
                                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${ub.status === 'active' ? 'bg-green-100 text-green-700' :
@@ -159,7 +159,7 @@ export default function UserBonusesPage() {
                                 {ub.status === 'active' && ub.rollover_target > 0 && (
                                     <div className="mt-3">
                                         <div className="flex justify-between text-xs text-gray-500 mb-1">
-                                            <span>Rollover: €{ub.wagered?.toFixed(2)} / €{ub.rollover_target?.toFixed(2)}</span>
+                                            <span>Rollover: MT{ub.wagered?.toFixed(2)} / MT{ub.rollover_target?.toFixed(2)}</span>
                                             <span>{Math.min(100, (ub.wagered / ub.rollover_target * 100)).toFixed(0)}%</span>
                                         </div>
                                         <div className="h-2 rounded-full bg-gray-200 overflow-hidden">

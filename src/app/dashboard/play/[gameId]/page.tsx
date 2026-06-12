@@ -12,9 +12,10 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
 
     if (!user) redirect("/login");
 
+    // Estado do jogo (a linha de games é legível por participantes/host/lobby via RLS)
     const { data: game, error } = await supabase
         .from("games")
-        .select("*, game_players(*, profiles(username, avatar_url))")
+        .select("*")
         .eq("id", gameId)
         .single();
 
@@ -29,16 +30,23 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
         );
     }
 
+    // Jogadores via get_table_state: devolve a mão SÓ do próprio utilizador
+    // (+ hand_count dos restantes). Esconde as cartas dos adversários (migração 103).
+    const { data: tableState } = await supabase.rpc("get_table_state", { p_game_id: gameId });
+    const players: any[] = (tableState as any)?.players ?? [];
+
     // Check if user is player
-    const isPlayer = game.game_players.some((p: any) => p.user_id === user.id);
+    const isPlayer = players.some((p: any) => p.user_id === user.id);
     // If not player, redirect to lobby (UNLESS they are host, which they should be in players anyway)
     if (!isPlayer && game.host_id !== user.id) {
         redirect("/dashboard/play");
     }
 
+    const gameWithPlayers = { ...game, game_players: players };
+
     return (
         <div className="h-[calc(100dvh-4rem)] -m-4 md:-m-8 overflow-hidden bg-ios-gray6">
-            <GameTable game={game} currentUser={user} />
+            <GameTable game={gameWithPlayers} currentUser={user} />
         </div>
     );
 }
