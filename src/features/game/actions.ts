@@ -99,7 +99,11 @@ export async function playCard(gameId: string, card: string, actingUserId?: stri
         const wagerAmount = result.stake_amount || 0
         const winnerTeam = result.winner_team as string
 
-        await logAudit(supabase, {
+        // Service role: o watchdog joga por um jogador AFK sem sessão de
+        // utilizador, e a política de INSERT em audit_logs passa a exigir
+        // user_id = auth.uid() (migração 105). Escrever com a service role
+        // garante que o registo de fim de jogo é sempre gravado.
+        await logAudit(svc, {
             userId: userId2,
             action: 'game_finished',
             entityType: 'game',
@@ -373,10 +377,13 @@ export async function respondTableInvite(inviteId: string, accept: boolean) {
             return { error: joinError.message || 'Erro ao entrar na mesa.' }
         }
 
-        // If 4th player joined, deal cards
-        if (joinData?.game_started) {
-            await dealCardsForGame(invite.game_id)
-        }
+        // NÃO distribuir aqui. O process_join_game (migração 099) já distribui
+        // as cartas DENTRO da mesma transação quando entra o 4º jogador
+        // (devolve game_started + dealt). Chamar dealCardsForGame aqui
+        // re-embaralhava as mãos com um baralho diferente, fora de transação —
+        // o jogador via a mão mudar e, se falhasse a meio dos 4 UPDATEs,
+        // ficavam mãos de baralhos distintos (cartas duplicadas) na mesma mesa.
+        // Ver src/app/dashboard/play/actions.ts, que já tinha esta nota.
     }
 
     await supabase
