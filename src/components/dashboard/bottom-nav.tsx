@@ -14,9 +14,11 @@ export function BottomNav({ pendingCount = 0, userId, initialChatUnread = 0 }: {
     const pathname = usePathname();
     const [chatUnread, setChatUnread] = useState(initialChatUnread)
 
-    useEffect(() => {
+    const [previousPath, setPreviousPath] = useState(pathname)
+    if (previousPath !== pathname) {
+        setPreviousPath(pathname)
         if (pathname === '/dashboard/chat') setChatUnread(0)
-    }, [pathname])
+    }
 
     useEffect(() => {
         if (!userId) return

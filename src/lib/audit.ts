@@ -1,4 +1,7 @@
+import 'server-only'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 interface AuditEntry {
   userId?: string | null
@@ -19,7 +22,10 @@ export async function logAudit(
   entry: AuditEntry
 ): Promise<void> {
   try {
-    await supabase.from('audit_logs').insert({
+    const session = await createClient()
+    const { data: { user } } = await session.auth.getUser()
+    if (!user || entry.userId !== user.id) throw new Error('Invalid audit actor')
+    const { error } = await createServiceClient().from('audit_logs').insert({
       user_id: entry.userId || null,
       action: entry.action,
       entity_type: entry.entityType || null,
@@ -27,6 +33,7 @@ export async function logAudit(
       details: entry.details || {},
       ip_address: entry.ipAddress || null,
     })
+    if (error) throw error
   } catch (err) {
     console.error('[AUDIT] Failed to log audit entry:', err)
   }

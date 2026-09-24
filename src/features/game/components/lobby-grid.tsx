@@ -1,6 +1,7 @@
 'use client'
+import { settlementAmounts } from '../settlement'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Image from 'next/image'
 import { Search, User, Trash2, X, UserPlus, Loader2, Check } from 'lucide-react'
@@ -21,7 +22,7 @@ interface InviteModalState {
 export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame }: { initialGames: any[], currentUser: any, onJoinGame: any, onCancelGame: any }) {
     const [games, setGames] = useState<any[]>(initialGames)
     const [search, setSearch] = useState('')
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
 
     // Invite modal state
     const [inviteModal, setInviteModal] = useState<InviteModalState | null>(null)
@@ -38,7 +39,7 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
         const gamesChannel = supabase.channel('public:games')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, (payload) => {
                 if (payload.eventType === 'INSERT' && payload.new.status === 'waiting') {
-                    supabase.from('profiles').select('username, avatar_url').eq('id', payload.new.host_id).single().then(({ data }) => {
+                    supabase.from('public_profiles').select('username, avatar_url').eq('id', payload.new.host_id).single().then(({ data }) => {
                         setGames(prev => {
                             const exists = prev.find(g => g.id === payload.new.id)
                             if (exists) return prev
@@ -49,9 +50,8 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
                     setGames(prev => prev.map(g => {
                         if (g.id !== payload.new.id) return g
                         const updated = { ...g, ...payload.new }
-                        if (updated.status === 'playing') updated.isDummy = true
                         return updated
-                    }).filter(g => g.status === 'waiting' || g.isDummy || g.status === 'playing'))
+                    }).filter(g => g.status === 'waiting'))
                 } else if (payload.eventType === 'DELETE') {
                     setGames(prev => prev.filter(g => g.id !== payload.old.id))
                 }
@@ -61,10 +61,8 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
         const playersChannel = supabase.channel('public:game_players')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players' }, async (payload) => {
                 const gameId = payload.eventType === 'DELETE' ? payload.old.game_id : payload.new.game_id
-                const { data: currentPlayers } = await supabase
-                    .from('game_players')
-                    .select('*, profiles(username, avatar_url)')
-                    .eq('game_id', gameId)
+                const { data: snapshot } = await supabase.rpc('get_table_state', { p_game_id: gameId })
+                const currentPlayers = (snapshot as any)?.players
                 if (currentPlayers) {
                     setGames(prev => prev.map(g => g.id === gameId ? { ...g, game_players: currentPlayers } : g))
                 }
@@ -178,7 +176,8 @@ export function LobbyGrid({ initialGames, currentUser, onJoinGame, onCancelGame 
                                                     <h3 className={`font-bold text-lg line-clamp-1 ${(game.isDummy || game.status === 'playing') && game.host_id !== currentUser?.id ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>
                                                         Mesa de {game.profiles?.username || "Anónimo"}
                                                     </h3>
-                                                    <p className="text-sm font-medium text-muted-foreground mt-1">Aposta: <span className="font-bold text-success">MT{game.stake.toFixed(2)}</span></p>
+                                                    <p className="text-sm font-medium text-muted-foreground mt-1">Entrada: <span className="font-bold text-success">{game.stake.toFixed(2)} créditos de teste</span></p>
+                                                    <p className="text-xs text-muted-foreground">Taxa simulada: 20% do pote. Vitória: {settlementAmounts(game.stake).perWinner.toFixed(2)} créditos por jogador. Empate: devolução integral.</p>
                                                 </div>
                                                 {game.isDummy ? (
                                                     <span className="flex items-center gap-1.5 text-danger font-bold text-xs bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20">

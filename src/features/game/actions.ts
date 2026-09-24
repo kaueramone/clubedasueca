@@ -1,13 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
-import { isValidMove, getTrickWinner, getCardSuit, getCardValue } from './utils'
-import { logAudit } from '@/lib/audit'
-import { processWagerForBonuses } from '@/features/bonuses/actions'
-import { processGameAffiliateCommissions } from '@/features/affiliates/actions'
-import { trackUserMetrics } from '@/features/crm/actions'
 import { redirect } from 'next/navigation'
 
 export async function cancelGame(gameId: string) {
@@ -54,91 +48,15 @@ export async function leaveGame(gameId: string) {
     redirect('/dashboard/play')
 }
 
-export async function playCard(gameId: string, card: string, actingUserId?: string) {
+export async function playCard(gameId: string, card: string) {
     const supabase = await createClient()
-    // actingUserId permite que o watchdog server-side jogue por um jogador AFK.
-    // Quando ausente, resolve o utilizador autenticado normalmente.
-    let userId = actingUserId
-    if (!userId) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return { error: 'Não autenticado' }
-        userId = user.id
-    }
-    const userId2 = userId
-
-    // R1: jogada atomica via RPC com lock de mesa (process_play_card).
-    // O RPC valida turno/carta/naipe, grava move+hand, calcula a vaza,
-    // avanca o turno ou finaliza o jogo (chamando process_game_end) — tudo
-    // numa unica transacao, eliminando a corrida do antigo fluxo de 6 chamadas.
-    const { data: result, error: rpcError } = await supabase.rpc('process_play_card', {
-        p_game_id: gameId,
-        p_card: card,
-        p_acting_user_id: userId2,
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Não autenticado' }
+    const { data, error } = await supabase.rpc('process_play_card', {
+        p_game_id: gameId, p_card: card, p_acting_user_id: user.id,
     })
-
-    if (rpcError) {
-        console.error('[PLAY_CARD]', rpcError)
-        return { error: rpcError.message || 'Erro ao jogar carta.' }
-    }
-    if (result?.error) {
-        return { error: result.error }
-    }
-
-    // Efeitos colaterais de fim de jogo (nao-transacionais) ficam em TS,
-    // disparados so quando o RPC sinaliza game_over.
-    if (result?.game_over) {
-        // Service role: com RLS (migração 103), o cliente do utilizador só vê a
-        // sua própria linha de game_players. Para os efeitos de fim de jogo
-        // (bónus/CRM/afiliados) precisamos de TODOS os jogadores.
-        const svc = createServiceClient()
-        const { data: players } = await svc
-            .from('game_players')
-            .select('*')
-            .eq('game_id', gameId)
-
-        const wagerAmount = result.stake_amount || 0
-        const winnerTeam = result.winner_team as string
-
-        // Service role: o watchdog joga por um jogador AFK sem sessão de
-        // utilizador, e a política de INSERT em audit_logs passa a exigir
-        // user_id = auth.uid() (migração 105). Escrever com a service role
-        // garante que o registo de fim de jogo é sempre gravado.
-        await logAudit(svc, {
-            userId: userId2,
-            action: 'game_finished',
-            entityType: 'game',
-            entityId: gameId,
-            details: {
-                score_a: result.score_a,
-                score_b: result.score_b,
-                winner_team: winnerTeam,
-                result: result.end_result,
-            },
-        })
-
-        for (const p of (players || [])) {
-            const isWinner = winnerTeam !== 'Draw' && p.team === winnerTeam
-            // Rake 20%: a dupla vencedora divide os 80% do pote (pote = 4 x stake).
-            const wonAmount = isWinner ? (wagerAmount * 4 * 0.80) / 2 : 0
-
-            processWagerForBonuses(p.user_id, wagerAmount).catch(err =>
-                console.error('[WAGER_BONUS]', err)
-            )
-            trackUserMetrics(p.user_id, {
-                wagered: wagerAmount,
-                won: wonAmount,
-                games_played: 1,
-                games_won: isWinner ? 1 : 0,
-            }).catch(err => console.error('[GAME_CRM]', err))
-        }
-
-        const houseFee = wagerAmount * 4 * 0.20
-        processGameAffiliateCommissions(gameId, houseFee).catch(err =>
-            console.error('[AFFILIATE_COMMISSION]', err)
-        )
-    }
-
-    revalidatePath(`/dashboard/play/${gameId}`)
+    if (error || data?.error) return { error: error?.message || data.error }
+    revalidatePath('/dashboard/play/' + gameId)
     return { success: true }
 }
 
@@ -146,129 +64,11 @@ export async function playTimeoutCard(gameId: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
-
-    // Service role para LER o estado completo da mesa (com RLS, o cliente do
-    // utilizador só veria a sua própria linha). A jogada continua a passar pelo
-    // RPC autoritativo via playCard.
-    const svc = createServiceClient()
-
-    // 1. Fetch Game State to see whose turn it is
-    const { data: game } = await svc.from('games').select('*').eq('id', gameId).single()
-    if (!game || game.status !== 'playing') return { error: 'Jogo inativo' }
-
-    // 2. Fetch Players
-    const { data: players } = await svc.from('game_players').select('*').eq('game_id', gameId)
-    if (!players) return { error: 'Jogadores não encontrados' }
-
-    const currentPlayer = players.find(p => p.position === game.current_turn)
-    // Se o player atual formos nós, faz play com random
-    if (currentPlayer && currentPlayer.user_id === user.id) {
-        const hand = currentPlayer.hand || []
-        if (hand.length === 0) return { error: 'Sem cartas na mão' }
-
-        // Find what lead suit is
-        const { data: moves } = await svc
-            .from('game_moves')
-            .select('*')
-            .eq('game_id', gameId)
-            .eq('round_number', game.current_round || 1)
-            .eq('trick_number', game.current_trick || 1)
-            .order('played_at', { ascending: true })
-
-        const leadCard = moves && moves.length > 0 ? moves[0] : null
-        const leadSuit = leadCard ? getCardSuit(leadCard.card) : null
-
-        const validCards = hand.filter((c: string) => isValidMove(c, hand, leadSuit))
-        const cardToPlay = validCards.length > 0 ? validCards[Math.floor(Math.random() * validCards.length)] : hand[0]
-
-        return playCard(gameId, cardToPlay)
-    }
-
-    return { error: 'Não podes forçar timeout noutros, apenas podias jogar a tua e passaste do tempo.' }
+    const { data, error } = await supabase.rpc('process_turn_timeout', { p_game_id: gameId })
+    if (error || data?.error) return { error: error?.message || data.error }
+    return { success: true }
 }
 
-// ============================================
-// WATCHDOG SERVER-SIDE: joga automaticamente pelo jogador da vez.
-// Usado pela rota /api/games/tick quando um turno fica parado tempo demais,
-// independentemente de qualquer client estar conectado.
-// Reaproveita a lógica de regras (isValidMove) e o playCard existente.
-// ============================================
-export async function autoPlayForPlayer(gameId: string) {
-    // Watchdog: corre sem sessão. Service role para ler o estado completo da
-    // mesa sob RLS (migração 103). A jogada vai pelo RPC autoritativo via playCard.
-    const supabase = createServiceClient()
-
-    const { data: game } = await supabase.from('games').select('*').eq('id', gameId).single()
-    if (!game || game.status !== 'playing') return { error: 'Jogo inativo' }
-
-    const { data: players } = await supabase.from('game_players').select('*').eq('game_id', gameId)
-    if (!players) return { error: 'Jogadores não encontrados' }
-
-    const currentPlayer = players.find(p => p.position === game.current_turn)
-    if (!currentPlayer) return { error: 'Jogador da vez não encontrado' }
-
-    const hand: string[] = currentPlayer.hand || []
-    if (hand.length === 0) return { error: 'Sem cartas na mão' }
-
-    // Descobre o naipe de saída da vaza atual
-    const { data: moves } = await supabase
-        .from('game_moves')
-        .select('*')
-        .eq('game_id', gameId)
-        .eq('round_number', game.current_round || 1)
-        .eq('trick_number', game.current_trick || 1)
-        .order('played_at', { ascending: true })
-
-    const leadCard = moves && moves.length > 0 ? moves[0] : null
-    const leadSuit = leadCard ? getCardSuit(leadCard.card) : null
-
-    const validCards = hand.filter((c: string) => isValidMove(c, hand, leadSuit))
-    const cardToPlay = validCards.length > 0
-        ? validCards[Math.floor(Math.random() * validCards.length)]
-        : hand[0]
-
-    // Joga POR ESTE jogador (actingUserId), reusando toda a lógica de playCard
-    return playCard(gameId, cardToPlay, currentPlayer.user_id)
-}
-
-
-// ============================================
-// DEAL CARDS (shared helper)
-// ============================================
-
-export async function dealCardsForGame(gameId: string) {
-    const { generateDeck, shuffleDeck } = await import('./utils')
-    // Service role: distribui/atualiza as mãos de TODOS os jogadores. Com RLS
-    // (migração 103) não há política de UPDATE, por isso estas escritas só
-    // passam com a service role (ou pelas RPCs SECURITY DEFINER).
-    const supabase = createServiceClient()
-    const deck = shuffleDeck(generateDeck())
-
-    const { data: players } = await supabase
-        .from('game_players')
-        .select('id, position')
-        .eq('game_id', gameId)
-        .order('position', { ascending: true })
-
-    if (!players || players.length !== 4) return
-
-    for (let i = 0; i < 4; i++) {
-        await supabase.from('game_players').update({ hand: deck.slice(i * 10, (i + 1) * 10) }).eq('id', players[i].id)
-    }
-
-    const trumpSuit = deck[9].split('-')[0]
-    await supabase.from('games').update({
-        trump_suit: trumpSuit,
-        current_turn: 1,
-        current_trick: 1,
-        current_round: 1,
-        score_a: 0,
-        score_b: 0,
-        turn_started_at: new Date().toISOString(),
-    }).eq('id', gameId)
-}
-
-// ============================================
 // TABLE INVITES
 // ============================================
 
@@ -290,7 +90,7 @@ export async function getFriendsForInvite() {
     )
 
     const { data: profiles } = await supabase
-        .from('profiles')
+        .from('public_profiles')
         .select('id, username, avatar_url')
         .in('id', friendIds)
 
@@ -373,7 +173,7 @@ export async function respondTableInvite(inviteId: string, accept: boolean) {
             p_preferred_team: invite.team || null,
         })
 
-        if (joinError && !joinData?.already_joined) {
+        if (joinError) {
             return { error: joinError.message || 'Erro ao entrar na mesa.' }
         }
 

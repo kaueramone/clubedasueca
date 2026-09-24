@@ -12,7 +12,7 @@ export function GlobalFooter({ hideGameLinks = false }: { hideGameLinks?: boolea
                             <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" />
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Jogue a sueca portuguesa com seus amigos e coloque suas moedas na mesa.
+                            Jogue Sueca com amigos em Moçambique. Beta com créditos fictícios e sem cobrança.
                         </p>
                     </div>
 
@@ -20,7 +20,7 @@ export function GlobalFooter({ hideGameLinks = false }: { hideGameLinks?: boolea
                         <h3 className="font-bold text-foreground mb-4">Sobre</h3>
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li><Link href="/p/como-funciona" className="hover:text-accent transition-colors">Como funciona?</Link></li>
-                            <li><Link href="/p/deposito-saque" className="hover:text-accent transition-colors">Deposito e Saque</Link></li>
+                            <li><Link href="/p/deposito-saque" className="hover:text-accent transition-colors">Créditos de teste</Link></li>
                         </ul>
                     </div>
 
@@ -42,7 +42,7 @@ export function GlobalFooter({ hideGameLinks = false }: { hideGameLinks?: boolea
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li><Link href="/p/termos" className="hover:text-accent transition-colors">Termos de Utilização</Link></li>
                             <li><Link href="/p/privacidade" className="hover:text-accent transition-colors">Política de Privacidade</Link></li>
-                            <li><Link href="/p/kyc" className="hover:text-accent transition-colors">Políticas KYC & AML</Link></li>
+                            <li><Link href="/p/kyc" className="hover:text-accent transition-colors">Identidade e fase de testes</Link></li>
                         </ul>
                     </div>
                 </div>

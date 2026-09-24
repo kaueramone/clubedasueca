@@ -2,17 +2,17 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+
 
 import { createClient } from '@/lib/supabase/server'
-import { applyWelcomeBonus } from '@/features/bonuses/actions'
-import { registerReferral } from '@/features/affiliates/actions'
-import { trackUserMetrics } from '@/features/crm/actions'
 
-const TURNSTILE_SECRET = '0x4AAAAAACsNPXDmhbBSYA3_Hv6dSgnaHaQ'
+import { registerReferral } from '@/features/affiliates/actions'
+
+
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY
 
 async function verifyTurnstile(token: string | null): Promise<boolean> {
-    if (!token) return false
+    if (!token || !TURNSTILE_SECRET) return false
     try {
         const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
@@ -27,10 +27,6 @@ async function verifyTurnstile(token: string | null): Promise<boolean> {
 }
 
 async function getBaseUrl(): Promise<string> {
-    const headersList = await headers()
-    const host = headersList.get('host')
-    const proto = headersList.get('x-forwarded-proto') || 'https'
-    if (host) return `${proto}://${host}`
     return process.env.NEXT_PUBLIC_BASE_URL || 'https://clubedasueca.co.mz'
 }
 
@@ -53,6 +49,14 @@ export async function login(prevState: any, formData: FormData) {
 
     if (error) {
         return { error: error.message }
+    }
+
+    if (data.user) {
+        const { data: profile, error: profileError } = await supabase.from('profiles').select('is_banned').eq('id', data.user.id).single()
+        if (profileError || !profile || profile.is_banned) {
+            await supabase.auth.signOut()
+            return { error: 'Conta indisponível. Contacta o apoio.' }
+        }
     }
 
     // Rotate session_id — any other open session will detect the change and sign out
@@ -82,11 +86,18 @@ export async function signup(prevState: any, formData: FormData) {
     const birthDate = formData.get('birthDate') as string
     const nationality = formData.get('nationality') as string
 
+    const dob = new Date(birthDate + 'T00:00:00Z')
+    const cutoff = new Date()
+    cutoff.setUTCFullYear(cutoff.getUTCFullYear() - 18)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate || '') || !Number.isFinite(dob.getTime()) || dob.toISOString().slice(0, 10) !== birthDate || dob > cutoff || dob.getUTCFullYear() < new Date().getUTCFullYear() - 120) {
+        return { error: 'É necessário ter pelo menos 18 anos. Confirma a data de nascimento.' }
+    }
+
     if (password !== confirmPassword) {
         return { error: 'As passwords não coincidem. Tente novamente.' }
     }
 
-    const { error } = await supabase.auth.signUp({
+    const { error, data: signupData } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -102,51 +113,13 @@ export async function signup(prevState: any, formData: FormData) {
         return { error: error.message }
     }
 
-    const { data: { user: newUser } } = await supabase.auth.getUser()
-    if (newUser) {
-        // ⚠️  FASE DE TESTES — remover quando os gateways de pagamento estiverem configurados
-        // Crédito de boas-vindas: 100 créditos (100 MZN) direto na carteira para cada conta nova
-        ;(async () => {
-            try {
-                const { data: wallet } = await supabase
-                    .from('wallets')
-                    .upsert(
-                        { user_id: newUser.id, balance: 100.00, currency: 'MZN' },
-                        { onConflict: 'user_id', ignoreDuplicates: false }
-                    )
-                    .select('id')
-                    .single()
-
-                if (wallet) {
-                    await supabase.from('transactions').insert({
-                        wallet_id: wallet.id,
-                        amount: 100.00,
-                        type: 'credit',
-                        description: '🎁 Crédito de Boas-Vindas (100 créditos) — Fase de Testes',
-                    })
-                }
-            } catch (err) {
-                console.error('[TESTING_CREDIT]', err)
-            }
-        })()
-        // ⚠️  FIM DA REGRA DE TESTES
-
-        // Apply welcome bonus (non-blocking)
-        applyWelcomeBonus(newUser.id).catch(err =>
-            console.error('[WELCOME_BONUS]', err)
-        )
-
-        // Track affiliate referral if ref code exists
-        const refCode = formData.get('refCode') as string
-        if (refCode) {
-            registerReferral(newUser.id, refCode).catch(err =>
-                console.error('[REFERRAL]', err)
-            )
-        }
-
-        // Initialize CRM metrics (non-blocking)
-        trackUserMetrics(newUser.id, {}).catch(err => console.error('[CRM_INIT]', err))
+    // Initial test credit is issued once by the database on email activation.
+    // Referral registration is awaited when a session exists; email confirmation may precede it.
+    const refCode = formData.get('refCode') as string
+    if (signupData.session && signupData.user && refCode) {
+        await registerReferral(signupData.user.id, refCode)
     }
+    if (!signupData.session) redirect('/login?message=Confirma o teu email para ativar a conta de teste')
 
     revalidatePath('/', 'layout')
     redirect('/dashboard')

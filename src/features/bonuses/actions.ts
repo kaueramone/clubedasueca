@@ -96,90 +96,6 @@ export async function getAvailableBonuses() {
     return { bonuses: data }
 }
 
-// ============================================
-// INTEGRATION HELPERS (chamados por outros modules)
-// ============================================
-
-/**
- * Aplicar bónus de boas-vindas no registo (chamado pelo signup)
- */
-export async function applyWelcomeBonus(userId: string) {
-    const supabase = await createClient()
-
-    // Find active welcome bonus
-    const { data: welcomeBonus } = await supabase
-        .from('bonuses')
-        .select('id')
-        .eq('type', 'welcome')
-        .eq('status', 'active')
-        .limit(1)
-        .single()
-
-    if (!welcomeBonus) return // No welcome bonus configured
-
-    const { error } = await supabase.rpc('apply_bonus', {
-        p_user_id: userId,
-        p_bonus_id: welcomeBonus.id,
-        p_deposit_amount: 0,
-    })
-
-    if (error) {
-        console.error('[WELCOME_BONUS]', error)
-    }
-}
-
-/**
- * Verificar e aplicar bónus de depósito (chamado após deposit)
- */
-export async function checkDepositBonuses(userId: string, depositAmount: number) {
-    const supabase = await createClient()
-
-    // Find matching deposit bonuses
-    const { data: bonuses } = await supabase
-        .from('bonuses')
-        .select('id, type, min_deposit')
-        .in('type', ['deposit_match', 'reload'])
-        .eq('status', 'active')
-        .or(`min_deposit.is.null,min_deposit.lte.${depositAmount}`)
-
-    if (!bonuses || bonuses.length === 0) return
-
-    for (const bonus of bonuses) {
-        const { error } = await supabase.rpc('apply_bonus', {
-            p_user_id: userId,
-            p_bonus_id: bonus.id,
-            p_deposit_amount: depositAmount,
-        })
-
-        if (error) {
-            // May fail if user already has it — that's ok
-            console.error('[DEPOSIT_BONUS]', error.message)
-        }
-    }
-}
-
-/**
- * Atualizar wagered e VIP points após uma aposta (chamado pelo playCard/game end)
- */
-export async function processWagerForBonuses(userId: string, wagerAmount: number) {
-    const supabase = await createClient()
-
-    // Update bonus rollover progress
-    await supabase.rpc('update_bonus_wagered', {
-        p_user_id: userId,
-        p_amount: wagerAmount,
-    })
-
-    // Add VIP points (1 point per 1MT wagered)
-    const points = Math.floor(wagerAmount)
-    if (points > 0) {
-        await supabase.rpc('add_vip_points', {
-            p_user_id: userId,
-            p_points: points,
-        })
-    }
-}
-
 /**
  * Verificar se utilizador tem free play ativo
  */
@@ -359,10 +275,9 @@ export async function adminApplyBonus(userId: string, bonusId: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Não autenticado' }
 
-    const { data, error } = await supabase.rpc('apply_bonus', {
+    const { data, error } = await supabase.rpc('admin_apply_bonus', {
         p_user_id: userId,
         p_bonus_id: bonusId,
-        p_deposit_amount: 0,
     })
 
     if (error) return { error: error.message }

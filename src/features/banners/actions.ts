@@ -26,17 +26,6 @@ export async function getActiveBanners(position: string = 'dashboard_top') {
 
     if (error) return { error: error.message }
 
-    // Increment impressions (non-blocking, batch)
-    if (data && data.length > 0) {
-        for (const banner of data) {
-            supabase
-                .from('banners')
-                .update({ impressions: (banner.impressions || 0) + 1 })
-                .eq('id', banner.id)
-                .then()
-        }
-    }
-
     return { banners: data || [] }
 }
 
@@ -47,23 +36,9 @@ export async function trackBannerClick(bannerId: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Insert click record
-    await supabase.from('banner_clicks').insert({
-        banner_id: bannerId,
-        user_id: user?.id || null,
-    })
-
-    // Increment counter
-    try {
-        await supabase.rpc('increment_banner_clicks', { p_banner_id: bannerId })
-    } catch {
-        // Fallback if RPC doesn't exist
-        await supabase
-            .from('banners')
-            .update({ clicks: 1 }) // This is a simplified fallback
-            .eq('id', bannerId)
-    }
-
+    if (!user) return { error: 'Não autenticado' }
+    const { data, error } = await supabase.rpc('record_banner_click', { p_banner_id: bannerId })
+    if (error || !data) return { error: 'Clique não registado.' }
     return { success: true }
 }
 

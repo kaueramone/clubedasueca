@@ -1,49 +1,30 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
-import { headers } from "next/headers";
 import "./globals.css";
-
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: 'swap' });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: 'swap' });
-
 export const metadata: Metadata = {
-    title: "Clube da Sueca | O Seu Clube Privado Desta Tradição Portuguesa",
-    description: "Jogue Sueca Online num ambiente premium e confiável.",
-    alternates: {
-        canonical: 'https://clubedasueca.co.mz',
-        languages: {
-            'pt-MZ': 'https://clubedasueca.co.mz',
-            'pt-PT': 'https://clubedasueca.pt',
-            'pt-BR': 'https://clubedasueca.com.br',
-            'x-default': 'https://clubedasueca.com',
-        },
-    },
+    title: "Clube da Sueca | Sueca online em Moçambique — Beta",
+    description: "Jogue Sueca online com créditos fictícios, sem cobrança. Beta de testes para Moçambique.",
     openGraph: {
         siteName: 'Clube da Sueca',
         type: 'website',
         locale: 'pt_MZ',
-        alternateLocale: ['pt_PT', 'pt_BR'],
     },
 };
-
 export const viewport: Viewport = {
     width: 'device-width',
     initialScale: 1,
     viewportFit: 'cover',
     themeColor: '#0B1F1A',
 };
-
 export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const headersList = await headers();
-    const host = headersList.get('host') || '';
-    const lang = host.includes('.com.br') ? 'pt-BR' : 'pt-PT';
-
     return (
-        <html lang={lang} className="dark">
+        <html lang="pt-MZ" className="dark">
             <body className={`${inter.variable} ${playfair.variable} font-sans min-h-screen bg-background text-foreground`}>
                 {children}
             </body>

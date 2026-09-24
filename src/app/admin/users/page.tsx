@@ -16,9 +16,6 @@ export default function AdminUsers() {
 
     const supabase = createClient()
 
-    useEffect(() => {
-        loadData()
-    }, [])
 
     const loadData = async () => {
         setLoading(true)
@@ -30,7 +27,7 @@ export default function AdminUsers() {
     // Debounce search
     useEffect(() => {
         const timer = setTimeout(() => {
-            getUsers(1, searchTerm).then(res => setUsers(res.users || []))
+            getUsers(1, searchTerm).then(res => { setUsers(res.users || []); setLoading(false) })
         }, 500)
         return () => clearTimeout(timer)
     }, [searchTerm])

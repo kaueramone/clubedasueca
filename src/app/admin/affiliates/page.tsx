@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getAllAffiliates, updateAffiliateStatus, payAffiliate } from '@/features/affiliates/actions'
 import { Users, Check, X, DollarSign, Ban } from 'lucide-react'
 import Link from 'next/link'
@@ -12,14 +12,16 @@ export default function AdminAffiliatesPage() {
     const [payingId, setPayingId] = useState<string | null>(null)
     const [payAmount, setPayAmount] = useState('')
 
-    useEffect(() => { loadData() }, [])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         const result = await getAllAffiliates()
         if (result.affiliates) setAffiliates(result.affiliates)
         setLoading(false)
-    }
+    }, [])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
     async function handleStatusChange(id: string, status: string) {
         const result = await updateAffiliateStatus(id, status)

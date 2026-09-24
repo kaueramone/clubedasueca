@@ -1,50 +1,25 @@
 'use client'
 
-import { useFormState } from 'react-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useActionState } from 'react'
+import { useState } from 'react'
+import { useTurnstile } from './use-turnstile'
 import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Eye, EyeOff } from 'lucide-react'
 
-const TURNSTILE_SITE_KEY = '0x4AAAAAACsNPdO_nwmclG_7'
 
 const initialState = {
     error: null as string | null,
 }
 
 export function RegisterForm() {
-    // @ts-ignore
-    const [state, formAction] = useFormState(signup, initialState)
+    const { containerRef: turnstileRef, reset } = useTurnstile()
+    const [state, formAction] = useActionState(async (previous: typeof initialState, formData: FormData) => {
+        try { return await signup(previous, formData) } finally { reset() }
+    }, initialState)
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-    const turnstileRef = useRef<HTMLDivElement>(null)
-    const widgetIdRef = useRef<string | null>(null)
-
-    useEffect(() => {
-        const scriptId = 'cf-turnstile-script'
-        if (!document.getElementById(scriptId)) {
-            const script = document.createElement('script')
-            script.id = scriptId
-            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js'
-            script.async = true
-            script.defer = true
-            document.head.appendChild(script)
-        }
-
-        const tryRender = () => {
-            if (typeof (window as any).turnstile !== 'undefined' && turnstileRef.current && !widgetIdRef.current) {
-                widgetIdRef.current = (window as any).turnstile.render(turnstileRef.current, {
-                    sitekey: TURNSTILE_SITE_KEY,
-                    theme: 'light',
-                })
-            } else if (typeof (window as any).turnstile === 'undefined') {
-                setTimeout(tryRender, 300)
-            }
-        }
-        setTimeout(tryRender, 300)
-    }, [])
-
     return (
         <form action={formAction} className="space-y-4">
             <div>
@@ -79,11 +54,11 @@ export function RegisterForm() {
                         className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     >
                         <option value="">Selecione...</option>
+                        <option value="Moçambique">Moçambique</option>
                         <option value="Portugal">Portugal</option>
                         <option value="Brasil">Brasil</option>
                         <option value="Angola">Angola</option>
                         <option value="Cabo Verde">Cabo Verde</option>
-                        <option value="Moçambique">Moçambique</option>
                         <option value="S. Tomé e Príncipe">S. Tomé e Príncipe</option>
                         <option value="Guiné-Bissau">Guiné-Bissau</option>
                         <option value="Outra">Outra</option>
@@ -104,7 +79,7 @@ export function RegisterForm() {
             </div>
 
             <div className="relative">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Palavra-passe</label>
                 <input
                     id="password"
                     name="password"
@@ -113,13 +88,13 @@ export function RegisterForm() {
                     className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     placeholder="••••••••"
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors">
+                <button type="button" aria-label={showPassword ? "Ocultar palavra-passe" : "Mostrar palavra-passe"} aria-pressed={showPassword} onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors">
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
             </div>
 
             <div className="relative">
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar Password</label>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar palavra-passe</label>
                 <input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -128,7 +103,7 @@ export function RegisterForm() {
                     className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     placeholder="••••••••"
                 />
-                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors">
+                <button type="button" aria-label={showConfirmPassword ? "Ocultar confirmação da palavra-passe" : "Mostrar confirmação da palavra-passe"} aria-pressed={showConfirmPassword} onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors">
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
             </div>

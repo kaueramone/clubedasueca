@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getAllBonuses, createBonus, updateBonus, getAllPromoCodes, createPromoCode } from '@/features/bonuses/actions'
 import { Gift, Tag, Plus, Pause, Play, Trash2, Copy, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
@@ -27,12 +27,8 @@ export default function AdminBonusesPage() {
     const [showCreatePromo, setShowCreatePromo] = useState(false)
     const [message, setMessage] = useState('')
 
-    useEffect(() => {
-        loadData()
-    }, [])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         const [bonusResult, promoResult] = await Promise.all([
             getAllBonuses(),
             getAllPromoCodes(),
@@ -40,7 +36,11 @@ export default function AdminBonusesPage() {
         if (bonusResult.bonuses) setBonuses(bonusResult.bonuses)
         if (promoResult.promoCodes) setPromoCodes(promoResult.promoCodes)
         setLoading(false)
-    }
+    }, [])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
     async function handleCreateBonus(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()

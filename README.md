@@ -1,56 +1,26 @@
-# ApostaNaSueca 🎴
+# ApostaNaSueca / Clube da Sueca
 
-Bem-vindo ao **ApostaNaSueca**, a plataforma moderna para jogar Sueca online com apostas reais, inspirada no design da Apple.
+Aplicação web de Sueca online para Moçambique, em beta com créditos fictícios. Não há cobrança, pagamentos móveis nem levantamentos. Todos os saldos de teste serão repostos a zero no lançamento oficial. A licença e o prestador de pagamentos da futura operação estão pendentes.
 
-## 🚀 Funcionalidades
+## Desenvolvimento
 
-- **Autenticação Completa**: Login, Registo, Recuperação de Password.
-- **Carteira Digital**: Depósitos via MB Way (simulado), Levantamentos, Histórico de Transações.
-- **Jogo Multiplayer**:
-  - Lobby em tempo real.
-  - Mesas de Sueca com apostas variadas (1€ a 20€).
-  - Lógica de jogo completa (distribuição, trunfo, jogadas, pontuação).
-  - Realtime updates com Supabase.
-- **Painel Administrativo**: Gestão de utilizadores e aprovação de saques.
-- **PWA**: Instale no seu telemóvel como uma app nativa.
+Instale as dependências com `npm install`, configure as variáveis documentadas em `.env.local.example` e execute `npm run dev`. As versões efetivas de Next.js e React estão em `package.json`.
 
-## 🛠️ Tecnologias
+A base de dados tem migrações incrementais em `supabase/migrations`. O schema inicial isolado não representa o estado atual. Valide a sequência num projeto de teste e confirme o histórico instalado antes de atualizar uma base existente. As migrações da auditoria não foram aplicadas em produção por este trabalho.
 
-- **Frontend**: Next.js 14 (App Router), React, Tailwind CSS.
-- **Backend**: Supabase (Database, Auth, Realtime).
-- **Linguagem**: TypeScript.
+`PLATFORM_MODE=beta` e a configuração privada da base de dados controlam a disponibilização de créditos de teste. Um modo diferente não ativa pagamentos reais. Nunca exponha a service role em variáveis `NEXT_PUBLIC_*`.
 
-## ⚙️ Configuração
+## Experiência atual
 
-1.  **Clonar o repositório**
-2.  **Instalar dependências**:
-    ```bash
-    npm install
-    ```
-3.  **Configurar Variáveis de Ambiente**:
-    Copie `.env.local.example` para `.env.local` e preencha as chaves do Supabase.
-    ```bash
-    cp .env.local.example .env.local
-    ```
-    Você precisa de criar um projeto no [Supabase](https://supabase.com) e obter a `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Demonstração e treino com bots; mesas multiplayer através do navegador.
+- Carteira de créditos fictícios com histórico paginado.
+- Suporte com pedidos persistentes, estados, mensagens e atendimento administrativo. Sem SLA garantido no beta.
+- Não existe suporte offline nem promessa de instalação PWA. Use uma ligação à internet; não são necessárias aplicações externas.
 
-4.  **Configurar Base de Dados**:
-    Execute o script `src/lib/supabase/schema.sql` no SQL Editor do seu projeto Supabase para criar as tabelas e triggers.
+## Verificação e lançamento
 
-5.  **Correr localmente**:
-    ```bash
-    npm run dev
-    ```
+Use os comandos de lint, typecheck e testes em `package.json`. A revisão em `auditoria/2026-09-24` documenta os achados e os limites dos testes. A validação do ambiente publicado, de quatro contas simultâneas e das políticas instaladas exige um ambiente de teste configurado.
 
-## 📱 PWA
+Antes de qualquer operação com dinheiro real são necessários os processos de licença, prestador de pagamentos, verificação de identidade, política de privacidade final e reconciliação financeira. Este beta não os ativa.
 
-Para testar o PWA, faça o build de produção e inicie o servidor:
-```bash
-npm run build
-npm start
-```
-Abra no navegador e clique no ícone de "Adicionar ao Ecrã Principal" (telemóvel) ou "Instalar" (Chrome desktop).
-
-## 📄 Licença
-
-Privado.
+Projeto privado.

@@ -38,7 +38,6 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
             setMessages(data || [])
         }
 
-        setIsLoadingMessages(true)
         fetchMessages().then(() => setIsLoadingMessages(false))
 
         // Subscribe to new direct messages in realtime
@@ -136,6 +135,7 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
     }
 
     const selectContact = (c: any) => {
+        setIsLoadingMessages(true)
         setActiveContact(c)
         if (window.innerWidth < 1024) {
             setIsSidebarOpen(false)
@@ -184,8 +184,8 @@ export default function ChatUI({ currentUser, contacts: initialContacts, pending
                                                     {u.avatar_url && <Image src={u.avatar_url} alt="A" width={32} height={32} className="object-cover w-full h-full" />}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="text-sm font-medium truncate text-foreground">{u.full_name || u.username}</span>
-                                                    <span className="text-[10px] text-muted-foreground truncate">{u.username} • {u.email}</span>
+                                                    <span className="text-sm font-medium truncate text-foreground">{u.username}</span>
+                                                    <span className="text-[10px] text-muted-foreground truncate">Alcunha pública</span>
                                                 </div>
                                             </div>
                                             <button onClick={() => onAddFriend(u.id)} className="p-1.5 bg-accent/10 hover:bg-accent text-accent hover:text-white rounded-full transition-colors" title="Adicionar">

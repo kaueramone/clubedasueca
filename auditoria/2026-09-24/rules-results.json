@@ -1,0 +1,8 @@
+{
+  "result": "PASS",
+  "scope": "Regras TypeScript isoladas; não valida SQL, multiplayer, concorrência ou UI",
+  "simulations": 1000,
+  "cardsPerGame": 40,
+  "pointsPerGame": 120,
+  "cardAssets": 40
+}

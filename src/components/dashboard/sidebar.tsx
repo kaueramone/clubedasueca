@@ -18,9 +18,11 @@ export function Sidebar({ userEmail, pendingCount = 0, userId, initialChatUnread
     const pathname = usePathname();
     const [chatUnread, setChatUnread] = useState(initialChatUnread)
 
-    useEffect(() => {
+    const [previousPath, setPreviousPath] = useState(pathname)
+    if (previousPath !== pathname) {
+        setPreviousPath(pathname)
         if (pathname === '/dashboard/chat') setChatUnread(0)
-    }, [pathname])
+    }
 
     useEffect(() => {
         if (!userId) return

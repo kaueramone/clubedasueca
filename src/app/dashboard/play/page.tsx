@@ -13,13 +13,10 @@ export default async function LobbyPage() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    // Reforco best-effort: expira mesas estagnadas (>10min) ao abrir o lobby.
-    // A garantia principal vem do pg_cron; isto so acelera quando ha trafego.
-    await supabase.rpc("expire_stale_games", { p_timeout_minutes: 10 });
 
     const { data: games } = await supabase
         .from("games")
-        .select("*, profiles:host_id(username, avatar_url), game_players(count)")
+        .select("*, game_players(count)")
         .eq("status", "waiting")
         .order("created_at", { ascending: false });
 
@@ -28,27 +25,9 @@ export default async function LobbyPage() {
         return (players[0]?.count || 0) < 4
     }) || [];
 
-    // Tó¡tica de Growth Hacking: Simular mesas sempre cheias/em jogo para criar perceó§ó£o de movimento
-    const dummyGames = [
-        {
-            id: 'dummy-1',
-            profiles: { username: 'RuiCosta89', avatar_url: null },
-            game_players: [{ count: 4 }],
-            stake: 5.0,
-            status: 'playing',
-            isDummy: true
-        },
-        {
-            id: 'dummy-2',
-            profiles: { username: 'Maria_PT', avatar_url: null },
-            game_players: [{ count: 4 }],
-            stake: 2.5,
-            status: 'playing',
-            isDummy: true
-        }
-    ];
-
-    const availableGames = [...dummyGames, ...dbGames];
+    const hostIds = [...new Set(dbGames.map(g => g.host_id))];
+    const { data: profiles } = hostIds.length ? await supabase.from('public_profiles').select('id, username, avatar_url').in('id', hostIds) : { data: [] };
+    const availableGames = dbGames.map(game => ({ ...game, profiles: profiles?.find(p => p.id === game.host_id) }));
 
     return (
         <div className="space-y-6">

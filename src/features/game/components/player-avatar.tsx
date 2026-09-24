@@ -13,7 +13,7 @@ export const PlayerAvatar = memo(function PlayerAvatar({ player, gameStatus, bor
     return (
         <div className={`h-12 w-12 rounded-full border-2 ${borderColorClass} bg-black/20 overflow-hidden shadow-lg relative`}>
             {player?.profiles?.avatar_url ? (
-                <Image src={player.profiles.avatar_url} alt={player.profiles.username || 'Jogador'} fill className="object-cover" />
+                <Image src={player.profiles.avatar_url} alt={player.profiles.username || 'Jogador'} fill sizes="64px" className="object-cover" />
             ) : player?.profiles?.username ? (
                 <div className="w-full h-full bg-primary flex items-center justify-center font-bold text-white text-lg">
                     {player.profiles.username.charAt(0).toUpperCase()}

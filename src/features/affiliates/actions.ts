@@ -71,11 +71,15 @@ export async function getAffiliateStatus() {
     const { data: referrals } = await supabase
         .from('affiliate_referrals')
         .select(`
-            *,
-            referred_user:profiles!referred_user_id(username)
+            *
         `)
         .eq('affiliate_id', affiliate.id)
         .order('created_at', { ascending: false })
+
+    const referralIds = [...new Set((referrals || []).map(referral => referral.referred_user_id))]
+    const { data: referredProfiles } = referralIds.length
+        ? await supabase.from('public_profiles').select('id, username').in('id', referralIds)
+        : { data: [] }
 
     // Get commissions
     const { data: commissions } = await supabase
@@ -93,7 +97,7 @@ export async function getAffiliateStatus() {
     return {
         affiliate,
         links: links || [],
-        referrals: referrals || [],
+        referrals: (referrals || []).map(referral => ({ ...referral, referred_user: referredProfiles?.find(profile => profile.id === referral.referred_user_id) ?? null })),
         commissions: commissions || [],
         summary: {
             total_earned: affiliate.total_earned || 0,
@@ -168,22 +172,6 @@ export async function registerReferral(userId: string, refCode: string) {
         console.error('[AFFILIATE_REFERRAL]', error)
     }
     return data
-}
-
-/**
- * Processar comissões de afiliados após um jogo (chamado pelo game end)
- */
-export async function processGameAffiliateCommissions(gameId: string, houseFee: number) {
-    const supabase = await createClient()
-
-    const { error } = await supabase.rpc('process_affiliate_commission', {
-        p_game_id: gameId,
-        p_house_fee: houseFee,
-    })
-
-    if (error) {
-        console.error('[AFFILIATE_COMMISSION]', error)
-    }
 }
 
 /**

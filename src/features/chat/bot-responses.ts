@@ -1,19 +1,19 @@
 export const botFaqResponses = [
     {
         keywords: ['deposito', 'depositar', 'mpesa', 'm-pesa', 'emola', 'e-mola', 'mkesh', 'pagamento', 'saldo', 'carteira', 'dinheiro'],
-        response: 'Para fazer um depósito, vá à página "Carteira" no seu Dashboard. Pode pagar por M-Pesa, e-Mola ou mKesh. O mínimo é 50 MZN (1 crédito = 1 MZN) e os depósitos são processados instantaneamente.'
+        response: 'No beta, adicione créditos de teste gratuitamente na Carteira. Não há cobrança, pagamentos móveis nem valor monetário. Todos os saldos serão repostos a zero no lançamento oficial.'
     },
     {
         keywords: ['levantamento', 'levantar', 'saque', 'sacar', 'receber'],
-        response: 'Para levantar os seus ganhos, vá à página "Carteira", clique no separador "Levantar" e siga as instruções. O valor mínimo é de 250 MZN e é enviado para a sua carteira móvel em até 24h.'
+        response: 'Não há levantamentos no beta. Os créditos são fictícios e não podem ser convertidos em dinheiro. Não envie PIN nem dados financeiros.'
     },
     {
         keywords: ['bonus', 'bónus', 'promo', 'promocao', 'codigo', 'rollover'],
-        response: 'Todos os nossos bónus têm requisitos de aposta (rollover). Pode verificar o estado atual do seu bónus na secção "Bónus" do Dashboard. Apenas completando o rollover o saldo de bónus passará a saldo real.'
+        response: 'Bónus nesta fase são apenas créditos fictícios, sem valor monetário, e serão repostos a zero no lançamento oficial.'
     },
     {
         keywords: ['afiliado', 'referenciais', 'amigo', 'convidar', 'comissao', 'cpa', 'revshare'],
-        response: 'Temos um sistema de afiliados excelente! Pode ganhar % do rake dos jogadores que convidar. Aceda a "Afiliados" no seu dashboard para gerar o seu link e começar a partilhar.'
+        response: 'O programa de convites está em teste. As comissões do beta são fictícias e não representam pagamentos reais.'
     },
     {
         keywords: ['senha', 'password', 'acesso', 'login', 'entrar', 'recuperar'],
@@ -31,7 +31,7 @@ export function getBotResponse(userMessage: string): string | null {
     // Procura por keywords
     for (const faq of botFaqResponses) {
         if (faq.keywords.some(keyword => msg.includes(keyword))) {
-            return `[Bot Automatizado] 👋 Olá! Reparei que mencionou algo relacionado com as nossas FAQs:\n\n${faq.response}\n\nSe isto não respondeu à sua questão, aguarde um momento. Um assistente humano irá falar consigo em breve.`
+            return `[Bot Automatizado] 👋 Olá! Reparei que mencionou algo relacionado com as nossas FAQs:\n\n${faq.response}\n\nO seu pedido está também na fila de suporte. Pode acompanhar a resposta no painel; não há prazo garantido durante o beta.`
         }
     }
 

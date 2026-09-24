@@ -2,7 +2,7 @@ import { GameTable } from '@/features/game/game-table'
 
 export default function DemoPage() {
     return (
-        <main className="w-full h-screen overflow-hidden bg-background">
+        <main className="w-full h-dvh overflow-hidden bg-background">
             <GameTable
                 isTraining={true}
                 isDemoGuest={true}

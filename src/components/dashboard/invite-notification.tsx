@@ -52,7 +52,7 @@ export function InviteNotification({ userId }: { userId: string }) {
                     if (new Date(inv.expires_at) < new Date()) return
 
                     const [{ data: profile }, { data: game }] = await Promise.all([
-                        supabase.from('profiles').select('username, avatar_url').eq('id', inv.from_user_id).single(),
+                        supabase.from('public_profiles').select('username, avatar_url').eq('id', inv.from_user_id).single(),
                         supabase.from('games').select('stake').eq('id', inv.game_id).single(),
                     ])
 
@@ -200,11 +200,11 @@ function InviteExpiry({ expiresAt }: { expiresAt: string }) {
 
     useEffect(() => {
         const total = new Date(expiresAt).getTime() - Date.now()
-        if (total <= 0) { setPct(0); return }
+
 
         const interval = setInterval(() => {
             const remaining = new Date(expiresAt).getTime() - Date.now()
-            setPct(Math.max(0, (remaining / total) * 100))
+            setPct(Math.max(0, (remaining / Math.max(1, total)) * 100))
             if (remaining <= 0) clearInterval(interval)
         }, 500)
         return () => clearInterval(interval)

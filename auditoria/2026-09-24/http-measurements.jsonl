@@ -1,0 +1,4 @@
+{"path":"/","status":200,"ttfb_s":0.430785,"total_s":0.442531,"html_bytes":52078}
+{"path":"/demo","status":200,"ttfb_s":0.401153,"total_s":0.402236,"html_bytes":33540}
+{"path":"/register","status":200,"ttfb_s":0.328797,"total_s":0.329374,"html_bytes":17103}
+{"path":"/p/deposito-saque","status":200,"ttfb_s":0.337697,"total_s":0.337932,"html_bytes":31461}

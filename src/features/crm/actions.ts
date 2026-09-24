@@ -3,48 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-// ============================================
-// SYSTEM WORKERS
-// ============================================
-
-/**
- * Atualizar métricas do utilizador após uma ação
- * Esta função é async mas pode ser chamada sem await (fire and forget)
- */
-export async function trackUserMetrics(userId: string, data: {
-    deposited?: number
-    withdrawn?: number
-    wagered?: number
-    won?: number
-    games_played?: number
-    games_won?: number
-}) {
-    const supabase = await createClient()
-
-    // Create metrics row if it doesnt exist initially (on register)
-    if (Object.keys(data).length === 0) {
-        try {
-            await supabase.from('user_metrics').insert({ user_id: userId, last_login_at: new Date().toISOString() }).select().single()
-        } catch (e) { }
-        return
-    }
-
-    const { error } = await supabase.rpc('increment_user_metrics', {
-        p_user_id: userId,
-        p_deposited: data.deposited || 0,
-        p_withdrawn: data.withdrawn || 0,
-        p_wagered: data.wagered || 0,
-        p_won: data.won || 0,
-        p_games_played: data.games_played || 0,
-        p_games_won: data.games_won || 0
-    })
-
-    if (error) {
-        console.error('[CRM_TRACKING]', error)
-    }
-}
-
-// ============================================
 // ADMIN ACTIONS
 // ============================================
 

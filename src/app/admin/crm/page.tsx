@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getCrmUsers, getAutomationRules, saveAutomationRule, getEmailLogs } from '@/features/crm/actions'
 import { Users, Mail, Play, Pause, Search, Target, DollarSign, Activity, FileText } from 'lucide-react'
 import Link from 'next/link'
@@ -15,10 +15,8 @@ export default function AdminCrmPage() {
     const [segmentFilter, setSegmentFilter] = useState('all')
     const [searchTerm, setSearchTerm] = useState('')
 
-    useEffect(() => { loadData() }, [tab, segmentFilter, searchTerm])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         if (tab === 'users') {
             const res = await getCrmUsers({ segment: segmentFilter, search: searchTerm })
             if (res.users) setUsers(res.users)
@@ -30,7 +28,11 @@ export default function AdminCrmPage() {
             if (res.logs) setLogs(res.logs)
         }
         setLoading(false)
-    }
+    }, [tab, segmentFilter, searchTerm])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
     return (
         <div className="min-h-screen bg-background p-4 md:p-8">

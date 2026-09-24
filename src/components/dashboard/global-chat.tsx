@@ -33,8 +33,7 @@ export function GlobalChat({
     const [newMessage, setNewMessage] = useState('')
     const [sending, setSending] = useState(false)
     const messagesContainerRef = useRef<HTMLDivElement>(null)
-    const supabaseRef = useRef(createClient())
-    const supabase = supabaseRef.current
+    const [supabase] = useState(createClient)
     const pendingTempId = useRef<string | null>(null)
     const initialLoadDone = useRef(false)
 
@@ -84,18 +83,19 @@ export function GlobalChat({
 
                         const { data } = await supabase
                             .from('global_messages')
-                            .select('id, content, created_at, user_id, profiles!inner(username, avatar_url)')
+                            .select('id, content, created_at, user_id')
                             .eq('id', incomingId)
                             .single()
 
                         if (data) {
+                            const { data: profile } = await supabase.from('public_profiles').select('username, avatar_url').eq('id', data.user_id).maybeSingle()
                             const newMsg: GlobalMessage = {
                                 id: data.id,
                                 content: data.content,
                                 created_at: data.created_at,
                                 user_id: data.user_id,
-                                username: (data.profiles as any)?.username || 'Jogador',
-                                avatar_url: (data.profiles as any)?.avatar_url || null,
+                                username: profile?.username || 'Jogador',
+                                avatar_url: profile?.avatar_url || null,
                                 game_count: 0,
                             }
                             setMessages(prev => {

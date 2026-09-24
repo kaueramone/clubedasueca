@@ -1,3 +1,4 @@
+import { BetaNotice } from '@/components/beta-notice'
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default async function Home() {
             {/* Header */}
             <GlobalHeader isLoggedIn={!!session} />
 
+            <BetaNotice />
             {/* Hero Section */}
             <main className="flex-1">
                 <section className="relative overflow-hidden py-24 sm:py-32 lg:pb-40">
@@ -41,14 +43,14 @@ export default async function Home() {
 
                             <div className="mb-8 inline-flex items-center rounded-full border border-accent/30 bg-background/50 backdrop-blur-md px-3 py-1 text-sm font-medium text-accent shadow-sm">
                                 <span className="flex h-2 w-2 rounded-full bg-accent mr-2 animate-pulse" />
-                                O Clube Tradicional Português
+                                Sueca online para Moçambique · Beta
                             </div>
                             <h1 className="text-5xl font-serif font-bold tracking-tight text-foreground sm:text-7xl mb-6">
-                                O Clube Oficial da <br className="hidden sm:block" />
+                                A sua mesa de <br className="hidden sm:block" />
                                 <span className="text-accent">Sueca Online</span>
                             </h1>
                             <p className="text-lg leading-8 text-muted-foreground mb-10 max-w-2xl mx-auto">
-                                Joga Sueca como sempre foi — agora com competição, ranking e prémios reais.
+                                Jogue Sueca em dupla, pratique com bots e experimente as mesas online. Durante o beta, todos os créditos são fictícios e gratuitos.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                 <Link href="/register" className="w-full sm:w-auto">
@@ -74,7 +76,7 @@ export default async function Home() {
                     <div className="container mx-auto px-4">
                         <div className="mx-auto max-w-2xl text-center mb-16">
                             <h2 className="text-3xl font-serif font-bold text-foreground sm:text-4xl">Porquê o Clube da Sueca?</h2>
-                            <p className="mt-4 text-lg text-muted-foreground">Esqueça os sites de casino barulhentos. Aqui joga-se Sueca a sério.</p>
+                            <p className="mt-4 text-lg text-muted-foreground">Quatro jogadores, duas equipas e a tradição da Sueca no seu telemóvel.</p>
                         </div>
                         <div className="grid sm:grid-cols-3 gap-8 max-w-5xl mx-auto">
                             <div className="bg-background rounded-2xl p-8 border border-border shadow-sm text-center">
@@ -82,21 +84,21 @@ export default async function Home() {
                                     <span className="text-2xl">♠️</span>
                                 </div>
                                 <h3 className="text-xl font-bold mb-2 text-foreground">Tradição Pura</h3>
-                                <p className="text-muted-foreground">Regras clássicas de Portugal implementadas fielmente com renúncia estrita.</p>
+                                <p className="text-muted-foreground">Baralho de 40 cartas, equipas de dois e obrigação de assistir ao naipe.</p>
                             </div>
                             <div className="bg-background rounded-2xl p-8 border border-border shadow-sm text-center">
                                 <div className="mx-auto h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mb-4">
                                     <span className="text-2xl">🏆</span>
                                 </div>
-                                <h3 className="text-xl font-bold mb-2 text-foreground">Ambiente Premium</h3>
-                                <p className="text-muted-foreground">Salas privadas e torneios de alto nível numa interface elegante e livre de distrações.</p>
+                                <h3 className="text-xl font-bold mb-2 text-foreground">Treino e mesas online</h3>
+                                <p className="text-muted-foreground">Aprenda com bots na demonstração e junte-se a outros jogadores nas mesas do beta.</p>
                             </div>
                             <div className="bg-background rounded-2xl p-8 border border-border shadow-sm text-center">
                                 <div className="mx-auto h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                                     <span className="text-2xl">🤝</span>
                                 </div>
                                 <h3 className="text-xl font-bold mb-2 text-foreground">Comunidade</h3>
-                                <p className="text-muted-foreground">Faça equipa com os seus amigos e jogue contra os melhores do país em segurança.</p>
+                                <p className="text-muted-foreground">Convide amigos, encontre parceiros e partilhe a sua experiência com o suporte.</p>
                             </div>
                         </div>
                     </div>
@@ -108,7 +110,7 @@ export default async function Home() {
             <section className="py-24 bg-background">
                 <div className="container mx-auto px-4">
                     <div className="mx-auto max-w-3xl text-center mb-16">
-                        <h2 className="text-3xl font-serif font-bold text-foreground sm:text-4xl text-accent">FAQ Estratégico</h2>
+                        <h2 className="text-3xl font-serif font-bold text-foreground sm:text-4xl text-accent">Perguntas frequentes</h2>
                         <p className="mt-4 text-lg text-muted-foreground">Tudo o que precisa saber para entrar no jogo.</p>
                     </div>
                     <div className="max-w-3xl mx-auto space-y-6">
@@ -118,19 +120,19 @@ export default async function Home() {
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-border">
                             <h3 className="text-lg font-bold text-foreground mb-2">Como funcionam os prémios?</h3>
-                            <p className="text-muted-foreground">As mesas funcionam à base de prémios por partida. O vencedor (ou a equipa vencedora) recebe o pote final da mesa (deduzido de uma pequena taxa da plataforma), creditado automaticamente em saldo real na conta.</p>
+                            <p className="text-muted-foreground">Os resultados movimentam apenas créditos de teste, sem valor monetário. Não existem prémios em dinheiro nem levantamentos no beta. Todos os saldos serão repostos a zero no lançamento oficial.</p>
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-border">
-                            <h3 className="text-lg font-bold text-foreground mb-2">É seguro?</h3>
-                            <p className="text-muted-foreground">O Clube da Sueca garante um jogo justo (Fair Play). Usamos baralhamento aleatório das cartas no servidor e algoritmos de deteção de conluio para manter a integridade total do jogo.</p>
+                            <h3 className="text-lg font-bold text-foreground mb-2">Em que fase está a plataforma?</h3>
+                            <p className="text-muted-foreground">Estamos a testar a plataforma. A operação com dinheiro real aguarda aprovação da licença em Moçambique e a contratação de um prestador de pagamentos. Partilhe eventuais falhas com o suporte.</p>
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-border">
                             <h3 className="text-lg font-bold text-foreground mb-2">Existe taxa?</h3>
-                            <p className="text-muted-foreground">A plataforma retém apenas um "Rake" (pequena percentagem) sobre as mesas a dinheiro real para manutenção do servidor, prize pools de torneios e desenvolvimento contínuo.</p>
+                            <p className="text-muted-foreground">Nas mesas de teste, a taxa simulada é de 20% do pote. Exemplo: quatro entradas de 100 créditos formam 400; a equipa vencedora recebe 320, ou 160 por jogador. No empate, cada entrada é devolvida e a taxa é zero. Não há cobrança.</p>
                         </div>
                         <div className="bg-card p-6 rounded-2xl border border-border">
                             <h3 className="text-lg font-bold text-foreground mb-2">Posso jogar no telemóvel?</h3>
-                            <p className="text-muted-foreground">Totalmente. O Clube da Sueca foi desenhado do zero para funcionar com 100% de fluidez em qualquer smartphone (iOS ou Android) diretamente pelo navegador, sem instalar nada.</p>
+                            <p className="text-muted-foreground">Pode jogar pelo navegador do telemóvel, sem instalar uma aplicação. A experiência está em testes e precisa de ligação à internet.</p>
                         </div>
                     </div>
                 </div>

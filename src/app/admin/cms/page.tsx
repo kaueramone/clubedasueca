@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getAllBlogPosts, saveBlogPost } from '@/features/cms/actions'
 import { Rss, Save, Trash2, Plus, Search } from 'lucide-react'
 import Link from 'next/link'
@@ -13,16 +13,18 @@ export default function AdminCmsPage() {
 
     const [editingPost, setEditingPost] = useState<any>(null)
 
-    useEffect(() => { loadData() }, [tab])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         if (tab === 'blog') {
             const res = await getAllBlogPosts()
             if (res.posts) setPosts(res.posts)
         }
         setLoading(false)
-    }
+    }, [tab])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
 
 

@@ -14,15 +14,16 @@ export async function getBlogPosts(limit = 10) {
     const { data, error } = await supabase
         .from('blog_posts')
         .select(`
-            id, slug, title, excerpt, cover_image, views, created_at, tags,
-            author:profiles!author_id(username, avatar_url)
+            id, slug, title, excerpt, cover_image, views, created_at, tags, author_id
         `)
         .eq('is_published', true)
         .order('created_at', { ascending: false })
         .limit(limit)
 
     if (error) return []
-    return data
+    const ids = [...new Set(data.map(post => post.author_id).filter(Boolean))]
+    const { data: authors } = ids.length ? await supabase.from('blog_authors').select('id, username, avatar_url').in('id', ids) : { data: [] }
+    return data.map(post => ({ ...post, author: authors?.find(author => author.id === post.author_id) ?? null }))
 }
 
 export async function getBlogPostBySlug(slug: string) {
@@ -30,8 +31,7 @@ export async function getBlogPostBySlug(slug: string) {
     const { data, error } = await supabase
         .from('blog_posts')
         .select(`
-            *,
-            author:profiles!author_id(username, avatar_url)
+            *
         `)
         .eq('slug', slug)
         .eq('is_published', true)
@@ -46,7 +46,8 @@ export async function getBlogPostBySlug(slug: string) {
         } catch { }
     }
 
-    return data
+    const { data: author } = await supabase.from('blog_authors').select('username, avatar_url').eq('id', data.author_id).maybeSingle()
+    return { ...data, author }
 }
 
 export async function getSeoSettings(path: string) {

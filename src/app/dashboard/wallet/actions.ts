@@ -1,82 +1,38 @@
-'use server'
-
-import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
-import { logAudit } from '@/lib/audit'
-import { checkDepositBonuses } from '@/features/bonuses/actions'
-import { trackUserMetrics } from '@/features/crm/actions'
+"use server";
+import { createClient } from "@/lib/supabase/server";
+import { assertBetaMode } from "@/lib/platform-mode";
+import { revalidatePath } from "next/cache";
 
 export async function deposit(formData: FormData) {
-    const supabase = await createClient()
-    const amount = parseFloat(formData.get('amount') as string)
-
-    // 1 crédito = 1 MZN. Depósito mínimo: 50 MZN.
-    if (isNaN(amount) || amount < 50) {
-        return { error: 'O valor mínimo de depósito é 50 MZN' }
-    }
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Utilizador não autenticado' }
-    }
-
-    // Atomic deposit via RPC
-    const { data, error } = await supabase.rpc('process_deposit', {
-        p_user_id: user.id,
-        p_amount: amount,
-    })
-
-    if (error) {
-        console.error('[DEPOSIT]', error)
-        return { error: error.message || 'Erro ao processar depósito' }
-    }
-
-    // Check and apply any deposit bonuses (non-blocking)
-    checkDepositBonuses(user.id, amount).catch(err => {
-        console.error('[DEPOSIT_BONUS]', err)
-    })
-
-    // Track metrics (CRM)
-    trackUserMetrics(user.id, { deposited: amount }).catch(err => {
-        console.error('[DEPOSIT_CRM]', err)
-    })
-
-    revalidatePath('/dashboard/wallet')
-    return { success: true, new_balance: data?.new_balance }
+  try {
+    assertBetaMode();
+  } catch {
+    return { error: "Adição de créditos de teste indisponível." };
+  }
+  const amount = Number(formData.get("amount"));
+  if (!Number.isSafeInteger(amount) || amount < 50 || amount > 10000)
+    return { error: "Escolha entre 50 e 10 000 créditos inteiros de teste." };
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Utilizador não autenticado" };
+  const { data, error } = await supabase.rpc("process_deposit", {
+    p_user_id: user.id,
+    p_amount: amount,
+  });
+  if (error)
+    return {
+      error:
+        "Não foi possível adicionar os créditos. Confirme o limite da carteira e tente novamente.",
+    };
+  revalidatePath("/dashboard", "layout");
+  return { success: true, new_balance: data?.new_balance };
 }
 
-export async function requestWithdrawal(formData: FormData) {
-    const supabase = await createClient()
-    const amount = parseFloat(formData.get('amount') as string)
-    const pixKey = formData.get('pixKey') as string
-
-    if (isNaN(amount) || amount < 250) {
-        return { error: 'O valor mínimo de levantamento é 250 MZN' }
-    }
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-        return { error: 'Utilizador não autenticado' }
-    }
-
-    // Atomic withdrawal via RPC
-    const { data, error } = await supabase.rpc('process_withdrawal', {
-        p_user_id: user.id,
-        p_amount: amount,
-        p_pix_key: pixKey,
-    })
-
-    if (error) {
-        console.error('[WITHDRAWAL]', error)
-        return { error: error.message || 'Erro ao solicitar levantamento' }
-    }
-
-    revalidatePath('/', 'layout')
-    return { success: true }
+export async function requestWithdrawal(_formData: FormData) {
+  return {
+    error:
+      "Levantamentos indisponíveis no beta. Os créditos são fictícios e não têm valor monetário.",
+  };
 }

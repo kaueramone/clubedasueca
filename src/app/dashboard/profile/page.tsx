@@ -88,7 +88,7 @@ export default function ProfilePage() {
                 avatarUrl = publicUrl
             }
 
-            const { error } = await supabase.from('profiles').upsert({
+            const { error } = await supabase.from('profiles').update({
                 id: user.id,
                 username: profile.username,
                 full_name: profile.full_name,
@@ -103,7 +103,7 @@ export default function ProfilePage() {
             router.refresh()
             alert('Perfil atualizado com sucesso!')
         } catch (error: any) {
-            alert('Erro ao atualizar perfil (Certifique-se que correu a migration SQL 070_profile_updates): ' + error.message)
+            alert('Não foi possível atualizar o perfil: ' + error.message)
         } finally {
             setSaving(false)
         }
@@ -182,7 +182,7 @@ export default function ProfilePage() {
                             <Input
                                 type="date"
                                 value={profile.birth_date || ''}
-                                onChange={e => setProfile({ ...profile, birth_date: e.target.value })}
+                                disabled title="Para corrigir ou completar a data de nascimento, contacta o apoio."
                             />
                         </div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getAllBanners, createBanner, updateBanner, deleteBanner, getBannerStats } from '@/features/banners/actions'
 import { Image as ImageIcon, Plus, Eye, MousePointer2, Percent, Calendar, Trash2, Edit2, Play, Pause } from 'lucide-react'
 import Link from 'next/link'
@@ -11,10 +11,8 @@ export default function AdminBannersPage() {
     const [showCreate, setShowCreate] = useState(false)
     const [message, setMessage] = useState('')
 
-    useEffect(() => { loadData() }, [])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         const result = await getAllBanners()
         if (result.banners) {
             // Get stats for each
@@ -27,7 +25,11 @@ export default function AdminBannersPage() {
             setBanners(withStats)
         }
         setLoading(false)
-    }
+    }, [])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()

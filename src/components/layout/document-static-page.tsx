@@ -1,3 +1,4 @@
+import { BetaNotice } from '@/components/beta-notice'
 import Image from 'next/image';
 import Link from 'next/link';
 import { GlobalHeader } from "@/components/layout/global-header";
@@ -8,6 +9,7 @@ export default function DocumentStaticPage({ title, lastUpdated, children }: { t
         <div className="min-h-screen bg-gray-50 dark:bg-background font-sans flex flex-col">
             <GlobalHeader hideSignup={true} />
 
+            <BetaNotice />
             <main className="container mx-auto px-4 py-20 max-w-3xl flex-1">
                 <article className="prose prose-stone dark:prose-invert max-w-none bg-white dark:bg-card p-10 md:p-16 rounded-3xl shadow-sm border border-border">
                     <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">{title}</h1>

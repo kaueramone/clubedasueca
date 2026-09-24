@@ -1,47 +1,13 @@
-import DocumentStaticPage from '@/components/layout/document-static-page';
-
-export default function PrivacidadePage() {
-    return (
-        <DocumentStaticPage title="Política de Privacidade" lastUpdated="Outubro de 2024">
-            <p>
-                No Clube da Sueca, acessível a partir da nossa plataforma online, uma das nossas
-                principais prioridades é a privacidade dos nossos membros. Este documento de Política
-                de Privacidade compila os tipos de informações que são recolhidas e registadas pelo nosso
-                clube e a forma como as utilizamos.
-            </p>
-
-            <h2>Que Informações Recolhemos</h2>
-            <p>
-                A recolha de informação pessoal baseia-se unicamente na otimização da experiência:
-            </p>
-            <ul>
-                <li><strong>Dados de Perfil:</strong> Nome, E-mail, Data de Nascimento e Nacionalidade.</li>
-                <li><strong>Dados Financeiros:</strong> Histórico de depósitos e saques para cumprimento de exigências Anti-Lavagem de Dinheiro (AML).</li>
-                <li><strong>Dados de Jogo:</strong> Registo das partidas jogadas, pontos alcançados, denúncias e interações no lobby.</li>
-            </ul>
-
-            <h2>Como Usamos a Informação</h2>
-            <p>Utilizamos as informações recolhidas de diversas formas, incluindo para:</p>
-            <ul>
-                <li>Providenciar, operar e manter a estabilidade das mesas de jogo.</li>
-                <li>Melhorar e personalizar a experiência através da oferta de Bónus e Promoções direcionadas.</li>
-                <li>Criar mecanismos robustos anti-fraude onde comportamentos anormais de aposta são sinalizados.</li>
-                <li>Entrar em contacto periódico (se o membro assim o desejar) para comunicar Eventos ou Manutenções da Plataforma.</li>
-            </ul>
-
-            <h2>Segurança de Dados</h2>
-            <p>
-                Todas as passwords não se encontram alojadas nativamente na nossa base de dados primária,
-                sendo suportadas por encriptação <em>Hash</em> delegando a autenticação através do prestador (Supabase Auth).
-                Não vendemos informações pessoais, listas de e-mails ou históricos de transação de nenhum dos nossos membros a agentes externos.
-            </p>
-
-            <h2>Os seus Direitos (RGPD)</h2>
-            <p>
-                Se reside sob a jurisdição Europeia, detém direitos abrangidos pelo Regulamento Geral de Proteção de Dados, nomeadamente o direito a solicitar
-                acesso aos seus dados corporativos, pedir retificações ou ordenar a eliminação limiar da sua conta, sob alçada de não ter
-                financiamentos ativos ou litígios em curso connosco.
-            </p>
-        </DocumentStaticPage>
-    );
+import DocumentStaticPage from '@/components/layout/document-static-page'
+export default function Page() {
+    return <DocumentStaticPage title="Privacidade no beta" lastUpdated="24 de setembro de 2026">
+            <h2>Dados utilizados</h2>
+            <p>Recolhemos dados de conta (nome, email, nascimento, nacionalidade, alcunha e avatar), registos de partidas, movimentos de créditos fictícios e mensagens enviadas ao suporte ou aos chats. A alcunha, o avatar e as mensagens públicas são visíveis a outros participantes.</p>
+            <h2>Finalidade e prestadores</h2>
+            <p>Estes dados permitem autenticar contas, operar as mesas, registar créditos de teste e responder a pedidos. A autenticação e a base de dados usam Supabase. Mensagens dirigidas ao bot comunitário podem ser processadas pelo prestador de inteligência artificial Groq; evite incluir dados pessoais no chat público.</p>
+            <h2>Pedidos de privacidade</h2>
+            <p>Pode solicitar acesso, correção ou eliminação dos seus dados através de Suporte no painel. O pedido fica registado e será analisado pela equipa. Não envie PIN nem documentos financeiros. O reset dos saldos no lançamento não significa eliminação automática da conta ou das mensagens.</p>
+            <h2>Informação a completar antes do lançamento</h2>
+            <p>A identificação formal do responsável, contactos, períodos de conservação e condições aplicáveis à operação licenciada serão publicados pela equipa responsável antes da abertura de pagamentos reais.</p>
+    </DocumentStaticPage>
 }

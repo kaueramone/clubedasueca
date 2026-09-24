@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getAffiliateStatus, applyForAffiliate, createAffiliateLink } from '@/features/affiliates/actions'
 import { Link2, Users, TrendingUp, DollarSign, Copy, Plus, Clock, CheckCircle } from 'lucide-react'
 
@@ -10,14 +10,16 @@ export default function AffiliateDashboardPage() {
     const [newLinkCode, setNewLinkCode] = useState('')
     const [message, setMessage] = useState('')
 
-    useEffect(() => { loadData() }, [])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         const result = await getAffiliateStatus()
         setData(result)
         setLoading(false)
-    }
+    }, [])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
     async function handleApply() {
         const result = await applyForAffiliate()

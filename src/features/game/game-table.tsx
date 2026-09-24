@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { playCard, cancelGame, leaveGame, playTimeoutCard, getFriendsForInvite, sendTableInvite } from './actions'
+import { tableFromSnapshot, trainingMove, settleTrainingTrick, secondsToDeadline, cardLabel } from './table-state'
 import { cn } from '@/lib/utils'
 import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
 import Image from 'next/image'
@@ -79,7 +80,12 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const audioShuffleRef = useRef<HTMLAudioElement | null>(null)
     const audioCollectRef = useRef<HTMLAudioElement | null>(null)
 
-    const supabase = createClient()
+    const supabase = useMemo(() => createClient(), [])
+    const [connectionError, setConnectionError] = useState<string | null>(null)
+    const [storageReady, setStorageReady] = useState(false)
+    const timeoutActionRef = useRef<() => void>(() => {})
+    const chatOpenRef = useRef(showChat)
+    chatOpenRef.current = showChat
 
     const openSeatInvite = async (seatAbsPos: number) => {
         const team: 'A' | 'B' = seatAbsPos % 2 === 0 ? 'A' : 'B'
@@ -93,7 +99,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const handleSendInvite = async (friendId: string) => {
         const gameId = gameState?.id
         if (!gameId) return
-        await sendTableInvite(gameId, friendId, inviteTeam || undefined)
+        const result = await sendTableInvite(gameId, friendId, inviteTeam || undefined)
+        if (result?.error) { alert(result.error); return }
         setInviteSent(prev => ({ ...prev, [friendId]: true }))
     }
 
@@ -126,32 +133,25 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         })
     }, [isTraining, currentUser?.profiles?.username, currentUser?.profiles?.avatar_url, currentUser?.user_metadata?.avatar_url])
 
-    // --- Training/Demo State Persistence ---
+    // Versioned, single-record persistence avoids mismatched hands and scores on reload.
     useEffect(() => {
-        if (!isTraining && !isDemoGuest) return;
-        const savedState = localStorage.getItem('sueca_training_state');
-        const savedScores = localStorage.getItem('sueca_training_scores');
+        if (!isTraining) return
+        try {
+            const saved = JSON.parse(localStorage.getItem('sueca_training_v2') || 'null')
+            if (saved?.game_players?.length === 4 && saved.trump_card) setGameState(saved)
+            else startTrainingGame()
+        } catch { startTrainingGame() }
+        setStorageReady(true)
+    }, [isTraining])
 
-        if (savedState && savedScores) {
-            try {
-                setGameState(JSON.parse(savedState));
-                setScores(JSON.parse(savedScores));
-            } catch (e) {
-                console.error("Failed to parse saved game state:", e);
-                startTrainingGame();
-            }
-        } else {
-            startTrainingGame();
-        }
-    }, [isTraining, isDemoGuest]);
-
-    // Save state on change
     useEffect(() => {
-        if ((isTraining || isDemoGuest) && gameState && gameState.status === 'playing') {
-            localStorage.setItem('sueca_training_state', JSON.stringify(gameState));
-            localStorage.setItem('sueca_training_scores', JSON.stringify(scores));
+        if (isTraining && storageReady) {
+            try { localStorage.setItem('sueca_training_v2', JSON.stringify(gameState)) } catch { /* Storage may be unavailable in private browsing. */ }
         }
-    }, [gameState, scores, isTraining, isDemoGuest]);
+        setScores({ A: gameState?.score_a ?? 0, B: gameState?.score_b ?? 0 })
+        if (gameState?.status === 'finished') setGameResult({ winnerTeam: gameState.winner_team || 'Draw', scoreA: gameState.score_a ?? 0, scoreB: gameState.score_b ?? 0 })
+        if (gameState?.status === 'cancelled') setGameCancelled(true)
+    }, [gameState, isTraining, storageReady])
 
     useEffect(() => {
         audioPlaceRef.current = new Audio('/audio/card-place-1.ogg')
@@ -185,6 +185,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
         setGameState((prev: any) => ({
             ...prev,
+            status: 'playing', current_turn: 0, rounds: [], current_trick_cards: [], score_a: 0, score_b: 0, winner_team: null,
             trump_card: trump,
             game_players: prev.game_players.map((p: any, i: number) => ({
                 ...p,
@@ -230,50 +231,37 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 hasShownTrumpRef.current = true
             }
         }
-    }, [gameState?.status, gameState?.trump_card, gameState?.rounds, gameState?.current_trick_cards])
+    }, [gameState?.status, gameState?.trump_card])
 
-    // --- AFK Timer Logic ---
+    // A deadline survives renders; the ref invokes the latest hand, never a stale closure.
     useEffect(() => {
-        if (!gameState || gameResult || isTrickProcessing || roundRecap || gameState.status !== 'playing') return
-
-        const myPlayer = isTraining
-            ? gameState.game_players[0]
-            : gameState.game_players.find((p: any) => p.user_id === currentUser?.id)
-
-        const myTurn = myPlayer && gameState.current_turn === myPlayer.position
-
-        let interval: NodeJS.Timeout
-
-        if (myTurn) {
-            setTurnTimeLeft(15)
-            interval = setInterval(() => {
-                setTurnTimeLeft(prev => {
-                    if (prev <= 1) {
-                        if (isTraining) {
-                            autoPlayHuman()
-                        } else {
-                            autoPlayOnline()
-                        }
-                        return 0
-                    }
-                    return prev - 1
-                })
-            }, 1000)
-        } else {
-            setTurnTimeLeft(15)
+        if (!gameState || gameResult || isTrickProcessing || roundRecap || gameState.status !== 'playing' || gameState.current_trick_cards.length === 4) return
+        if (isTraining && (gameState.current_turn !== 0 || !storageReady)) return
+        const deadline = isTraining ? new Date(Date.now() + 15000).toISOString() : gameState.turn_deadline
+        if (!deadline) return
+        let attempted = false
+        const tick = () => {
+            const remaining = secondsToDeadline(deadline)
+            setTurnTimeLeft(remaining)
+            if (remaining === 0 && !attempted) { attempted = true; timeoutActionRef.current() }
         }
-
+        tick()
+        const interval = setInterval(tick, 250)
         return () => clearInterval(interval)
-    }, [gameState.current_turn, gameResult, isTrickProcessing, roundRecap, gameState.status])
+    }, [gameState.current_turn, gameState.turn_deadline, gameState.current_trick_cards.length, gameResult, isTrickProcessing, roundRecap, gameState.status, isTraining, storageReady])
 
     const autoPlayOnline = useCallback(async () => {
         if (!game || isTraining) return
         setLoading(true)
-        const res = await playTimeoutCard(game.id)
-        if (res?.error) {
-            console.error('[AUTO_PLAY_ERROR]', res.error)
+        try {
+            const res = await playTimeoutCard(game.id)
+            if (res?.error) console.error('[AUTO_PLAY_ERROR]', res.error)
+        } catch {
+            setConnectionError('Jogada automática não confirmada. A recuperar o estado da mesa…')
+        } finally {
+            setLoading(false)
+            await refreshSnapshotRef.current()
         }
-        setLoading(false)
     }, [game, isTraining])
 
     const autoPlayHuman = useCallback(() => {
@@ -295,27 +283,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         }
     }, [isTraining, gameState])
 
-    // --- Round Recap Auto-Advance Logic ---
-    useEffect(() => {
-        if (roundRecap) {
-            const interval = setInterval(() => {
-                setRoundRecap(prev => {
-                    if (!prev) return null
-                    if (prev.timeLeft <= 1) {
-                        dismissRecap()
-                        return null
-                    }
-                    return { ...prev, timeLeft: prev.timeLeft - 1 }
-                })
-            }, 1000)
-            return () => clearInterval(interval)
-        }
-    }, [roundRecap])
+    timeoutActionRef.current = isTraining ? autoPlayHuman : autoPlayOnline
 
+    useEffect(() => {
+        if (!roundRecap) return
+        const timer = setTimeout(() => {
+            if (roundRecap.timeLeft <= 1) dismissRecap()
+            else setRoundRecap(prev => prev ? { ...prev, timeLeft: prev.timeLeft - 1 } : null)
+        }, 1000)
+        return () => clearTimeout(timer)
+    }, [roundRecap])
 
     // Bot Logic Effect
     useEffect(() => {
-        if (!isTraining || !gameState || gameState.status !== 'playing' || isTrickProcessing || gameResult || roundRecap) return
+        if (!isTraining || !gameState || gameState.status !== 'playing' || isTrickProcessing || gameResult || roundRecap || gameState.current_trick_cards.length === 4) return
 
         const currentPlayer = gameState.game_players.find((p: any) => p.position === gameState.current_turn)
         if (currentPlayer && currentPlayer.user_id.startsWith('bot')) {
@@ -379,31 +360,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         if (isTrickProcessing || roundRecap) return
 
         playSound('place')
-        setGameState((prev: any) => {
-            const playerIndex = prev.game_players.findIndex((p: any) => p.user_id === playerId)
-            const newHand = prev.game_players[playerIndex].hand.filter((c: string) => c !== card)
-            const newTrick = [...prev.current_trick_cards, { player_id: playerId, card }]
-
-            if (newTrick.length === 4) {
-                processTrickEnd(prev, newHand, newTrick, playerIndex)
-                return {
-                    ...prev,
-                    game_players: prev.game_players.map((p: any, i: number) =>
-                        i === playerIndex ? { ...p, hand: newHand } : p
-                    ),
-                    current_trick_cards: newTrick,
-                }
-            }
-
-            return {
-                ...prev,
-                game_players: prev.game_players.map((p: any, i: number) =>
-                    i === playerIndex ? { ...p, hand: newHand } : p
-                ),
-                current_trick_cards: newTrick,
-                current_turn: (prev.current_turn + 1) % 4
-            }
-        })
+        setGameState((prev: any) => trainingMove(prev, playerId, card))
     }, [isTrickProcessing, roundRecap, playSound])
 
     const buildTrickExplanation = useCallback((fullTrick: any[], winnerId: string, trumpSuit: string) => {
@@ -442,125 +399,101 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return "Carta mais alta vence."
     }, [])
 
-    const processTrickEnd = useCallback((prevState: any, handAfterMove: string[], fullTrick: any[], playerIndex: number) => {
+    useEffect(() => {
+        if (!isTraining || gameState.current_trick_cards.length !== 4) return
         setIsTrickProcessing(true)
-
-        const trumpSuit = getCardSuit(prevState.trump_card)
-        const winnerId = getTrickWinner(fullTrick, trumpSuit)
-        const winnerPlayer = prevState.game_players.find((p: any) => p.user_id === winnerId) || prevState.game_players[0]
-        const points = fullTrick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
-
-        const explanation = buildTrickExplanation(fullTrick, winnerId, trumpSuit)
-
-        setTimeout(() => {
+        const trick = gameState.current_trick_cards
+        const trump = getCardSuit(gameState.trump_card)
+        const winnerId = getTrickWinner(trick, trump)
+        const winner = gameState.game_players.find((p: any) => p.user_id === winnerId)
+        const timer = setTimeout(() => {
             playSound('collect')
-
-            setScores(prev => ({
-                ...prev,
-                [winnerPlayer.team]: prev[winnerPlayer.team as 'A' | 'B'] + points
-            }))
-
-            setRoundRecap({
-                winner: winnerPlayer.profiles.username,
-                points: points,
-                team: winnerPlayer.team,
-                explanation: explanation,
-                timeLeft: 10
-            })
-
+            setRoundRecap({ winner: winner.profiles.username, points: trick.reduce((sum: number, c: any) => sum + getCardValue(c.card), 0), team: winner.team, explanation: buildTrickExplanation(trick, winnerId, trump), timeLeft: 5 })
         }, 1200)
-    }, [playSound, buildTrickExplanation])
+        return () => clearTimeout(timer)
+    }, [isTraining, gameState.current_trick_cards, gameState.trump_card, buildTrickExplanation, playSound])
 
     const dismissRecap = useCallback(() => {
-        if (!roundRecap) return
-
+        setGameState((state: any) => settleTrainingTrick(state))
         setIsTrickProcessing(false)
         setRoundRecap(null)
-
-        setGameState((state: any) => {
-            const trick = state.current_trick_cards
-            if (trick.length !== 4) return state
-
-            const trumpSuit = getCardSuit(state.trump_card)
-            const winnerId = getTrickWinner(trick, trumpSuit)
-            const winnerPlayer = state.game_players.find((p: any) => p.user_id === winnerId)
-            const points = trick.reduce((acc: number, c: any) => acc + getCardValue(c.card), 0)
-
-            const newRounds = [...state.rounds, {
-                winner: winnerId,
-                cards: trick,
-                points: points
-            }]
-
-            if (newRounds.length === 10) {
-                const finalScoreA = scores.A
-                const finalScoreB = scores.B
-                let winnerTeam = 'Draft'
-                if (finalScoreA > finalScoreB) winnerTeam = 'A'
-                else if (finalScoreB > finalScoreA) winnerTeam = 'B'
-                else winnerTeam = 'Draw'
-
-                setGameResult({
-                    winnerTeam,
-                    scoreA: finalScoreA,
-                    scoreB: finalScoreB
-                })
-                return { ...state, rounds: newRounds, current_trick_cards: [] }
-            }
-
-            return {
-                ...state,
-                current_trick_cards: [],
-                current_turn: winnerPlayer.position,
-                rounds: newRounds
-            }
-        })
-    }, [roundRecap, scores])
+    }, [])
 
     // Realtime Subscription & Chat Channel
     const [realtimeChannel, setRealtimeChannel] = useState<any>(null)
 
+    const refreshSnapshotRef = useRef<() => Promise<void>>(async () => {})
     useEffect(() => {
-        if (isTraining) return
-
-        // Recarrega os jogadores via get_table_state: devolve a mão SÓ do
-        // próprio utilizador (+ hand_count dos restantes). As cartas dos
-        // adversários nunca chegam ao cliente (migração 103 / RLS).
-        const refreshPlayers = async () => {
-            const { data } = await supabase.rpc('get_table_state', { p_game_id: game.id })
-            const players = (data as any)?.players
-            if (players) {
-                setGameState((prev: any) => ({ ...prev, game_players: players }))
+        if (isTraining || !game?.id) return
+        let disposed = false
+        let inFlight = false
+        let refreshAgain = false
+        let removed = false
+        const refresh = async () => {
+            if (disposed || removed) return
+            if (inFlight) { refreshAgain = true; return }
+            inFlight = true
+            try {
+                do {
+                    refreshAgain = false
+                    const { data, error } = await supabase.rpc('get_table_state', { p_game_id: game.id })
+                    if (!disposed && !removed) {
+                        if (error?.code === 'P0002') {
+                            removed = true
+                            setLoading(false)
+                            setConnectionError(null)
+                            setGameCancelled(true)
+                            break
+                        }
+                        if (error?.code === '42501') {
+                            setConnectionError('Acesso à mesa indisponível. Confirma a tua sessão ou regressa às mesas.')
+                            break
+                        }
+                        if (error) throw error
+                        setGameState(tableFromSnapshot(data as any))
+                        setConnectionError(null)
+                    }
+                } while (refreshAgain && !disposed && !removed)
+            } catch {
+                if (!disposed && !removed) setConnectionError('A recuperar a ligação à mesa. As jogadas estão temporariamente suspensas.')
+            } finally {
+                inFlight = false
             }
         }
-
-        const channel = supabase
-            .channel(`game-${game.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${game.id}` }, (payload) => {
-                if (payload.eventType === 'DELETE') {
+        refreshSnapshotRef.current = refresh
+        const channel = supabase.channel(`game-${game.id}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'games', filter: `id=eq.${game.id}` }, payload => {
+                // DELETE events may not retain the subscription filter; match the key explicitly.
+                if (payload.eventType === 'DELETE' && payload.old.id === game.id) {
+                    removed = true
+                    setLoading(false)
+                    setConnectionError(null)
                     setGameCancelled(true)
-                    return
-                }
-                setGameState((prev: any) => ({ ...prev, ...payload.new }))
-                // Cada jogada altera a linha de games (vez/pontos). Sob RLS, os
-                // eventos da linha de outro jogador não chegam aqui, por isso é
-                // este evento que dispara o refresh das mãos/contagens.
-                refreshPlayers()
+                } else { void refresh() }
             })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players', filter: `game_id=eq.${game.id}` }, () => {
-                // Dispara quando a própria linha muda (e, na fase "waiting", quando
-                // entram/saem jogadores). Recarrega sempre via get_table_state.
-                refreshPlayers()
-            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players', filter: `game_id=eq.${game.id}` }, () => { void refresh() })
             .on('broadcast', { event: 'chat_message' }, (payload) => {
                 setMessages(prev => [...prev, payload.payload])
-                if (!showChat) setUnreadCount(prev => prev + 1)
+                if (!chatOpenRef.current) setUnreadCount(prev => prev + 1)
             })
-            .subscribe()
-
+            .subscribe(status => {
+                if (status === 'SUBSCRIBED') void refresh()
+                else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setConnectionError('Ligação interrompida. A recuperar o estado da mesa…')
+            })
         setRealtimeChannel(channel)
-        return () => { supabase.removeChannel(channel) }
-    }, [game?.id, supabase, isTraining, showChat])
+        void refresh()
+        const onVisible = () => { if (document.visibilityState === 'visible') void refresh() }
+        window.addEventListener('online', refresh)
+        document.addEventListener('visibilitychange', onVisible)
+        const poll = setInterval(refresh, 5000)
+        return () => {
+            disposed = true
+            clearInterval(poll)
+            window.removeEventListener('online', refresh)
+            document.removeEventListener('visibilitychange', onVisible)
+            void supabase.removeChannel(channel)
+        }
+    }, [game?.id, supabase, isTraining])
 
     const handleSendMessage = useCallback((e: React.FormEvent) => {
         e.preventDefault()
@@ -607,7 +540,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     if (!myPlayer && gameState.status === 'playing') return <div>Acesso Negado ou não é Jogador desta mesa</div>
 
     const handlePlayCard = async (card: string) => {
-        if (loading || isTrickProcessing || roundRecap) return
+        if (loading || connectionError || isTrickProcessing || roundRecap || gameState.current_turn !== myPlayer?.position) return
 
         if (selectedCard !== card) {
             setSelectedCard(card)
@@ -631,9 +564,14 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
         setLoading(true)
         playSound('place')
-        const res = await playCard(game.id, card)
-        if (res?.error) alert(res.error)
-        setLoading(false)
+        try {
+            const res = await playCard(game.id, card)
+            if (res?.error) alert(res.error)
+            await refreshSnapshotRef.current()
+        } catch {
+            setConnectionError('Jogada não confirmada. A recuperar o estado da mesa…')
+            await refreshSnapshotRef.current()
+        } finally { setLoading(false) }
     }
 
     const handleCancelGame = async () => {
@@ -665,7 +603,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             >
                 <Image
                     src={src}
-                    alt={card}
+                    alt={cardLabel(card)}
                     fill
                     className="object-contain"
                     sizes="(max-width: 768px) 100px, 150px"
@@ -707,8 +645,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 short:p-1 short:px-safe select-none">
             {/* Background Images */}
             <div className="absolute inset-0 z-0">
-                <Image src="/images/mesa-horizontal.png" alt="Mesa de jogo" fill className="object-cover hidden md:block" priority />
-                <Image src="/images/mesa-vert.png" alt="Mesa de jogo" fill className="object-cover md:hidden" priority />
+                <Image src="/images/mesa-horizontal.png" alt="Mesa de jogo" fill sizes="100vw" className="object-cover hidden md:block" priority />
+                <Image src="/images/mesa-vert.png" alt="Mesa de jogo" fill sizes="100vw" className="object-cover md:hidden" priority />
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
@@ -719,7 +657,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                     <button
                         onClick={() => {
                             if (confirm('Deseja cancelar esta partida de treino? O progresso será perdido.')) {
-                                localStorage.removeItem('sueca_training_state');
+                                localStorage.removeItem('sueca_training_v2');
                                 localStorage.removeItem('sueca_training_scores');
                                 router.push(isDemoGuest ? '/' : '/dashboard');
                             }
@@ -784,7 +722,8 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             />
 
             {/* Scoreboard */}
-            <ScoreBoard scoreA={scores.A} scoreB={scores.B} />
+            <ScoreBoard scoreA={scores.A} scoreB={scores.B} myTeam={myPlayer?.team || 'A'} />
+            {connectionError && <p role="alert" className="absolute top-28 inset-x-3 z-50 bg-red-950 text-white p-2 rounded text-xs text-center">{connectionError}</p>}
 
             {/* AFK Timer */}
             {gameState.current_turn === myPos && !roundRecap && !gameResult && gameState.status === 'playing' && (
@@ -840,9 +779,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             </div>
 
             {/* Center (Table) */}
-            <div className="relative w-48 h-48 short:w-48 short:h-48 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden short:-translate-y-[10%]">
+            <div className="relative w-48 h-48 short:!w-40 short:!h-40 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden short:-translate-y-[20%]">
                 <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
-                    <Image src="/images/favicon.png" alt="" fill className="object-contain p-4" aria-hidden="true" />
+                    <Image src="/images/favicon.png" alt="" fill sizes="256px" className="object-contain p-4" aria-hidden="true" />
                 </div>
 
                 {/* Waiting State Overlay */}
@@ -866,15 +805,17 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 {roundRecap && (
                     <div
                         onClick={dismissRecap}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') dismissRecap() }}
+                        tabIndex={0}
                         className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 rounded-full cursor-pointer hover:bg-black/70 transition-colors animate-in fade-in"
-                        role="status"
+                        role="button"
                         aria-label={`${roundRecap.winner} ganhou ${roundRecap.points} pontos`}
                     >
-                        <div className="text-center space-y-1 p-4">
-                            <p className="text-xs font-bold text-white/70 uppercase tracking-widest">{roundRecap.explanation}</p>
+                        <div className="text-center space-y-1 p-4 short:p-2 short:space-y-0">
+                            <p className="text-xs short:text-[10px] font-bold text-white/70 uppercase tracking-widest short:tracking-normal">{roundRecap.explanation}</p>
                             <div className="flex flex-col items-center">
-                                <p className="text-xl font-bold text-white shadow-black drop-shadow-md">{roundRecap.winner}</p>
-                                <p className="text-2xl font-black text-[#FFD700]">+{roundRecap.points}</p>
+                                <p className="text-xl short:text-sm font-bold text-white shadow-black drop-shadow-md">{roundRecap.winner}</p>
+                                <p className="text-2xl short:text-lg font-black text-[#FFD700]">+{roundRecap.points}</p>
                             </div>
                             <p className="text-[10px] text-white/50 mt-2">Próxima em {roundRecap.timeLeft}s...</p>
                         </div>
@@ -902,36 +843,34 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 </div>
             </div>
 
+<p className="absolute bottom-0 inset-x-0 text-center text-[9px] bg-black/70 text-white z-40">Teste gratuito · Sem dinheiro real · Saldos repostos a zero no lançamento</p>
             {/* Bottom Player (Me) */}
-            <div className="absolute bottom-6 sm:bottom-10 short:bottom-1 w-full flex flex-col items-center z-30 overflow-visible">
-                <div className="flex -space-x-[2.8rem] sm:-space-x-[3.5rem] short:-space-x-[2rem] mb-6 sm:mb-8 short:mb-1 px-2 py-2 short:py-0 hover:-space-x-[2rem] transition-all duration-300 ease-out perspective-1000 max-w-[95vw] overflow-visible justify-center" role="group" aria-label="As suas cartas">
-                    {sortHand(myPlayer.hand || []).map((card: string, index: number) => {
-                        const total = myPlayer.hand.length
-                        const mid = (total - 1) / 2
-                        const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
-                        const rotate = (index - mid) * (isMobile ? 3 : 5)
-                        const isSelected = selectedCard === card
-                        const pullUp = isSelected ? (isMobile ? 35 : 45) : 0
-                        const translateY = Math.abs(index - mid) * (isMobile ? 2 : 5) - pullUp
-
-                        return (
-                            <div key={card} style={{ transform: `rotate(${rotate}deg) translateY(${translateY}px)`, zIndex: isSelected ? 50 : index }}
-                                className={cn("transform-gpu transition-transform origin-bottom", !isSelected && "hover:!rotate-0 hover:!translate-y-[-10px] hover:!z-40")}>
-                                {renderCard(card, () => handlePlayCard(card))}
-                            </div>
-                        )
+            <div className="absolute bottom-6 sm:bottom-10 short:!bottom-3 w-full flex flex-col items-center z-30 overflow-visible">
+                <p id="hand-instructions" className="text-[11px] short:text-[10px] text-white bg-black/70 rounded px-2 py-1 short:py-0 mb-1 short:mb-0 text-center max-w-full">
+                    {gameState.current_turn === myPos ? 'A tua vez: toca para selecionar; toca novamente para jogar.' : 'Aguarda a tua vez.'} Desliza para ver todas as cartas. Deves seguir o naipe de saída, se o tiveres.
+                </p>
+                <div className="w-full overflow-x-auto overscroll-x-contain px-3 pb-2 pt-3 short:pb-1 short:pt-2" role="group" aria-label="As tuas cartas" aria-describedby="hand-instructions">
+                    <div className="flex gap-1 w-max min-w-full justify-center">
+                    {sortHand(myPlayer?.hand || []).map((card: string) => {
+                        const lead = gameState.current_trick_cards[0]?.card
+                        const legal = isValidMove(card, myPlayer.hand, lead ? getCardSuit(lead) : null)
+                        const enabled = legal && gameState.current_turn === myPos && !loading && !isTrickProcessing && !roundRecap && !connectionError && gameState.status === 'playing'
+                        return <button key={card} type="button" aria-label={`${cardLabel(card)}${legal ? '' : ', deves seguir o naipe'}`} aria-pressed={selectedCard === card} disabled={!enabled} onClick={() => handlePlayCard(card)} className={cn('relative shrink-0 w-14 h-20 sm:w-20 sm:h-28 short:!w-11 short:!h-[62px] rounded bg-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-yellow-300 transition-transform', selectedCard === card && '-translate-y-2 ring-4 ring-yellow-300', !legal && 'opacity-40')}>
+                            <Image src={getCardAssetPath(card)} alt="" fill sizes="(max-height: 480px) 44px, (max-width: 640px) 56px, 80px" className="object-contain" />
+                        </button>
                     })}
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-3 short:gap-1.5 bg-black/40 px-6 py-2 short:px-3 short:py-0.5 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
                     <div className="h-10 w-10 short:h-7 short:w-7 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
-                        {myPlayer.profiles?.avatar_url ? (
-                            <Image src={myPlayer.profiles.avatar_url} alt={myPlayer.profiles?.username || 'Eu'} fill className="object-cover" />
+                        {myPlayer?.profiles?.avatar_url ? (
+                            <Image src={myPlayer?.profiles.avatar_url} alt={myPlayer?.profiles?.username || 'Eu'} fill sizes="80px" className="object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-gray-400"><User className="w-6 h-6" /></div>
                         )}
                     </div>
-                    <span className="text-white font-bold text-shadow-sm">{myPlayer.profiles?.username || 'Eu'}</span>
+                    <span className="text-white font-bold text-shadow-sm">{myPlayer?.profiles?.username || 'Eu'}</span>
                     <div className="h-full w-px bg-white/20 mx-2" />
                     {gameState.trump_card && (() => {
                         // Compute fixed position from badge ref so the popover escapes all stacking contexts
@@ -956,14 +895,14 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                                 >
                                     <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest drop-shadow-md pr-1">Trunfo</span>
                                     <div className="relative w-6 h-8 sm:w-7 sm:h-10 overflow-hidden rounded-[4px] shadow-sm border border-white/50 bg-white transform rotate-3">
-                                        <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill className="object-cover" />
+                                        <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill sizes="80px" className="object-cover" />
                                     </div>
                                 </div>
                                 {/* Popover rendered with fixed position — escapes all stacking contexts */}
                                 {showTrumpExpanded && (
                                     <div style={popoverStyle} className="flex flex-col items-center gap-1">
                                         <div className="relative w-20 h-28 rounded-lg shadow-2xl border-2 border-yellow-300 bg-white overflow-hidden">
-                                            <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill className="object-cover" />
+                                            <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill sizes="80px" className="object-cover" />
                                         </div>
                                         <span className="text-[9px] font-bold text-yellow-200 uppercase tracking-widest drop-shadow">Trunfo</span>
                                     </div>
@@ -983,18 +922,20 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             {gameResult && (
                 <GameResultOverlay
                     gameResult={gameResult}
+                    myTeam={myPlayer?.team || 'A'}
                     stake={gameState.stake || 0}
                     isTraining={isTraining}
                     isDemoGuest={isDemoGuest}
                     onExit={() => {
-                        localStorage.removeItem('sueca_training_state');
+                        localStorage.removeItem('sueca_training_v2');
                         localStorage.removeItem('sueca_training_scores');
                         router.push(isDemoGuest ? '/' : '/dashboard');
                     }}
                     onNewGame={() => {
-                        localStorage.removeItem('sueca_training_state');
+                        localStorage.removeItem('sueca_training_v2');
                         localStorage.removeItem('sueca_training_scores');
-                        startTrainingGame()
+                        if (isTraining) startTrainingGame()
+                        else router.push('/dashboard/play')
                     }}
                     onRegister={() => router.push('/register')}
                 />
@@ -1013,9 +954,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         </div>
                         {inviteTeam && (
                             <p className="text-xs text-muted-foreground mb-4">
-                                {inviteTeam === 'A'
-                                    ? '🟢 Equipa A — vai jogar no teu time'
-                                    : '🔴 Equipa B — vai jogar contra ti'}
+                                {inviteTeam === myPlayer?.team ? 'Vai jogar na tua equipa' : 'Vai jogar na equipa adversária'}
                             </p>
                         )}
 
@@ -1057,7 +996,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                         <div className="text-5xl mb-4">🚫</div>
                         <h2 className="text-xl font-bold text-foreground mb-2">Mesa Cancelada</h2>
                         <p className="text-muted-foreground text-sm mb-6">
-                            O anfitrião cancelou a mesa. O teu saldo foi devolvido automaticamente.
+                            A mesa foi cancelada ou expirou. Consulta a carteira para confirmar a devolução dos créditos de teste.
                         </p>
                         <button
                             onClick={() => router.push('/dashboard/play')}

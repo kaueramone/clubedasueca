@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export function UserPresence({ userId, email }: { userId: string, email: string }) {
+export function UserPresence({ userId }: { userId: string }) {
     const supabase = createClient()
 
     // Heartbeat persistido: grava last_seen_at no banco enquanto o utilizador
@@ -30,20 +30,10 @@ export function UserPresence({ userId, email }: { userId: string, email: string 
         })
 
         channel
-            .on('presence', { event: 'sync' }, () => {
-                // console.log('Presence sync', channel.presenceState())
-            })
-            .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-                console.log('join', key, newPresences)
-            })
-            .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-                console.log('leave', key, leftPresences)
-            })
             .subscribe(async (status) => {
                 if (status === 'SUBSCRIBED') {
                     await channel.track({
                         user_id: userId,
-                        email: email,
                         online_at: new Date().toISOString(),
                     })
                 }
@@ -52,7 +42,7 @@ export function UserPresence({ userId, email }: { userId: string, email: string 
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [userId, email, supabase])
+    }, [userId, supabase])
 
     return null // Invisible component
 }

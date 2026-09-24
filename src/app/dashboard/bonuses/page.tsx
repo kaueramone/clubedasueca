@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { getUserBonuses, getVipStatus, redeemPromoCode } from '@/features/bonuses/actions'
 import { Gift, Trophy, Star, Ticket } from 'lucide-react'
 
@@ -12,12 +12,8 @@ export default function UserBonusesPage() {
     const [message, setMessage] = useState('')
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        loadData()
-    }, [])
 
-    async function loadData() {
-        setLoading(true)
+    const loadData = useCallback(async () => {
         const [bonusResult, vipResult] = await Promise.all([
             getUserBonuses(),
             getVipStatus(),
@@ -26,7 +22,11 @@ export default function UserBonusesPage() {
         if (vipResult.vip) setVip(vipResult.vip)
         if (vipResult.levels) setLevels(vipResult.levels)
         setLoading(false)
-    }
+    }, [])
+
+    // Fetch external server data; state updates occur after the awaited response.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { void loadData() }, [loadData])
 
     async function handleRedeemCode(e: React.FormEvent) {
         e.preventDefault()

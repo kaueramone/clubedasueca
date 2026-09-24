@@ -1,6 +1,6 @@
 'use client'
 
-import { useFormState } from 'react-dom'
+import { useActionState } from 'react'
 import { forgotPassword } from '@/app/auth/actions'
 import { SubmitButton } from '@/components/submit-button'
 
@@ -9,8 +9,7 @@ const initialState = {
 }
 
 export function ForgotPasswordForm() {
-    // @ts-ignore
-    const [state, formAction] = useFormState(forgotPassword, initialState)
+    const [state, formAction] = useActionState(async (_previous: typeof initialState, formData: FormData) => forgotPassword(formData), initialState)
 
     return (
         <form action={formAction} className="space-y-6">

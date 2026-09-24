@@ -25,7 +25,7 @@ export function SessionGuard({ userId, sessionId }: { userId: string; sessionId:
                     const newSessionId = payload.new?.session_id
                     if (newSessionId && newSessionId !== sessionId) {
                         // Another device logged in — kill this session
-                        supabase.auth.signOut().then(() => {
+                        supabase.auth.signOut({ scope: 'local' }).then(() => {
                             router.push('/login?kicked=1')
                         })
                     }

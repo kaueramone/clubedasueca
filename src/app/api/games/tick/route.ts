@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { autoPlayForPlayer } from '@/features/game/actions'
+import { autoPlayForPlayer } from '@/features/game/internal'
 
 export const dynamic = 'force-dynamic'
 
 // Tolerância: turno parado há mais deste tempo (segundos) é considerado AFK.
-// O client já tem timer visual de 15s; 30s no servidor é a rede de segurança.
+// O cliente apresenta o prazo absoluto de 30s decidido pelo servidor.
 const TURN_TIMEOUT_SECONDS = 30
 
 // Watchdog autoritativo de turnos.
@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
         .select('id')
         .eq('status', 'playing')
         .lt('turn_started_at', cutoff)
+        .limit(100)
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 })

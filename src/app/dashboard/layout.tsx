@@ -1,3 +1,4 @@
+import { BetaNotice } from '@/components/beta-notice'
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { createClient } from "@/lib/supabase/server";
@@ -46,7 +47,8 @@ export default async function DashboardLayout({
     const { count: pendingCount } = await supabase
         .from('friendships')
         .select('id', { count: 'exact', head: true })
-        .eq('friend_id', user.id)
+        .neq('sender_id', user.id)
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('status', 'pending');
 
     const { count: unreadMessagesCount } = await supabase
@@ -59,7 +61,7 @@ export default async function DashboardLayout({
 
     return (
         <div className="flex h-[100dvh] bg-ios-gray6">
-            <UserPresence userId={user.id} email={user.email || ''} />
+            <UserPresence userId={user.id} />
             <Sidebar userEmail={user.email} pendingCount={totalNotifications} userId={user.id} initialChatUnread={unreadMessagesCount || 0} />
             <div className="flex flex-1 flex-col overflow-hidden">
                 {/* Global Dashboard Header */}
@@ -83,7 +85,7 @@ export default async function DashboardLayout({
                         <div className="hidden md:flex items-center gap-3">
                             <HeaderBalance initialBalance={wallet?.balance || 0} userId={user.id} />
                             <Link href="/dashboard/wallet/deposit" className="bg-success/10 text-success hover:bg-success hover:text-white transition-colors border border-success/20 px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm">
-                                Depositar
+                                Créditos de teste
                             </Link>
                         </div>
 
@@ -109,6 +111,7 @@ export default async function DashboardLayout({
                     </div>
                 </header>
 
+            <BetaNotice />
                 <main className="flex-1 overflow-y-auto pb-20 md:pb-0 p-4 md:p-8">
                     {children}
                 </main>
