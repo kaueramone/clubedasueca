@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-10",
+  "platform": "https://clubedasueca.co.mz",
+  "method": "Actual authenticated admin UI save/publish, actual community UI send, production webhook/provider response, actual admin UI restore",
+  "topic": "community",
+  "published": {
+    "revision": 3,
+    "is_active": true,
+    "published_updated": true
+  },
+  "question": {
+    "id": "226c45bd-c32f-4ce3-b5ff-c7ca0b1b3e39",
+    "content": "Teste técnico da atualização da base: Bot, qual é a expressão de verificação de 10/10/2026? Isso dá créditos?",
+    "created_at": "2026-10-10 17:11:05.989051+00"
+  },
+  "answer": {
+    "id": "942452a6-5d0d-4daf-8a65-2a8063d8df9f",
+    "content": "A expressão de verificação do teste técnico de 10/10/2026 é «Mesa Verde 47», apenas uma identificação do teste. Não é código promocional e não concede créditos. São créditos fictícios do beta.",
+    "created_at": "2026-10-10 17:11:09.575845+00"
+  },
+  "responseLatencySeconds": 3.586,
+  "questionDidNotContainExpectedPhrase": true,
+  "answerContainedPublishedPhrase": true,
+  "restored": {
+    "revision": 5,
+    "is_active": true,
+    "no_pending_draft": true,
+    "original_restored": true,
+    "audited_changes": 4,
+    "nonzero_or_wrong_currency_wallets": 0
+  },
+  "codeChanges": false,
+  "newDeploymentRequired": false,
+  "testMessages": "Retained as explicitly labelled technical test in community chat",
+  "screenshots": [
+    "knowledge-live-published-2026-10-10.png",
+    "knowledge-live-chat-2026-10-10.png",
+    "knowledge-live-restored-2026-10-10.png"
+  ]
+}
