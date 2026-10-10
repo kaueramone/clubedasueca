@@ -99,6 +99,7 @@ export async function signup(prevState: unknown, formData: FormData) {
         email,
         password,
         options: {
+            emailRedirectTo: `${recoveryOrigin((await headers()).get('origin'), process.env.NEXT_PUBLIC_BASE_URL, process.env.NODE_ENV === 'development')}/auth/callback`,
             data: {
                 full_name: fullName,
                 birth_date: birthDate,

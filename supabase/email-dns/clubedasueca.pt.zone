@@ -1,0 +1,6 @@
+$ORIGIN clubedasueca.pt.
+$TTL 300
+resend._domainkey IN TXT "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHmFe7scYG4P03ppVrh8NTDy/MrKusU2wDlbI6CEiUsX9lPrhiPPg3U4EEAs++PoKkM8SQL+d5Te+L+2kmQpxgU421x5wGP0dgKajiTa6Rg1JqNzf8GiQMc7v2a8Nm4UgvTxXLR8cx/IckH/Y6ffGyzPCnM7LAl48Hh2RAkIf/iQIDAQAB"
+send IN MX 10 feedback-smtp.eu-west-1.amazonses.com.
+send IN TXT "v=spf1 include:amazonses.com ~all"
+rsend IN CNAME send.forge.rmta.net.
