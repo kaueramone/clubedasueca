@@ -1,0 +1,248 @@
+{
+  "gameId": "a760694e-f480-46a2-84b5-1dc7b6d5e75e",
+  "results": [
+    {
+      "name": "Snapshot player 1 hides all other hands",
+      "pass": true
+    },
+    {
+      "name": "RLS direct hand read player 1",
+      "pass": true
+    },
+    {
+      "name": "Snapshot player 2 hides all other hands",
+      "pass": true
+    },
+    {
+      "name": "RLS direct hand read player 2",
+      "pass": true
+    },
+    {
+      "name": "Snapshot player 3 hides all other hands",
+      "pass": true
+    },
+    {
+      "name": "RLS direct hand read player 3",
+      "pass": true
+    },
+    {
+      "name": "Snapshot player 4 hides all other hands",
+      "pass": true
+    },
+    {
+      "name": "RLS direct hand read player 4",
+      "pass": true
+    },
+    {
+      "name": "Anonymous table snapshot",
+      "pass": true,
+      "detail": "permission denied for function get_table_state"
+    },
+    {
+      "name": "Play out of turn",
+      "pass": true,
+      "detail": "Não é a sua vez"
+    },
+    {
+      "name": "Impersonate another player",
+      "pass": true,
+      "detail": "Não autorizado"
+    },
+    {
+      "name": "Malformed card",
+      "pass": true,
+      "detail": "Carta não está na sua mão"
+    },
+    {
+      "name": "Card not in own hand",
+      "pass": true,
+      "detail": "Carta não está na sua mão"
+    },
+    {
+      "name": "Refuse to follow suit",
+      "pass": true,
+      "detail": "Tens de seguir o naipe de saída!"
+    },
+    {
+      "name": "Force forged 120-0 settlement",
+      "pass": true,
+      "detail": "permission denied for function process_game_end"
+    },
+    {
+      "name": "Force redeal",
+      "pass": true,
+      "detail": "permission denied for function deal_cards_for_game"
+    },
+    {
+      "name": "Direct score/result mutation",
+      "pass": true,
+      "detail": "RLS returned 0 changed rows; authoritative snapshot unchanged"
+    },
+    {
+      "name": "Direct own hand mutation",
+      "pass": true,
+      "detail": "RLS returned 0 changed rows; authoritative snapshot unchanged"
+    },
+    {
+      "name": "Direct move injection",
+      "pass": true,
+      "detail": "new row violates row-level security policy for table \"game_moves\""
+    },
+    {
+      "name": "Escalate profile to admin",
+      "pass": true,
+      "detail": "Campos protegidos: contacte o apoio"
+    },
+    {
+      "name": "Join game on behalf of another user",
+      "pass": true,
+      "detail": "Não autorizado"
+    },
+    {
+      "name": "Concurrent duplicate play is applied once",
+      "pass": true,
+      "detail": "Successes=1; hand 4 -> 3; rejected=Carta não está na sua mão"
+    },
+    {
+      "name": "Independent replay validates ownership, suit and turn sequence",
+      "pass": true,
+      "detail": "40 distinct moves replayed through ten tricks"
+    },
+    {
+      "name": "Independent score reconstruction",
+      "pass": true,
+      "detail": "Calculated 84-36; stored 84-36"
+    },
+    {
+      "name": "Replay after game finished",
+      "pass": true,
+      "detail": "Jogo não está ativo"
+    },
+    {
+      "name": "Forged result retry cannot change completed game",
+      "pass": true,
+      "detail": "permission denied for function process_game_end"
+    },
+    {
+      "name": "Editable user metadata cannot grant admin access",
+      "pass": true,
+      "detail": "is_admin() remains false after role=admin user metadata"
+    },
+    {
+      "name": "Modified JWT role fails signature verification",
+      "pass": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "Reject invalid stake 0",
+      "pass": true,
+      "detail": "Entrada inválida"
+    },
+    {
+      "name": "Reject invalid stake -50",
+      "pass": true,
+      "detail": "Entrada inválida"
+    },
+    {
+      "name": "Reject invalid stake NaN",
+      "pass": true,
+      "detail": "Entrada inválida"
+    },
+    {
+      "name": "Reject invalid stake Infinity",
+      "pass": true,
+      "detail": "Entrada inválida"
+    },
+    {
+      "name": "Reject invalid stake 10000.01",
+      "pass": true,
+      "detail": "Entrada inválida"
+    },
+    {
+      "name": "Reject invalid stake 50.001",
+      "pass": true,
+      "detail": "Entrada inválida"
+    },
+    {
+      "name": "Credit another player wallet",
+      "pass": true,
+      "detail": "Não autorizado"
+    },
+    {
+      "name": "Withdrawal stays disabled in beta",
+      "pass": true,
+      "detail": "No beta não existem levantamentos. Os créditos são fictícios e serão repostos a zero no lançamento."
+    },
+    {
+      "name": "User cannot invoke admin bonus grant",
+      "pass": true,
+      "detail": "Não autorizado"
+    },
+    {
+      "name": "Unauthenticated internal endpoint /api/games/tick",
+      "pass": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "Unauthenticated internal endpoint /api/community/respond",
+      "pass": true,
+      "detail": "HTTP 401"
+    },
+    {
+      "name": "Concurrent duplicate join applies once",
+      "pass": true,
+      "detail": "Idempotent retry returns success/already_joined by design. Independent SQL verified exactly 1 seat and 1 bet debit for the repeated player, and 4 seats/4 bets total. Initial harness wrongly required one HTTP/RPC failure."
+    },
+    {
+      "name": "Duplicate join leaves exactly four seats",
+      "pass": true,
+      "detail": "four unique player seats"
+    },
+    {
+      "name": "Premature timeout rejected",
+      "pass": true,
+      "detail": "O turno ainda não terminou"
+    },
+    {
+      "name": "Four concurrent expired timeout requests play once",
+      "pass": true,
+      "detail": "successful calls=1; total remaining cards=39"
+    },
+    {
+      "name": "Concurrency test table also completes normally",
+      "pass": true,
+      "detail": "Score 51-69"
+    },
+    {
+      "name": "Cannot refund completed game again",
+      "pass": true,
+      "detail": "Não é possível cancelar um jogo em andamento"
+    },
+    {
+      "name": "Cannot leave completed game for refund",
+      "pass": true,
+      "detail": "Não é possível sair de um jogo em andamento (O Bot assumirá o lugar automáticamente após timeout ou refresh)."
+    },
+    {
+      "name": "Null acting user rejected",
+      "pass": true,
+      "detail": "Não autorizado"
+    },
+    {
+      "name": "Banned account cannot create a game with an existing access token",
+      "pass": true,
+      "detail": "permission denied for function process_create_game"
+    },
+    {
+      "name": "Anonymous client cannot spoof a table chat broadcast",
+      "pass": false,
+      "detail": "Anonymous subscriptions accepted; send=ok; anonymous receiver observed forged sender=true. Target was only the completed QA table; no real player messages."
+    }
+  ],
+  "raceGameId": "cc3a3e3a-4041-40af-8bb0-828bd9d70297",
+  "cleanup": {
+    "accounts_disabled": 4,
+    "sessions_globally_revoked": true,
+    "audit_game_records_preserved": true
+  }
+}

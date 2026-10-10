@@ -1,0 +1,60 @@
+{
+  "gameId": "a760694e-f480-46a2-84b5-1dc7b6d5e75e",
+  "trump": "spades",
+  "score": {
+    "A": 84,
+    "B": 36
+  },
+  "tricks": [
+    {
+      "trick": 1,
+      "winner_position": 3,
+      "points": 2
+    },
+    {
+      "trick": 2,
+      "winner_position": 0,
+      "points": 14
+    },
+    {
+      "trick": 3,
+      "winner_position": 0,
+      "points": 14
+    },
+    {
+      "trick": 4,
+      "winner_position": 2,
+      "points": 2
+    },
+    {
+      "trick": 5,
+      "winner_position": 3,
+      "points": 10
+    },
+    {
+      "trick": 6,
+      "winner_position": 3,
+      "points": 18
+    },
+    {
+      "trick": 7,
+      "winner_position": 2,
+      "points": 4
+    },
+    {
+      "trick": 8,
+      "winner_position": 3,
+      "points": 6
+    },
+    {
+      "trick": 9,
+      "winner_position": 0,
+      "points": 15
+    },
+    {
+      "trick": 10,
+      "winner_position": 0,
+      "points": 35
+    }
+  ]
+}

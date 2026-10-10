@@ -1,0 +1,30 @@
+[
+  {
+    "verified": {
+      "fee": 40,
+      "bets": 4,
+      "wins": 2,
+      "moves": 40,
+      "status": "finished",
+      "game_id": "a760694e-f480-46a2-84b5-1dc7b6d5e75e",
+      "score_a": 84,
+      "score_b": 36,
+      "distinct_cards": 40,
+      "settlement_count": 1
+    }
+  },
+  {
+    "verified": {
+      "fee": 40,
+      "bets": 4,
+      "wins": 2,
+      "moves": 40,
+      "status": "finished",
+      "game_id": "cc3a3e3a-4041-40af-8bb0-828bd9d70297",
+      "score_a": 51,
+      "score_b": 69,
+      "distinct_cards": 40,
+      "settlement_count": 1
+    }
+  }
+]

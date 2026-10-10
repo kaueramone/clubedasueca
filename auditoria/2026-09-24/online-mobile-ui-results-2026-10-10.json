@@ -1,0 +1,346 @@
+{
+  "gameId": "a760694e-f480-46a2-84b5-1dc7b6d5e75e",
+  "views": [
+    {
+      "document": [
+        394,
+        740
+      ],
+      "hand": 0,
+      "result": "Vitória!Parabéns, a sua equipa venceu.Prémio da dupla: 160.00 créditos de testeTaxa de 20%, ajustada ao cêntimo: 40.00 créditos. Cada vencedor recebe 80.00 créditos; ganho líquido 30.00.Nós (A)84Eles (B)36SairNova Partida",
+      "score": "Placar: Nós 84, Eles 36",
+      "viewport": [
+        394,
+        740
+      ]
+    },
+    {
+      "document": [
+        394,
+        740
+      ],
+      "hand": 0,
+      "result": "Derrota!Não foi desta vez.Prémio da dupla: 160.00 créditos de testeTaxa de 20%, ajustada ao cêntimo: 40.00 créditos. Cada vencedor recebe 80.00 créditos; ganho líquido 30.00.Nós (B)36Eles (A)84SairNova Partida",
+      "score": "Placar: Nós 36, Eles 84",
+      "viewport": [
+        394,
+        740
+      ]
+    },
+    {
+      "document": [
+        394,
+        740
+      ],
+      "hand": 0,
+      "result": "Vitória!Parabéns, a sua equipa venceu.Prémio da dupla: 160.00 créditos de testeTaxa de 20%, ajustada ao cêntimo: 40.00 créditos. Cada vencedor recebe 80.00 créditos; ganho líquido 30.00.Nós (A)84Eles (B)36SairNova Partida",
+      "score": "Placar: Nós 84, Eles 36",
+      "viewport": [
+        394,
+        740
+      ]
+    },
+    {
+      "document": [
+        394,
+        740
+      ],
+      "hand": 0,
+      "result": "Derrota!Não foi desta vez.Prémio da dupla: 160.00 créditos de testeTaxa de 20%, ajustada ao cêntimo: 40.00 créditos. Cada vencedor recebe 80.00 créditos; ganho líquido 30.00.Nós (B)36Eles (A)84SairNova Partida",
+      "score": "Placar: Nós 36, Eles 84",
+      "viewport": [
+        394,
+        740
+      ]
+    }
+  ],
+  "moves": [
+    {
+      "player": 2,
+      "card": "4 de copas",
+      "before": 10,
+      "selected": "true",
+      "after": 10
+    },
+    {
+      "player": 3,
+      "card": "2 de copas",
+      "before": 10,
+      "selected": "true",
+      "unchanged": true,
+      "after": 9
+    },
+    {
+      "player": 4,
+      "card": "Dama de copas",
+      "before": 10,
+      "selected": "true",
+      "unchanged": true,
+      "after": 9
+    },
+    {
+      "player": 1,
+      "card": "3 de copas",
+      "before": 10,
+      "selected": "true",
+      "unchanged": true,
+      "after": 9
+    },
+    {
+      "player": 4,
+      "card": "Rei de copas",
+      "before": 9,
+      "selected": "true",
+      "unchanged": true,
+      "after": 8
+    },
+    {
+      "player": 1,
+      "card": "7 de copas",
+      "before": 9,
+      "selected": "true",
+      "unchanged": true,
+      "after": 8
+    },
+    {
+      "player": 2,
+      "card": "6 de copas",
+      "before": 9,
+      "selected": "true",
+      "unchanged": true,
+      "after": 8
+    },
+    {
+      "player": 3,
+      "card": "5 de copas",
+      "before": 9,
+      "selected": "true",
+      "unchanged": true,
+      "after": 8
+    },
+    {
+      "player": 1,
+      "card": "Ás de copas",
+      "before": 8,
+      "selected": "true",
+      "unchanged": true,
+      "after": 7
+    },
+    {
+      "player": 2,
+      "card": "Valete de copas",
+      "before": 8,
+      "selected": "true",
+      "unchanged": true,
+      "after": 7
+    },
+    {
+      "player": 3,
+      "card": "6 de ouros",
+      "before": 8,
+      "selected": "true",
+      "unchanged": true,
+      "after": 7
+    },
+    {
+      "player": 4,
+      "card": "3 de ouros",
+      "before": 8,
+      "selected": "true",
+      "unchanged": true,
+      "after": 7
+    },
+    {
+      "player": 1,
+      "card": "4 de ouros",
+      "before": 7,
+      "selected": "true",
+      "unchanged": true,
+      "after": 6
+    },
+    {
+      "player": 2,
+      "card": "2 de ouros",
+      "before": 7,
+      "selected": "true",
+      "unchanged": true,
+      "after": 6
+    },
+    {
+      "player": 3,
+      "card": "Dama de ouros",
+      "before": 7,
+      "selected": "true",
+      "unchanged": true,
+      "after": 6
+    },
+    {
+      "player": 4,
+      "card": "5 de ouros",
+      "before": 7,
+      "selected": "true",
+      "unchanged": true,
+      "after": 6
+    },
+    {
+      "player": 3,
+      "card": "2 de paus",
+      "before": 6,
+      "selected": "true",
+      "unchanged": true,
+      "after": 5
+    },
+    {
+      "player": 1,
+      "card": "3 de paus",
+      "before": 6,
+      "selected": "true",
+      "unchanged": true,
+      "after": 5
+    },
+    {
+      "player": 2,
+      "card": "4 de paus",
+      "before": 6,
+      "selected": "true",
+      "unchanged": true,
+      "after": 5
+    },
+    {
+      "player": 4,
+      "card": "Ás de ouros",
+      "before": 5,
+      "selected": "true",
+      "unchanged": true,
+      "after": 4
+    },
+    {
+      "player": 1,
+      "card": "Rei de ouros",
+      "before": 5,
+      "selected": "true",
+      "unchanged": true,
+      "after": 4
+    },
+    {
+      "player": 2,
+      "card": "Valete de ouros",
+      "before": 5,
+      "selected": "true",
+      "unchanged": true,
+      "after": 4
+    },
+    {
+      "player": 4,
+      "card": "2 de espadas",
+      "before": 4,
+      "selected": "true",
+      "unchanged": true,
+      "after": 3
+    },
+    {
+      "player": 1,
+      "card": "5 de espadas",
+      "before": 4,
+      "selected": "true",
+      "unchanged": true,
+      "after": 3
+    },
+    {
+      "player": 3,
+      "card": "Rei de paus",
+      "before": 3,
+      "selected": "true",
+      "unchanged": true,
+      "after": 2
+    },
+    {
+      "player": 4,
+      "card": "6 de espadas",
+      "before": 3,
+      "selected": "true",
+      "unchanged": true,
+      "after": 2
+    },
+    {
+      "player": 1,
+      "card": "6 de paus",
+      "before": 3,
+      "selected": "true",
+      "unchanged": true,
+      "after": 2
+    },
+    {
+      "player": 2,
+      "card": "Dama de paus",
+      "before": 3,
+      "selected": "true",
+      "unchanged": true,
+      "after": 2
+    },
+    {
+      "player": 4,
+      "card": "Dama de espadas",
+      "before": 2,
+      "selected": "true",
+      "unchanged": true,
+      "after": 1
+    },
+    {
+      "player": 1,
+      "card": "Valete de espadas",
+      "before": 2,
+      "selected": "true",
+      "unchanged": true,
+      "after": 1
+    },
+    {
+      "player": 2,
+      "card": "7 de ouros",
+      "before": 2,
+      "selected": "true",
+      "unchanged": true,
+      "after": 1
+    },
+    {
+      "player": 3,
+      "card": "4 de espadas",
+      "before": 2,
+      "selected": "true",
+      "unchanged": true,
+      "after": 1
+    },
+    {
+      "player": 1,
+      "card": "Ás de espadas",
+      "before": 1,
+      "selected": "true",
+      "unchanged": true,
+      "after": 0
+    },
+    {
+      "player": 2,
+      "card": "Valete de paus",
+      "before": 1,
+      "selected": "true",
+      "unchanged": true,
+      "after": 0
+    },
+    {
+      "player": 3,
+      "card": "Ás de paus",
+      "before": 1,
+      "selected": "true",
+      "unchanged": true,
+      "after": 0
+    },
+    {
+      "player": 4,
+      "card": "7 de espadas",
+      "before": 1,
+      "selected": "true",
+      "unchanged": true,
+      "after": 0
+    }
+  ]
+}

@@ -1,0 +1,491 @@
+{
+  "lints": [
+    {
+      "name": "rls_enabled_no_policy",
+      "title": "RLS Enabled No Policy",
+      "level": "INFO",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects cases where row level security (RLS) has been enabled on a table but no RLS policies have been created.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+      "count": 5,
+      "findings": [
+        {
+          "detail": "Table \\`private.app_config\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "app_config",
+            "type": "table",
+            "schema": "private"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Table \\`private.commission_effects\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "commission_effects",
+            "type": "table",
+            "schema": "private"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Table \\`private.community_receipts\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "community_receipts",
+            "type": "table",
+            "schema": "private"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Table \\`private.game_effects\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "game_effects",
+            "type": "table",
+            "schema": "private"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Table \\`private.welcome_credits\\` has RLS enabled, but no policies exist",
+          "metadata": {
+            "name": "welcome_credits",
+            "type": "table",
+            "schema": "private"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        }
+      ]
+    },
+    {
+      "name": "security_definer_view",
+      "title": "Security Definer View",
+      "level": "ERROR",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects views defined with the SECURITY DEFINER property. These views enforce Postgres permissions and row level security policies (RLS) of the view creator, rather than that of the querying user",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view",
+      "count": 2,
+      "findings": [
+        {
+          "detail": "View \\`public.public_profiles\\` is defined with the SECURITY DEFINER property",
+          "metadata": {
+            "name": "public_profiles",
+            "type": "view",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "View \\`public.blog_authors\\` is defined with the SECURITY DEFINER property",
+          "metadata": {
+            "name": "blog_authors",
+            "type": "view",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        }
+      ]
+    },
+    {
+      "name": "function_search_path_mutable",
+      "title": "Function Search Path Mutable",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects functions where the search_path parameter is not set.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+      "count": 4,
+      "findings": [
+        {
+          "detail": "Function \\`public.card_suit\\` has a role mutable search_path",
+          "metadata": {
+            "name": "card_suit",
+            "type": "function",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function \\`public.card_rank\\` has a role mutable search_path",
+          "metadata": {
+            "name": "card_rank",
+            "type": "function",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function \\`public.card_value\\` has a role mutable search_path",
+          "metadata": {
+            "name": "card_value",
+            "type": "function",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function \\`public.card_strength\\` has a role mutable search_path",
+          "metadata": {
+            "name": "card_strength",
+            "type": "function",
+            "schema": "public"
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        }
+      ]
+    },
+    {
+      "name": "anon_security_definer_function_executable",
+      "title": "Public Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable without signing in. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if it is not meant to be public.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+      "count": 2,
+      "findings": [
+        {
+          "detail": "Function `public.increment_blog_views(p_post_id uuid)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/increment_blog_views`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "increment_blog_views",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_post_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.track_affiliate_click(p_code text)` can be executed by the `anon` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/track_affiliate_click`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "track_affiliate_click",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_code text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        }
+      ]
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Detects `SECURITY DEFINER` functions that are callable by signed-in users. Revoke `EXECUTE`, switch the function to `SECURITY INVOKER`, or move it out of your exposed API schema if signed-in users should not call it.",
+      "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+      "count": 25,
+      "findings": [
+        {
+          "detail": "Function `public.admin_apply_bonus(p_user_id uuid, p_bonus_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/admin_apply_bonus`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "admin_apply_bonus",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_bonus_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.append_support_message(p_conversation_id uuid, p_message text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/append_support_message`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "append_support_message",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conversation_id uuid, p_message text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.create_support_ticket(p_subject text, p_message text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/create_support_ticket`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "create_support_ticket",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_subject text, p_message text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.get_table_state(p_game_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/get_table_state`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "get_table_state",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_game_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.increment_blog_views(p_post_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/increment_blog_views`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "increment_blog_views",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_post_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.is_admin()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_admin`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "is_admin",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.is_game_participant(p_game_id uuid, p_uid uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_game_participant`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "is_game_participant",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_game_id uuid, p_uid uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.is_game_waiting(p_game_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/is_game_waiting`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "is_game_waiting",
+            "schema": "public",
+            "language": "sql",
+            "arguments": "p_game_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.pay_affiliate(p_affiliate_id uuid, p_amount numeric, p_admin_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/pay_affiliate`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "pay_affiliate",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_affiliate_id uuid, p_amount numeric, p_admin_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_cancel_game(p_user_id uuid, p_game_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_cancel_game`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_cancel_game",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_game_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_create_game(p_user_id uuid, p_stake numeric)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_create_game`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_create_game",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_stake numeric",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_deposit(p_user_id uuid, p_amount numeric)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_deposit`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_deposit",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_amount numeric",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_join_game(p_user_id uuid, p_game_id uuid, p_preferred_team text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_join_game`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_join_game",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_game_id uuid, p_preferred_team text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_leave_game(p_user_id uuid, p_game_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_leave_game`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_leave_game",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_game_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_play_card(p_game_id uuid, p_card text, p_acting_user_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_play_card`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_play_card",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_game_id uuid, p_card text, p_acting_user_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_turn_timeout(p_game_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_turn_timeout`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_turn_timeout",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_game_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.process_withdrawal(p_user_id uuid, p_amount numeric, p_pix_key text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/process_withdrawal`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "process_withdrawal",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_amount numeric, p_pix_key text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.record_banner_click(p_banner_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/record_banner_click`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "record_banner_click",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_banner_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.redeem_promo_code(p_user_id uuid, p_code text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/redeem_promo_code`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "redeem_promo_code",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_user_id uuid, p_code text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.register_affiliate_referral(p_referred_user_id uuid, p_ref_code text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/register_affiliate_referral`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "register_affiliate_referral",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_referred_user_id uuid, p_ref_code text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.resolve_support_ticket(p_conversation_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/resolve_support_ticket`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "resolve_support_ticket",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conversation_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.set_support_ticket_status(p_conversation_id uuid, p_status text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/set_support_ticket_status`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "set_support_ticket_status",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_conversation_id uuid, p_status text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.touch_last_seen()` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/touch_last_seen`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "touch_last_seen",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.track_affiliate_click(p_code text)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/track_affiliate_click`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "track_affiliate_click",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_code text",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        },
+        {
+          "detail": "Function `public.update_affiliate_status_admin(p_affiliate_id uuid, p_status text, p_admin_id uuid)` can be executed by the `authenticated` role as a `SECURITY DEFINER` function via `/rest/v1/rpc/update_affiliate_status_admin`. Revoke `EXECUTE` or switch it to `SECURITY INVOKER` if that is not intentional.",
+          "metadata": {
+            "name": "update_affiliate_status_admin",
+            "schema": "public",
+            "language": "plpgsql",
+            "arguments": "p_affiliate_id uuid, p_status text, p_admin_id uuid",
+            "security_definer": true
+          },
+          "observed_at": "2026-10-10T15:05:09.504Z"
+        }
+      ]
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "title": "Leaked Password Protection Disabled",
+      "level": "WARN",
+      "facing": "EXTERNAL",
+      "categories": [
+        "SECURITY"
+      ],
+      "description": "Leaked password protection is currently disabled.",
+      "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+      "count": 1,
+      "findings": [
+        {
+          "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+          "metadata": {
+            "type": "auth",
+            "entity": "Auth"
+          }
+        }
+      ]
+    }
+  ]
+}
