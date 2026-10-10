@@ -7,6 +7,8 @@ import {
   sendChatMessage,
 } from "@/features/chat/actions";
 
+import { supportStatuses, supportStatus } from "@/features/chat/status";
+
 type Ticket = {
   id: string;
   subject: string;
@@ -18,13 +20,6 @@ type Message = {
   message: string;
   is_bot: boolean;
   sender?: { username: string } | null;
-};
-const statusLabel: Record<string, string> = {
-  waiting_agent: "Na fila da equipa",
-  open: "Aberto",
-  active: "Em atendimento",
-  resolved: "Resolvido",
-  closed: "Fechado",
 };
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -179,7 +174,7 @@ export default function SupportPage() {
           <strong>{t.subject}</strong>
           <br />
           <span className="text-sm break-all">
-            {t.id} · {statusLabel[t.status] || t.status} · Responsável:{" "}
+            {t.id} · {supportStatuses[supportStatus(t.status)]} · Responsável:{" "}
             {t.agent?.username || "A atribuir"}
           </span>
         </button>
@@ -202,7 +197,7 @@ export default function SupportPage() {
           ))}
           <form onSubmit={reply} className="space-y-3">
             <label htmlFor="reply">
-              Nova mensagem / pedir atendimento humano
+              Nova mensagem (também pode responder a pedidos resolvidos)
             </label>
             <textarea
               id="reply"

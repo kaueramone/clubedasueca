@@ -175,12 +175,11 @@ export async function sendDirectMessage(
   if (!content && !imageUrl) return { error: "Message cannot be empty" };
 
   if (receiverId === SUPPORT_CONTACT_ID) {
-    // Find existing open conversation
+    // Continue the latest support conversation, including resolved tickets.
     const { data: conv } = await supabase
       .from("live_conversations")
       .select("id")
       .eq("user_id", user.id)
-      .in("status", ["open", "waiting_agent", "active"])
       .order("created_at", { ascending: false })
       .limit(1)
       .single();

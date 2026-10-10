@@ -56,7 +56,8 @@ async function main() {
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/106_beta_security_and_game_contract.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/107_support_integrity.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/108_review_accounting_and_admin.sql'),'utf8'));
-  console.log('PASS migrations 106/107/108 apply to isolated PostgreSQL');
+  await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010120123_support_reopenable_status.sql'),'utf8'));
+  console.log('PASS migrations 106/107/108 and support status apply to isolated PostgreSQL');
   await deny(`INSERT INTO auth.users VALUES ('${uid(9)}','minor@example.invalid','{"birth_date":"2020-01-01"}',now())`,'minor via auth API rejected');
   for(let n=1;n<=5;n++) {
     await run(`INSERT INTO auth.users VALUES ('${uid(n)}','test${n}@example.invalid','{"birth_date":"1990-01-01","full_name":"Test ${n}"}',${n===5?'NULL':'now()'})`);
@@ -184,9 +185,39 @@ async function main() {
   await run(`SELECT append_support_message('${ticket}','Vamos ajudar')`);
   await run(`SELECT resolve_support_ticket('${ticket}')`);
   check((await run(`SELECT status FROM live_conversations WHERE id='${ticket}'`)).rows[0].status==='resolved','assigned admin resolves ticket');
+  await run(`SELECT append_support_message('${ticket}','Follow-up after resolution')`);
+  check((await run(`SELECT status,resolved_at FROM live_conversations WHERE id='${ticket}'`)).rows[0].status==='active','admin reply reopens resolved ticket');
+  for (const state of ['resolved','waiting_agent','active','resolved']) {
+    await run(`SELECT set_support_ticket_status('${ticket}','${state}')`);
+    const row=(await run(`SELECT status,resolved_at FROM live_conversations WHERE id='${ticket}'`)).rows[0];
+    check(row.status===state && (state==='resolved' ? row.resolved_at!==null : row.resolved_at===null),'status transitions and resolution timestamp');
+  }
+  const before=(await run(`SELECT count(*) n FROM live_messages WHERE conversation_id='${ticket}'`)).rows[0].n;
+  await run(`SELECT set_support_ticket_status('${ticket}','resolved')`);
+  check((await run(`SELECT count(*) n FROM live_messages WHERE conversation_id='${ticket}'`)).rows[0].n===before,'same status is idempotent');
+  await deny(`SELECT set_support_ticket_status('${ticket}','closed')`,'unsupported status denied');
+  await asUser(uid(1));
+  await deny(`SELECT set_support_ticket_status('${ticket}','active')`,'user status mutation denied');
+  await asUser(null,'anon');
+  await deny(`SELECT set_support_ticket_status('${ticket}','active')`,'anonymous status mutation denied');
+  await owner(); await run(`UPDATE profiles SET role='admin' WHERE id='${uid(3)}'`);
+  await asUser(uid(3));
+  await deny(`SELECT set_support_ticket_status('${ticket}','active')`,'other assigned agent cannot take over');
+  await deny(`SELECT append_support_message('${ticket}','Takeover')`,'other assigned agent cannot reply');
+  await owner(); await run(`UPDATE profiles SET role='user' WHERE id='${uid(3)}'`);
   await asUser(uid(1)); await run(`SELECT append_support_message('${ticket}','Preciso de revisão')`);
   check((await run(`SELECT status FROM live_conversations WHERE id='${ticket}'`)).rows[0].status==='waiting_agent','user reopens resolved ticket');
   await owner();
+  const unassigned=(await run(`INSERT INTO live_conversations(user_id,status,subject,resolved_at) VALUES('${uid(1)}','closed','Unassigned',now()) RETURNING id`)).rows[0].id;
+  await asUser(uid(4));
+  await run(`SELECT append_support_message('${unassigned}','Continue support')`);
+  const reopened=(await run(`SELECT status,agent_id,resolved_at FROM live_conversations WHERE id='${unassigned}'`)).rows[0];
+  check(reopened.status==='active' && reopened.agent_id===uid(4) && reopened.resolved_at===null,'reply to unassigned closed ticket claims it and clears resolution');
+  await owner(); await run(`UPDATE profiles SET is_banned=true WHERE id='${uid(4)}'`);
+  await asUser(uid(4));
+  await deny(`SELECT set_support_ticket_status('${ticket}','resolved')`,'banned admin status denied');
+  await deny(`SELECT append_support_message('${ticket}','Banned')`,'banned admin reply denied');
+  await owner(); await run(`UPDATE profiles SET is_banned=false WHERE id='${uid(4)}'`);
   const legacy=(await run(`INSERT INTO support_tickets(user_id,subject) VALUES('${uid(1)}','Legacy') RETURNING id`)).rows[0].id;
   await run(`INSERT INTO support_messages(ticket_id,sender_id,message) VALUES('${legacy}','${uid(1)}','Private')`);
   await asUser(uid(2));

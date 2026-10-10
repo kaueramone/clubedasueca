@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import { getBotResponse } from "./bot-responses";
+import { supportStatuses, type SupportStatus } from "./status";
 
 async function context(admin = false) {
   const supabase = await createClient();
@@ -87,7 +88,7 @@ export async function startConversation(
   return { success: true, conversationId: String(conversationId) };
 }
 
-export async function sendChatMessage(conversationId: string, message: string) {
+export async function sendChatMessage(conversationId: string, message: string): Promise<{ error?: string; success?: boolean; status?: string }> {
   const { supabase, user, isAdmin } = await context();
   if (!message.trim() || message.length > 4000)
     return { error: "A mensagem deve ter entre 1 e 4000 caracteres." };
@@ -105,7 +106,7 @@ export async function sendChatMessage(conversationId: string, message: string) {
   if (error) return { error: "Não foi possível enviar a mensagem." };
   revalidatePath("/dashboard/support");
   revalidatePath("/admin/chat");
-  return { success: true };
+  return { success: true, status: isAdmin ? "active" : "waiting_agent" };
 }
 
 export async function getChatMessages(conversationId: string) {
@@ -142,39 +143,34 @@ export async function adminGetConversations(statusFilter?: string) {
     .order("updated_at", { ascending: false })
     .limit(200);
   if (statusFilter && statusFilter !== "all")
-    query = query.eq("status", statusFilter);
+    query = statusFilter === "waiting_agent"
+      ? query.in("status", ["open", "waiting_agent"])
+      : statusFilter === "resolved"
+        ? query.in("status", ["resolved", "closed"])
+        : query.eq("status", statusFilter);
   const { data, error } = await query;
   return error
     ? { error: "Não foi possível carregar os pedidos." }
     : { conversations: data };
 }
 
-export async function adminAssignConversation(conversationId: string) {
-  const { user } = await context(true);
-  const { data, error } = await createServiceClient()
-    .from("live_conversations")
-    .update({
-      agent_id: user.id,
-      status: "active",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", conversationId)
-    .in("status", ["open", "waiting_agent", "active"])
-    .or(`agent_id.is.null,agent_id.eq.${user.id}`)
-    .select("id")
-    .maybeSingle();
-  if (error || !data)
-    return { error: "Pedido indisponível ou atribuído a outro agente." };
+export async function adminUpdateConversationStatus(conversationId: string, status: SupportStatus) {
+  const { supabase } = await context(true);
+  if (!Object.hasOwn(supportStatuses, status)) return { error: "Estado inválido." };
+  const { data, error } = await supabase.rpc("set_support_ticket_status", {
+    p_conversation_id: conversationId,
+    p_status: status,
+  });
+  if (error || !data) return { error: "Não foi possível alterar o estado. Verifique se o pedido está atribuído a outro agente." };
   revalidatePath("/admin/chat");
-  return { success: true };
+  revalidatePath("/dashboard/support");
+  return { success: true, conversation: data };
+}
+
+export async function adminAssignConversation(conversationId: string) {
+  return adminUpdateConversationStatus(conversationId, "active");
 }
 
 export async function adminResolveConversation(conversationId: string) {
-  const { supabase } = await context(true);
-  const { error } = await supabase.rpc("resolve_support_ticket", {
-    p_conversation_id: conversationId,
-  });
-  if (error) return { error: "Não foi possível resolver o pedido." };
-  revalidatePath("/admin/chat");
-  return { success: true };
+  return adminUpdateConversationStatus(conversationId, "resolved");
 }
