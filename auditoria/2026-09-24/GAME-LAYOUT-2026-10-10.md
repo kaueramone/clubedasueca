@@ -25,3 +25,9 @@ Os testes visuais usam Chromium com dimensões de telemóvel; não representam t
 
 - [Apple: Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons) — dimensão dos alvos de toque.
 - [WebKit: Safari 15.4](https://webkit.org/blog/12445/new-webkit-features-in-safari-15-4/) — unidades dinâmicas de viewport.
+
+## Publicação
+
+Código `a01ba75e1fa16abb9fca6818f8d6d19a56336d71`, deployment `dpl_FsNBCg5jFpGJXdrHw6gHJVTPh4dG`: READY, produção, com os domínios .pt/.co.mz/.com/.com.br atribuídos e sem erro de alias. Build de produção concluído.
+
+Conferido `https://clubedasueca.co.mz/demo` em 393×740: dez cartas de ~64×91px totalmente visíveis, documento sem excesso de largura/altura e sem erros de consola. Evidência: `game-layout-mobile-published-2026-10-10.png`.
