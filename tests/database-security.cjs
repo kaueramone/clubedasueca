@@ -64,6 +64,7 @@ async function main() {
     CREATE FUNCTION extensions.gen_random_bytes(n integer) RETURNS bytea LANGUAGE sql VOLATILE AS $$
       SELECT decode(replace(gen_random_uuid()::text,'-',''),'hex') $$;`);
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010153805_cryptographic_online_shuffle.sql'),'utf8'));
+  await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010163638_community_bot_message_length.sql'),'utf8'));
   const decks=(await run(`SELECT private.secure_sueca_deck() deck FROM generate_series(1,200)`)).rows.map(r=>r.deck);
   check(decks.every(d=>d.length===40 && new Set(d).size===40),'secure shuffle preserves all 40 unique cards');
   check(new Set(decks.map(d=>d.join(','))).size===200,'secure shuffle generates distinct permutations (smoke test, not certification)');
@@ -345,6 +346,9 @@ async function main() {
   let forbiddenCode;
   try { await run(`SELECT get_table_state('${game}')`); } catch(error) { forbiddenCode=error.code; }
   check(forbiddenCode==='42501','inaccessible existing table differs from deleted table');
+  await owner();
+  check((await run(`INSERT INTO global_messages(user_id,content) VALUES('${uid(1)}',repeat('a',500)) RETURNING id`)).rows.length===1,'500-character community answer supported');
+  await deny(`INSERT INTO global_messages(user_id,content) VALUES('${uid(1)}',repeat('a',501))`,'oversized community answer refused');
   console.log(`PASS ${assertions} security/game assertions (local PostgreSQL; no deployed Supabase claim)`);
   await db.close();
 }
