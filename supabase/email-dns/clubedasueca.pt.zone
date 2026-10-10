@@ -4,3 +4,4 @@ resend._domainkey IN TXT "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDHmFe7scYG4P03
 send IN MX 10 feedback-smtp.eu-west-1.amazonses.com.
 send IN TXT "v=spf1 include:amazonses.com ~all"
 rsend IN CNAME send.forge.rmta.net.
+_dmarc IN TXT "v=DMARC1; p=none; adkim=r; aspf=r"

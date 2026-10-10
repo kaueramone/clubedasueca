@@ -21,3 +21,11 @@
 - Não foi pedido um terceiro email de recuperação nesta etapa. A validação do novo hook combina assinatura em produção, testes locais do payload/link e entrega real separada; não equivale a um novo ciclo completo de recuperação pelo email recebido.
 
 Comprovativos: `auth-email-hook-enabled-2026-10-10.png`, `auth-email-dns-pt-2026-10-10.png`, `auth-email-dns-mz-2026-10-10.png`. Valores DNS e reversão documentados em `supabase/templates/AUTH-EMAIL-HOOK.md` e `AUTH-EMAIL-DNS-2026-10-10.md`.
+
+## Retorno do destinatário e DMARC
+
+O proprietário confirmou que recebeu ambos os testes, mas o .co.mz foi colocado no lixo eletrónico do Outlook. Portanto, a entrega foi validada; a colocação na caixa de entrada do .co.mz continua pendente.
+
+A consulta pública confirmou SPF e DKIM publicados, mas ausência de DMARC em ambos os domínios. Foi acrescentado TXT `_dmarc` com `v=DMARC1; p=none; adkim=r; aspf=r` nas duas zonas Cloudflare e confirmado por consulta DNS. A política inicial não determina rejeição/quarentena e não envia relatórios a terceiros. Não garante a pasta de entrada nem demonstra que a ausência de DMARC foi a causa específica. Os cabeçalhos Authentication-Results e X-Forefront-Antispam-Report foram solicitados para diagnóstico adicional. Não foram enviados novos emails nem alteradas senhas.
+
+Fonte: https://www.resend.com/blog/why-your-emails-are-going-to-spam e https://www.resend.com/blog/top-10-email-deliverability-tips .
