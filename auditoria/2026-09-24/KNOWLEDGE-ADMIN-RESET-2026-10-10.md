@@ -18,6 +18,8 @@ Bloqueia execução fora do beta, com tabelas de dinheiro real, partidas ativas 
 - `npm run test:db`: 195 verificações em PostgreSQL isolado, incluindo autorizações, rascunho/publicação/pausa, conflitos, auditoria, MZN e reset/replay.
 - TypeScript, ESLint dos ficheiros alterados e build de produção aprovados.
 - RPC no projeto de produção: guardar, publicar, pausar e reativar aprovados dentro de transação revertida; tópico temporário não permaneceu.
-- Não foi usada sessão autenticada de administrador da aplicação para testar a interface em produção.
+- Interface real verificada no navegador com dados locais: pesquisa, seleção, edição, bloqueio de publicação antes de guardar, formulário de novo tópico e preservação do texto quando a sessão falta. O preview temporário foi removido. Não foi usada sessão autenticada de administrador da aplicação em produção.
+- Corrigida validação HTML do identificador para o padrão Unicode v dos navegadores atuais; letras maiúsculas recusadas no navegador e no servidor.
+- Advisor Supabase: a nova RPC aparece no aviso genérico de funções SECURITY DEFINER executáveis por authenticated; o acesso é intencional e protegido internamente por is_admin(), além das ações e RLS. [Referência do advisor](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable). Demais avisos preexistentes fora do escopo desta alteração.
 
 O recibo final de produção é guardado separadamente, sem dados pessoais nem credenciais.

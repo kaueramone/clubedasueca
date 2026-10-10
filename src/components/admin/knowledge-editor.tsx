@@ -49,7 +49,7 @@ export function KnowledgeEditor({ initialTopics }: { initialTopics: KnowledgeRow
         <form className="min-w-0 space-y-4 rounded-xl border border-border bg-card p-5" onSubmit={e => { e.preventDefault(); void perform('save') }}>
             <h2 className="text-xl font-semibold">{selected ? selected.title : 'Novo tópico'}</h2>
             <label className="block text-sm" htmlFor="knowledge-id">Identificador (letras minúsculas, números, _ ou -)</label>
-            <input id="knowledge-id" className="w-full rounded-lg border border-border p-2" value={id} disabled={busy || Boolean(selected)} required pattern="[a-z][a-z0-9_-]{1,47}" maxLength={48} onChange={e => setId(e.target.value)} />
+            <input id="knowledge-id" className="w-full rounded-lg border border-border p-2" value={id} disabled={busy || Boolean(selected)} required pattern={'[a-z][a-z0-9_\\-]{1,47}'} maxLength={48} onChange={e => setId(e.target.value)} />
             <label className="block text-sm" htmlFor="knowledge-title">Título</label>
             <input id="knowledge-title" className="w-full rounded-lg border border-border p-2" value={title} disabled={busy} required minLength={2} maxLength={100} onChange={e => setTitle(e.target.value)} />
             <label className="block text-sm" htmlFor="knowledge-facts">Informações públicas para o robô</label>
