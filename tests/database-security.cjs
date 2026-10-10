@@ -66,6 +66,7 @@ async function main() {
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010153805_cryptographic_online_shuffle.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010163638_community_bot_message_length.sql'),'utf8'));
   for (const name of ['20261010165010_community_knowledge_admin','20261010165013_enforce_mzn_wallet_currency']) await db.exec(fs.readFileSync(path.join(root, 'supabase/migrations/'+name+'.sql'),'utf8'));
+  await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010191149_enforce_online_turn_deadline.sql'),'utf8'));
   const decks=(await run(`SELECT private.secure_sueca_deck() deck FROM generate_series(1,200)`)).rows.map(r=>r.deck);
   check(decks.every(d=>d.length===40 && new Set(d).size===40),'secure shuffle preserves all 40 unique cards');
   check(new Set(decks.map(d=>d.join(','))).size===200,'secure shuffle generates distinct permutations (smoke test, not certification)');
@@ -167,6 +168,13 @@ async function main() {
   const early=(await run(`SELECT public.process_turn_timeout('${game}') result`)).rows[0].result;
   check(Boolean(early.error),'early timeout refused');
   await owner(); await run(`UPDATE games SET turn_started_at=now()-interval '31 seconds' WHERE id='${game}'`);
+  const expiredPlayer=(await run(`SELECT gp.user_id,gp.hand->>0 card,g.turn_started_at FROM games g JOIN game_players gp ON gp.game_id=g.id AND gp.position=g.current_turn WHERE g.id='${game}'`)).rows[0];
+  const beforeLate=(await run(`SELECT (SELECT count(*) FROM game_moves WHERE game_id='${game}') moves,(SELECT jsonb_agg(hand ORDER BY position) FROM game_players WHERE game_id='${game}') hands`)).rows[0];
+  await asUser(expiredPlayer.user_id);
+  check((await run(`SELECT process_play_card('${game}','${expiredPlayer.card}','${expiredPlayer.user_id}') result`)).rows[0].result.error.includes('Tempo esgotado'),'late manual move refused after server deadline');
+  await owner();
+  check(JSON.stringify((await run(`SELECT (SELECT count(*) FROM game_moves WHERE game_id='${game}') moves,(SELECT jsonb_agg(hand ORDER BY position) FROM game_players WHERE game_id='${game}') hands`)).rows[0])===JSON.stringify(beforeLate),'late move leaves all hands and moves unchanged');
+  check(new Date((await run(`SELECT turn_started_at FROM games WHERE id='${game}'`)).rows[0].turn_started_at).getTime()===new Date(expiredPlayer.turn_started_at).getTime(),'late retry cannot reset turn clock');
   await asUser(uid(1));
   check(!(await run(`SELECT process_turn_timeout('${game}') result`)).rows[0].result.error,'participant can recover expired other turn');
   check(Boolean((await run(`SELECT process_turn_timeout('${game}') result`)).rows[0].result.error),'duplicate timeout cannot play next turn early');
