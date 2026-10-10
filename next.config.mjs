@@ -28,6 +28,13 @@ const nextConfig = {
                     },
                 ],
             },
+            {
+                source: '/auth/confirm',
+                headers: [
+                    { key: 'Referrer-Policy', value: 'no-referrer' },
+                    { key: 'Cache-Control', value: 'no-store' },
+                ],
+            },
         ];
     },
 };

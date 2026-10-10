@@ -19,7 +19,6 @@ function load(file) {
   vm.runInNewContext(source,box);return box.exports;
 }
 const model=load('src/features/auth/recovery.ts');
-const confirm=load('src/app/auth/confirm/route.ts');
 const callback=load('src/app/auth/callback/route.ts');
 const actions=load('src/app/auth/actions.ts');
 function fixture({invalid=false,banned=false,anonymous=false,recovery=false,updateError=null}={}) {
@@ -42,18 +41,30 @@ async function main(){
   check(!!model.passwordValidation('short','short'),'short password denied');
   check(!!model.passwordValidation('ExampleTest123','Mismatch123'),'confirmation mismatch denied');
   check(model.passwordValidation('ExampleTest123','ExampleTest123')===null,'valid confirmed password');
+  // Render the server page itself with a small JSX runtime; GET must never verify an OTP.
+  const source=ts.transpileModule(fs.readFileSync('src/app/auth/confirm/page.tsx','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.ReactJSX}}).outputText;
+  const box={exports:{},require(name){
+    if(name==='react/jsx-runtime')return {jsx:(type,props)=>({type,props}),jsxs:(type,props)=>({type,props})};
+    if(name==='next/link')return {default:'Link'};
+    if(name==='@/components/auth/confirm-recovery-form')return {ConfirmRecoveryForm:'ConfirmRecoveryForm'};
+    if(name==='@/features/auth/recovery')return model;
+    if(name==='next/navigation')return {redirect:url=>{throw Object.assign(new Error('redirect'),{destination:url});}};
+    throw new Error('GET attempted unexpected dependency '+name);
+  }};
+  vm.runInNewContext(source,box);
+  const token='pkce_'+'a'.repeat(56), data=new FormData(); data.set('token_hash',token);
   let calls=fixture();
-  let response=await confirm.GET(new Request('https://clubedasueca.co.mz/auth/confirm?token_hash=fixture-token&type=recovery'));
-  check(response.headers.get('location')==='https://clubedasueca.co.mz/update-password','verified email reaches password form');
-  check(calls[0][1].type==='recovery','token only verified as recovery');
-  check(response.headers.get('cache-control')==='no-store'&&response.headers.get('referrer-policy')==='no-referrer','token response not cached/leaked');
-  fixture({invalid:true});response=await confirm.GET(new Request('https://clubedasueca.pt/auth/confirm?token_hash=used-token&type=recovery'));
-  check(response.headers.get('location').endsWith('/update-password?error=invalid_link'),'expired/used link offers restart');
-  calls=fixture();await confirm.GET(new Request('https://clubedasueca.pt/auth/confirm?token_hash=token&type=signup'));
-  check(calls.length===0,'wrong verification type never consumed');
-  calls=fixture({banned:true});response=await confirm.GET(new Request('https://clubedasueca.pt/auth/confirm?token_hash=token&type=recovery'));
-  check(response.headers.get('location').includes('/login?message=')&&calls.some(c=>c[0]==='signOut'),'banned recovery session signed out');
-  fixture({recovery:true});response=await callback.GET(new Request('https://clubedasueca.pt/auth/callback?code=fixture'));
+  for(let i=0;i<3;i++)check(!!await box.exports.default({searchParams:Promise.resolve({token_hash:token,type:'recovery'})}),'scanner GET renders confirmation');
+  check(calls.length===0,'repeated email scans never consume a token');
+  let destination;try{await actions.confirmRecovery(data);}catch(error){destination=error.destination;}
+  check(destination==='/update-password','explicit confirmation reaches password form');
+  check(calls[0][1].type==='recovery'&&calls[0][1].token_hash===token,'POST only verifies recovery token');
+  fixture({invalid:true});check((await actions.confirmRecovery(data)).error.includes('mais recente'),'expired/used link offers restart');
+  calls=fixture();const missing=new FormData();check(!!(await actions.confirmRecovery(missing)).error&&calls.length===0,'missing token never verified');
+  let invalidPage;try{await box.exports.default({searchParams:Promise.resolve({token_hash:token,type:'signup'})});}catch(error){invalidPage=error.destination;}
+  check(invalidPage==='/update-password?error=invalid_link','other token types rejected');
+  calls=fixture({banned:true});check((await actions.confirmRecovery(data)).error.includes('indisponível')&&calls.some(c=>c[0]==='signOut'),'banned recovery session signed out');
+  fixture({recovery:true});let response=await callback.GET(new Request('https://clubedasueca.pt/auth/callback?code=fixture'));
   check(response.headers.get('location').endsWith('/update-password'),'legacy root fallback recognizes recovery');
   fixture();response=await callback.GET(new Request('https://clubedasueca.pt/auth/callback?code=fixture&next=//attacker.invalid'));
   check(response.headers.get('location')==='https://clubedasueca.pt/dashboard','callback cannot redirect off site');
@@ -65,7 +76,7 @@ async function main(){
   const password=new FormData();password.set('password','ExampleTest123');password.set('confirmPassword','ExampleTest123');
   calls=fixture({anonymous:true});check(!!(await actions.updatePassword(password)).error&&!calls.some(c=>c[0]==='update'),'anonymous cannot set password');
   calls=fixture({banned:true});check(!!(await actions.updatePassword(password)).error&&!calls.some(c=>c[0]==='update'),'banned account cannot set password');
-  calls=fixture();let destination;try{await actions.updatePassword(password);}catch(error){destination=error.destination;}
+  calls=fixture();destination=undefined;try{await actions.updatePassword(password);}catch(error){destination=error.destination;}
   check(destination==='/dashboard'&&calls.some(c=>c[0]==='update'),'verified password update returns to game');
   fixture({updateError:{code:'same_password'}});check((await actions.updatePassword(password)).error.includes('diferente'),'same password explained');
   console.log('PASS '+checks+' recovery action/route/origin/password checks (mocked Auth; no email sent)');

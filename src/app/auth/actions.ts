@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { recoveryOrigin, passwordValidation } from '@/features/auth/recovery'
+import { recoveryOrigin, passwordValidation, validRecoveryToken } from '@/features/auth/recovery'
 
 
 import { createClient } from '@/lib/supabase/server'
@@ -145,6 +145,22 @@ export async function forgotPassword(formData: FormData) {
     }
 
     return { error: null, success: true }
+}
+
+export async function confirmRecovery(formData: FormData): Promise<{ error: string | null }> {
+    const token = formData.get('token_hash')
+    const invalid = { error: 'O link é inválido, expirou ou já foi utilizado. Peça outro email e use o link mais recente.' }
+    if (!validRecoveryToken(token)) return invalid
+    const supabase = await createClient()
+    const { error } = await supabase.auth.verifyOtp({ token_hash: token, type: 'recovery' })
+    if (error) return invalid
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = user ? await supabase.from('profiles').select('is_banned').eq('id', user.id).single() : { data: null }
+    if (!profile || profile.is_banned) {
+        await supabase.auth.signOut()
+        return { error: 'Conta indisponível. Contacte o apoio.' }
+    }
+    redirect('/update-password')
 }
 
 export async function updatePassword(formData: FormData) {

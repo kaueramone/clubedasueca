@@ -29,3 +29,7 @@ export function passwordValidation(password: unknown, confirmation: unknown) {
   if (password !== confirmation) return 'As senhas não coincidem.'
   return null
 }
+
+export function validRecoveryToken(value: unknown): value is string {
+  return typeof value === 'string' && /^[A-Za-z0-9_-]{20,512}$/.test(value)
+}
