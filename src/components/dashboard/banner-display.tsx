@@ -2,91 +2,46 @@
 
 import { useEffect, useState } from 'react'
 import { getActiveBanners, trackBannerClick } from '@/features/banners/actions'
-import { cn } from '@/lib/utils'
-import Image from 'next/image'
+import { BannerCard } from '@/features/banners/banner-card'
+import type { Banner } from '@/features/banners/model'
 
 export function BannerDisplay({ position = 'dashboard_top' }: { position?: string }) {
-    const [banners, setBanners] = useState<any[]>([])
-    const [currentIndex, setCurrentIndex] = useState(0)
-
-    useEffect(() => {
-        getActiveBanners(position).then(res => {
-            if (res.banners) setBanners(res.banners)
-        })
-    }, [position])
-
-    useEffect(() => {
-        if (banners.length <= 1) return
-        const interval = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % banners.length)
-        }, 5000)
-        return () => clearInterval(interval)
-    }, [banners])
-
-    if (banners.length === 0) return null
-
-    const handleBannerClick = (banner: any) => {
-        trackBannerClick(banner.id).catch(console.error)
-        if (banner.link_url) {
-            window.open(banner.link_url, '_blank')
-        }
-    }
-
-    return (
-        <div className="relative w-full overflow-hidden rounded-2xl shadow-md group" role="region" aria-label="Banners promocionais">
-            <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-            >
-                {banners.map((banner, idx) => (
-                    <div
-                        key={banner.id || idx}
-                        onClick={() => handleBannerClick(banner)}
-                        className="relative w-full flex-shrink-0 cursor-pointer transition-transform hover:scale-[1.01] min-h-[140px] sm:min-h-[180px]"
-                        role="button"
-                        aria-label={banner.title || `Banner ${idx + 1}`}
-                    >
-                        {banner.image_url && (
-                            <div className={cn("absolute inset-0", banner.mobile_image_url ? "hidden sm:block" : "block")}>
-                                <Image
-                                    src={banner.image_url}
-                                    alt={banner.title || 'Banner promocional'}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 100vw, 1200px"
-                                    priority={idx === 0}
-                                />
-                            </div>
-                        )}
-                        {banner.mobile_image_url && (
-                            <div className="absolute inset-0 block sm:hidden">
-                                <Image
-                                    src={banner.mobile_image_url}
-                                    alt={banner.title || 'Banner promocional'}
-                                    fill
-                                    className="object-cover"
-                                    sizes="100vw"
-                                    priority={idx === 0}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {banners.length > 1 && (
-                <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-2 z-20">
-                    {banners.map((b, idx) => (
-                        <button
-                            key={b.id || idx}
-                            onClick={(e) => { e.stopPropagation(); setCurrentIndex(idx) }}
-                            className={`h-1.5 rounded-full transition-all ${idx === currentIndex ? 'w-6 bg-white' : 'w-2 bg-white/50'}`}
-                            aria-label={`Ir para banner ${idx + 1}`}
-                            aria-current={idx === currentIndex ? 'true' : undefined}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    )
+  const [banners, setBanners] = useState<Banner[]>([])
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    getActiveBanners(position).then(result => {
+      if (!cancelled && result.banners) { setBanners(result.banners); setIndex(0) }
+    }).catch(() => { /* Banners do not block access to the dashboard. */ })
+    return () => { cancelled = true }
+  }, [position])
+  useEffect(() => {
+    if (banners.length < 2 || paused || hovered || focused || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const timer = setInterval(() => setIndex(value => (value + 1) % banners.length), 10000)
+    return () => clearInterval(timer)
+  }, [banners.length, paused, hovered, focused])
+  if (!banners.length) return null
+  return <section className="min-w-0 w-full self-start" aria-label="Informações do clube" aria-roledescription="carrossel"
+    onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+    onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false) }}>
+    <div className="grid min-w-0">
+      {banners.map((banner, slide) => <div key={banner.id} style={{ gridArea: '1 / 1' }}
+        className={`min-w-0 ${slide === index ? 'visible' : 'invisible pointer-events-none'}`}
+        aria-hidden={slide !== index} inert={slide !== index}>
+        <BannerCard banner={banner} onFollow={() => { void trackBannerClick(banner.id).catch(() => {}) }} />
+      </div>)}
+    </div>
+    {banners.length > 1 && <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
+      {banners.map((banner, slide) => <button key={banner.id} type="button"
+        onClick={() => { setIndex(slide); setPaused(true) }} aria-label={`Mostrar banner ${slide + 1}: ${banner.title}`}
+        aria-current={slide === index ? 'true' : undefined}
+        className={`h-8 min-w-8 rounded-full border border-border text-xs ${slide === index ? 'bg-primary text-white' : 'bg-card text-foreground'}`}>{slide + 1}</button>)}
+      <button type="button" onClick={() => setPaused(value => !value)} className="min-h-8 px-2 text-xs underline">
+        {paused ? 'Retomar rotação' : 'Pausar rotação'}
+      </button>
+    </div>}
+  </section>
 }

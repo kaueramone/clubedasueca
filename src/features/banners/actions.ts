@@ -3,203 +3,101 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAudit } from '@/lib/audit'
+import { validateBanner } from './model'
 
-// ============================================
-// PUBLIC / USER ACTIONS
-// ============================================
-
-/**
- * Obter banners ativos para uma posição e segmento
- */
-export async function getActiveBanners(position: string = 'dashboard_top') {
-    const supabase = await createClient()
-    const now = new Date().toISOString()
-
-    const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .eq('is_active', true)
-        .eq('position', position)
-        .lte('start_date', now)
-        .or(`end_date.is.null,end_date.gte.${now}`)
-        .order('priority', { ascending: false })
-
-    if (error) return { error: error.message }
-
-    return { banners: data || [] }
+async function adminContext() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data: profile } = await supabase.from('profiles').select('role,is_banned').eq('id', user.id).single()
+  if (!profile || profile.role !== 'admin' || profile.is_banned) return null
+  return { supabase, user }
 }
 
-/**
- * Registar click num banner
- */
+function refreshBanners() {
+  revalidatePath('/admin/banners')
+  revalidatePath('/dashboard')
+}
+
+export async function getActiveBanners(position = 'dashboard_top') {
+  const supabase = await createClient()
+  const now = new Date().toISOString()
+  const { data, error } = await supabase.from('banners').select('*')
+    .eq('is_active', true).eq('position', position)
+    .or(`start_date.is.null,start_date.lte.${now}`)
+    .or(`end_date.is.null,end_date.gt.${now}`)
+    .order('priority', { ascending: false }).order('created_at', { ascending: false }).limit(100)
+  return error ? { error: 'Não foi possível carregar os banners.' } : { banners: data || [] }
+}
+
 export async function trackBannerClick(bannerId: string) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) return { error: 'Não autenticado' }
-    const { data, error } = await supabase.rpc('record_banner_click', { p_banner_id: bannerId })
-    if (error || !data) return { error: 'Clique não registado.' }
-    return { success: true }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado' }
+  const { data, error } = await supabase.rpc('record_banner_click', { p_banner_id: bannerId })
+  return error || !data ? { error: 'Clique não registado.' } : { success: true }
 }
 
-// ============================================
-// ADMIN ACTIONS
-// ============================================
-
-/**
- * Listar todos os banners (admin)
- */
 export async function getAllBanners() {
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .order('priority', { ascending: false })
-
-    if (error) return { error: error.message }
-    return { banners: data }
+  const context = await adminContext()
+  if (!context) return { error: 'Sem permissão.' }
+  const { data, error } = await context.supabase.from('banners').select('*')
+    .order('priority', { ascending: false }).order('created_at', { ascending: false }).limit(100)
+  return error ? { error: 'Não foi possível carregar os banners.' } : { banners: data || [] }
 }
 
-/**
- * Criar banner (admin)
- */
+export async function saveBanner(bannerId: string | null, formData: FormData) {
+  const context = await adminContext()
+  if (!context) return { error: 'Sem permissão.' }
+  const parsed = validateBanner(Object.fromEntries(formData.entries()))
+  if (!parsed.data) return { error: parsed.error }
+  if (!bannerId && parsed.data.template === 'image') return { error: 'Selecione um dos três modelos para o novo banner.' }
+  const { supabase, user } = context
+  const content = { ...parsed.data, start_date: parsed.data.start_date || new Date().toISOString(), updated_at: new Date().toISOString() }
+  const query = bannerId
+    ? supabase.from('banners').update(content).eq('id', bannerId)
+    : supabase.from('banners').insert({ ...content, position: 'dashboard_top', target_segment: 'all', priority: 0, is_active: true })
+  const { data, error } = await query.select('id').single()
+  if (error || !data) return { error: 'Não foi possível guardar o banner.' }
+  await logAudit(supabase, { userId: user.id, action: bannerId ? 'update_banner' : 'create_banner', entityType: 'banner', entityId: data.id, details: content })
+  refreshBanners()
+  return { success: true, banner: data }
+}
+
 export async function createBanner(formData: FormData) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Não autenticado' }
-
-    let imageUrl = formData.get('image_url') as string | null
-    let mobileImageUrl = formData.get('mobile_image_url') as string | null
-
-    const desktopFile = formData.get('image_file') as File | null
-    const mobileFile = formData.get('mobile_image_file') as File | null
-
-    if (desktopFile && desktopFile.size > 0) {
-        const ext = desktopFile.name.split('.').pop() || 'png'
-        const fileName = `desktop-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`
-        const { error: uploadError } = await supabase.storage.from('banners').upload(fileName, desktopFile)
-        if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName)
-            imageUrl = publicUrl
-        }
-    }
-
-    if (mobileFile && mobileFile.size > 0) {
-        const ext = mobileFile.name.split('.').pop() || 'png'
-        const fileName = `mobile-${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${ext}`
-        const { error: uploadError } = await supabase.storage.from('banners').upload(fileName, mobileFile)
-        if (!uploadError) {
-            const { data: { publicUrl } } = supabase.storage.from('banners').getPublicUrl(fileName)
-            mobileImageUrl = publicUrl
-        }
-    }
-
-    const bannerData = {
-        title: formData.get('title') as string,
-        description: formData.get('description') as string || null,
-        image_url: imageUrl,
-        mobile_image_url: mobileImageUrl,
-        link_url: formData.get('link_url') as string || null,
-        position: 'dashboard_top', // Always dashboard top
-        priority: 0,
-        target_segment: 'all', // Always all
-        start_date: formData.get('start_date') as string || new Date().toISOString(),
-        end_date: formData.get('end_date') as string || null,
-        is_active: true,
-    }
-
-    const { data, error } = await supabase.from('banners').insert(bannerData).select().single()
-
-    if (error) return { error: error.message }
-
-    await logAudit(supabase, {
-        userId: user.id,
-        action: 'create_banner',
-        entityType: 'banner',
-        entityId: data.id,
-        details: bannerData as any,
-    })
-
-    revalidatePath('/admin/banners')
-    return { success: true, banner: data }
+  return saveBanner(null, formData)
 }
 
-/**
- * Atualizar banner (admin)
- */
-export async function updateBanner(bannerId: string, updates: Record<string, any>) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Não autenticado' }
-
-    const { error } = await supabase
-        .from('banners')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', bannerId)
-
-    if (error) return { error: error.message }
-
-    await logAudit(supabase, {
-        userId: user.id,
-        action: 'update_banner',
-        entityType: 'banner',
-        entityId: bannerId,
-        details: updates,
-    })
-
-    revalidatePath('/admin/banners')
-    return { success: true }
+export async function updateBanner(bannerId: string, updates: { is_active: boolean }) {
+  const context = await adminContext()
+  if (!context) return { error: 'Sem permissão.' }
+  if (typeof updates?.is_active !== 'boolean') return { error: 'Estado inválido.' }
+  const { supabase, user } = context
+  const { data, error } = await supabase.from('banners').update({ is_active: updates.is_active, updated_at: new Date().toISOString() }).eq('id', bannerId).select('id').single()
+  if (error || !data) return { error: 'Não foi possível alterar o estado do banner.' }
+  await logAudit(supabase, { userId: user.id, action: 'update_banner', entityType: 'banner', entityId: bannerId, details: { is_active: updates.is_active } })
+  refreshBanners()
+  return { success: true }
 }
 
-/**
- * Deletar banner (admin)
- */
 export async function deleteBanner(bannerId: string) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Não autenticado' }
-
-    const { error } = await supabase.from('banners').delete().eq('id', bannerId)
-
-    if (error) return { error: error.message }
-
-    await logAudit(supabase, {
-        userId: user.id,
-        action: 'delete_banner',
-        entityType: 'banner',
-        entityId: bannerId,
-    })
-
-    revalidatePath('/admin/banners')
-    return { success: true }
+  const context = await adminContext()
+  if (!context) return { error: 'Sem permissão.' }
+  const { supabase, user } = context
+  const { data, error } = await supabase.from('banners').delete().eq('id', bannerId).select('id').single()
+  if (error || !data) return { error: 'Não foi possível eliminar o banner.' }
+  await logAudit(supabase, { userId: user.id, action: 'delete_banner', entityType: 'banner', entityId: bannerId })
+  refreshBanners()
+  return { success: true }
 }
 
-/**
- * Obter estatísticas de um banner (admin)
- */
 export async function getBannerStats(bannerId: string) {
-    const supabase = await createClient()
-
-    const { data: banner } = await supabase
-        .from('banners')
-        .select('*')
-        .eq('id', bannerId)
-        .single()
-
-    const { count: clickCount } = await supabase
-        .from('banner_clicks')
-        .select('*', { count: 'exact', head: true })
-        .eq('banner_id', bannerId)
-
-    const ctr = banner && banner.impressions > 0
-        ? ((clickCount || 0) / banner.impressions * 100).toFixed(2)
-        : '0.00'
-
-    return {
-        banner,
-        clicks: clickCount || 0,
-        impressions: banner?.impressions || 0,
-        ctr,
-    }
+  const context = await adminContext()
+  if (!context) return { error: 'Sem permissão.' }
+  const { supabase } = context
+  const [{ data: banner }, { count }] = await Promise.all([
+    supabase.from('banners').select('*').eq('id', bannerId).single(),
+    supabase.from('banner_clicks').select('id', { count: 'exact', head: true }).eq('banner_id', bannerId),
+  ])
+  return { banner, clicks: count || 0, impressions: banner?.impressions || 0, ctr: banner?.impressions ? ((count || 0) / banner.impressions * 100).toFixed(2) : '0.00' }
 }

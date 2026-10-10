@@ -57,6 +57,7 @@ async function main() {
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/107_support_integrity.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/108_review_accounting_and_admin.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010120123_support_reopenable_status.sql'),'utf8'));
+  await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010122011_responsive_banner_templates.sql'),'utf8'));
   console.log('PASS migrations 106/107/108 and support status apply to isolated PostgreSQL');
   await deny(`INSERT INTO auth.users VALUES ('${uid(9)}','minor@example.invalid','{"birth_date":"2020-01-01"}',now())`,'minor via auth API rejected');
   for(let n=1;n<=5;n++) {
@@ -245,7 +246,14 @@ async function main() {
     check(Math.round(Number(total)*100) === Math.round(stake*4*100), `stake ${stake} exact pot conservation`);
   }
   const banner=(await run(`INSERT INTO banners(title) VALUES('Test') RETURNING id`)).rows[0].id;
+  check((await run(`SELECT template FROM banners WHERE id='${banner}'`)).rows[0].template==='image','legacy image default preserved');
+  await deny(`INSERT INTO banners(title,template) VALUES('','classic')`,'structured title required');
+  await deny(`INSERT INTO banners(title,template,link_url) VALUES('Test','classic','/dashboard')`,'button label required with destination');
+  await deny(`INSERT INTO banners(title,template,description) VALUES('Test','classic',repeat('a',501))`,'description length enforced');
+  await deny(`INSERT INTO banners(title,template) VALUES('Test','unknown')`,'unknown template rejected');
   await asUser(uid(1));
+  await deny(`INSERT INTO banners(title,template) VALUES('Forged','classic')`,'player cannot create banner');
+  check((await run(`UPDATE banners SET title='Forged' WHERE id='${banner}' RETURNING id`)).rows.length===0,'player cannot edit banner');
   check((await run(`SELECT record_banner_click('${banner}') result`)).rows[0].result,'banner click recorded');
   await deny(`INSERT INTO banner_clicks(banner_id,user_id) VALUES('${banner}','${uid(2)}')`,'forged banner click denied');
   await owner();
@@ -253,6 +261,9 @@ async function main() {
   await run(`UPDATE private.app_config SET mode='beta'`);
   const manualBonus=(await run(`INSERT INTO bonuses(name,type,amount) VALUES('Manual test','vip_reward',10) RETURNING id`)).rows[0].id;
   await asUser(uid(4));
+  const campaign=(await run(`INSERT INTO banners(title,template,link_url,cta_label) VALUES('Novidades','classic','/dashboard/play','Jogar') RETURNING id`)).rows[0].id;
+  check((await run(`UPDATE banners SET template='informational',title='Informação' WHERE id='${campaign}' RETURNING id`)).rows.length===1,'admin creates and edits responsive banner');
+  check((await run(`DELETE FROM banners WHERE id='${campaign}' RETURNING id`)).rows.length===1,'admin deletes banner');
   const applied=(await run(`SELECT admin_apply_bonus('${uid(1)}','${manualBonus}') result`)).rows[0].result;
   check(!applied.error,'admin bonus two-argument contract succeeds');
   await run(`INSERT INTO storage.objects(bucket_id,name) VALUES('banners','valid.png')`);
@@ -264,6 +275,7 @@ async function main() {
   check((await run(`UPDATE affiliates SET total_earned=987654 RETURNING id`)).rows.length===0,'banned admin cannot mutate affiliates');
   await deny(`INSERT INTO bonuses(name,type,amount) VALUES('Injected','welcome',100)`,'banned admin bonus insert denied');
   check((await run(`UPDATE banners SET title='hacked' RETURNING id`)).rows.length===0,'banned admin cannot mutate banners');
+  await deny(`INSERT INTO banners(title,template) VALUES('Banned','promotional')`,'banned admin cannot create banner');
   await deny(`SELECT record_banner_click('${banner}')`,'banned banner click denied');
   await deny(`INSERT INTO storage.objects(bucket_id,name) VALUES('banners','banned.png')`,'banned admin storage insert denied');
   await deny(`INSERT INTO blog_posts(slug,title,content) VALUES('forged','Forged','text')`,'banned admin CMS insert denied');

@@ -1,0 +1,34 @@
+.shell { container: banner / inline-size; min-width: 0; width: 100%; border-radius: 1rem; isolation: isolate; overflow: hidden; color: #fff; }
+.classic { background: radial-gradient(ellipse at top right, #267252, transparent 70%), #0b3026; }
+.informational { background: radial-gradient(ellipse at top right, #295d91, transparent 70%), #142a47; }
+.promotional { background: radial-gradient(ellipse at top right, #913a45, transparent 70%), #481b39; }
+.inner { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 1.1rem; padding: 1.5rem; min-height: 13rem; }
+.copy { position: relative; z-index: 1; min-width: 0; width: 100%; }
+.eyebrow { display: inline-block; color: #f6d797; font-size: .65rem; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; margin-bottom: .75rem; }
+.informational .eyebrow { color: #b4dfff; }
+.promotional .eyebrow { color: #ffcea7; }
+.title { margin: 0; font-size: 1.35rem; font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
+.description { margin: .7rem 0 0; color: #ffffffde; font-size: .875rem; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.cta { position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center; gap: .6rem; max-width: 100%; border-radius: .65rem; padding: .75rem 1.1rem; color: #182c27; background: #f6d797; font-size: .8rem; font-weight: 700; line-height: 1.4; text-decoration: none; overflow-wrap: anywhere; }
+.informational .cta { background: #d3eaff; color: #142a47; }
+.promotional .cta { background: #ffcea7; color: #481b39; }
+.cta:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+.cta > span:first-child { min-width: 0; }
+.ornament { pointer-events: none; position: absolute; right: -1.8rem; top: -.5rem; width: 11rem; height: 11rem; border: 1px solid #ffffff18; border-radius: 2rem; transform: rotate(25deg); }
+.ornament::after { content: ''; position: absolute; inset: 1.5rem; border: 1px solid #ffffff18; border-radius: 1.2rem; }
+.informational .ornament { border-radius: 50%; width: 15rem; height: 15rem; }
+.informational .ornament::after { border-radius: 50%; }
+.promotional .ornament { transform: rotate(45deg); border-radius: 0; }
+.legacy { display: block; width: 100%; background: #0b3026; }
+.legacyImage { display: block; width: 100%; height: auto; object-fit: contain; }
+.mobileImage { display: none; }
+@container banner (max-width: 479px) {
+  .hasMobile .desktopImage { display: none; }
+  .hasMobile .mobileImage { display: block; }
+}
+@container banner (min-width: 480px) {
+  .inner { padding: 2rem; min-height: 14rem; }
+  .title { font-size: 1.85rem; }
+  .description { font-size: .95rem; max-width: 42rem; }
+  .ornament { width: 17rem; height: 17rem; right: -2rem; }
+}
