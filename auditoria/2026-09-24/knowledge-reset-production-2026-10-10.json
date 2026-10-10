@@ -1,0 +1,93 @@
+{
+  "codeCommit": "8619485332956814378abf13e5ed4069d2c68d83",
+  "before": [
+    {
+      "auth_users": 34,
+      "profiles": 34,
+      "games": 3,
+      "support_tickets": 4,
+      "support_messages": 11,
+      "community_messages": 96,
+      "wallets": 34,
+      "balance_total": "500001410.00",
+      "transactions": 121,
+      "user_bonuses": 0,
+      "commissions": 0
+    }
+  ],
+  "after": [
+    {
+      "auth_users": 34,
+      "profiles": 34,
+      "games": 3,
+      "support_tickets": 4,
+      "support_messages": 11,
+      "community_messages": 96,
+      "wallets": 34,
+      "balance_total": "0.00",
+      "transactions": 0,
+      "user_bonuses": 0,
+      "commissions": 0
+    }
+  ],
+  "verification": [
+    {
+      "invalid_wallets": 0,
+      "withdrawals": 0,
+      "house_revenue": 0,
+      "financial_metrics_nonzero": 0,
+      "vip_points_nonzero": 0,
+      "affiliate_totals_nonzero": 0,
+      "active_knowledge_topics": 16,
+      "temporary_topics": 0,
+      "existing_user_credit_cutoff": 34,
+      "reset_receipt": {
+        "mode": "beta",
+        "cutoff": "2026-10-10T17:03:29.472018+00:00",
+        "wallets": 34,
+        "currency": "MZN",
+        "commissions_deleted": 0,
+        "withdrawals_deleted": 0,
+        "transactions_deleted": 121,
+        "user_bonuses_deleted": 0,
+        "house_revenue_deleted": 2,
+        "previous_balance_total": 500001410
+      }
+    }
+  ],
+  "tests": {
+    "community": 61,
+    "database": 195,
+    "build": "pass",
+    "typecheck": "pass",
+    "scopedLint": "pass"
+  },
+  "productionRPC": "save/publish/pause/resume passed; rolled back",
+  "uiLimitation": "No authenticated application admin browser session available",
+  "localUI": {
+    "search": true,
+    "selection": true,
+    "draftEditing": true,
+    "dirtyPublishDisabled": true,
+    "unauthenticatedSaveRefused": true,
+    "draftRetainedOnError": true,
+    "modernBrowserIdentifierValidation": true,
+    "temporaryPreviewRemoved": true
+  },
+  "productionUnauthenticatedAdminRedirect": "/login",
+  "advisor": {
+    "newRPC": "Expected authenticated SECURITY DEFINER notice, protected by explicit auth.uid/is_admin checks and audited RPC",
+    "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+  },
+  "deployment": {
+    "id": "dpl_4pvt2qbYZ3i2cEDjjfC8ZxrwKomn",
+    "state": "READY",
+    "commit": "8619485332956814378abf13e5ed4069d2c68d83",
+    "productionDomains": [
+      "clubedasueca.co.mz",
+      "clubedasueca.pt",
+      "clubedasueca.com",
+      "clubedasueca.com.br"
+    ]
+  }
+}
