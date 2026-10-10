@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Home, Users, BarChart2, MessageSquare, Image as ImageIcon, FileText, Gift, Award, Shield, DollarSign } from 'lucide-react'
+import { Home, Users, BarChart2, MessageSquare, Image as ImageIcon, FileText, Gift, Award, Bot, DollarSign } from 'lucide-react'
 
 import Image from 'next/image'
 
@@ -57,6 +57,9 @@ export function AdminSidebar() {
                 </Link>
 
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-6 px-4">Suporte</div>
+                <Link href="/admin/robot" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-primary/5 hover:text-primary">
+                    <Bot className="h-5 w-5" /> Robô de atendimento
+                </Link>
                 <Link href="/admin/chat" className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-primary/5 hover:text-primary transition-colors">
                     <MessageSquare className="h-5 w-5" />
                     Live Chat

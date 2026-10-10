@@ -59,7 +59,12 @@ export async function POST(req: NextRequest) {
                     .select('id, username').in('id', userIds)
                 if (profilesError) return
                 const conversation = buildConversation(latest as CommunityMessage, [...recent].reverse() as CommunityMessage[], profiles || [], BOT_USER_ID)
-                const reply = await getBotReply(conversation)
+                const { data: knowledge, error: knowledgeError } = await supabase.from('community_knowledge')
+                    .select('topic_id, published_content').eq('is_active', true).order('topic_id').limit(41)
+                if (knowledgeError || !knowledge?.length || knowledge.length > 40) return
+                const topics = knowledge.filter(k => typeof k.published_content === 'string')
+                    .map(k => ({ id: k.topic_id, facts: k.published_content as string }))
+                const reply = await getBotReply(conversation, topics)
                 if (!reply) return
                 const { error: insertError } = await supabase.from('global_messages').insert({ user_id: BOT_USER_ID, content: reply })
                 if (insertError) console.error('[community/respond] Failed to store reply', insertError.code)

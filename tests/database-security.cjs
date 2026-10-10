@@ -65,6 +65,7 @@ async function main() {
       SELECT decode(replace(gen_random_uuid()::text,'-',''),'hex') $$;`);
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010153805_cryptographic_online_shuffle.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010163638_community_bot_message_length.sql'),'utf8'));
+  for (const name of ['20261010165010_community_knowledge_admin','20261010165013_enforce_mzn_wallet_currency']) await db.exec(fs.readFileSync(path.join(root, 'supabase/migrations/'+name+'.sql'),'utf8'));
   const decks=(await run(`SELECT private.secure_sueca_deck() deck FROM generate_series(1,200)`)).rows.map(r=>r.deck);
   check(decks.every(d=>d.length===40 && new Set(d).size===40),'secure shuffle preserves all 40 unique cards');
   check(new Set(decks.map(d=>d.join(','))).size===200,'secure shuffle generates distinct permutations (smoke test, not certification)');
@@ -349,6 +350,57 @@ async function main() {
   await owner();
   check((await run(`INSERT INTO global_messages(user_id,content) VALUES('${uid(1)}',repeat('a',500)) RETURNING id`)).rows.length===1,'500-character community answer supported');
   await deny(`INSERT INTO global_messages(user_id,content) VALUES('${uid(1)}',repeat('a',501))`,'oversized community answer refused');
+  await deny(`UPDATE wallets SET currency='EUR'`,'wallet currency cannot drift from MZN');
+  await asUser(uid(1));
+  check((await run(`SELECT * FROM community_knowledge`)).rows.length===0,'player cannot read admin knowledge');
+  await deny(`SELECT write_community_knowledge('save','injected','Test','Facts',0)`,'player cannot write knowledge');
+  await asUser(uid(4));
+  await deny(`SELECT write_community_knowledge('save','injected','Test','Facts',0)`,'banned admin cannot write knowledge');
+  await owner(); await run(`UPDATE profiles SET is_banned=false WHERE id='${uid(4)}'`);
+  await asUser(uid(4));
+  check((await run(`SELECT * FROM community_knowledge`)).rows.length===16,'admin sees seeded knowledge');
+  await deny(`UPDATE community_knowledge SET is_active=false`,'admin direct mutation denied; audited RPC required');
+  await run(`SELECT write_community_knowledge('save','newtopic','New topic','First draft',0)`);
+  let topic=(await run(`SELECT * FROM community_knowledge WHERE topic_id='newtopic'`)).rows[0];
+  check(!topic.is_active && topic.published_content===null,'draft not visible to bot');
+  await run(`SELECT write_community_knowledge('publish','newtopic','','',1)`);
+  await run(`SELECT write_community_knowledge('save','newtopic','New topic','Second draft',2)`);
+  topic=(await run(`SELECT * FROM community_knowledge WHERE topic_id='newtopic'`)).rows[0];
+  check(topic.published_content==='First draft' && topic.draft_content==='Second draft','draft changes do not leak before publication');
+  await deny(`SELECT write_community_knowledge('publish','newtopic','','',2)`,'stale revision rejected');
+  await run(`SELECT write_community_knowledge('publish','newtopic','','',3)`);
+  await run(`SELECT write_community_knowledge('pause','newtopic','','',4)`);
+  check(!(await run(`SELECT is_active FROM community_knowledge WHERE topic_id='newtopic'`)).rows[0].is_active,'topic can pause');
+  await run(`SELECT write_community_knowledge('resume','newtopic','','',5)`);
+  check((await run(`SELECT published_content FROM community_knowledge WHERE topic_id='newtopic'`)).rows[0].published_content==='Second draft','resume uses last publication');
+  await deny(`SELECT write_community_knowledge('save','secret','Secret','sk-test-1234567890123456',0)`,'credential paste rejected');
+  await deny(`SELECT write_community_knowledge('save','oversized','Test',repeat('x',2001),0)`,'topic size limit enforced');
+  await owner();
+  check(Number((await run(`SELECT count(*) n FROM audit_logs WHERE action LIKE 'community_knowledge_%'`)).rows[0].n)===6,'all knowledge edits audited atomically');
+  const resetSQL=fs.readFileSync(path.join(root,'supabase/maintenance/reset_beta_credits_20261010.sql'),'utf8');
+  // Guard failure must roll back the entire maintenance transaction.
+  await run(`UPDATE private.app_config SET mode='paused'`);
+  let resetDenied=false;
+  try { await db.exec(resetSQL); } catch { resetDenied=true; await db.exec('ROLLBACK'); }
+  check(resetDenied,'reset refuses non-beta mode');
+  await run(`UPDATE private.app_config SET mode='beta'`);
+  await run(`INSERT INTO games(host_id,stake,status) VALUES('${uid(1)}',50,'waiting')`);
+  resetDenied=false;
+  try { await db.exec(resetSQL); } catch { resetDenied=true; await db.exec('ROLLBACK'); }
+  check(resetDenied,'reset refuses active tables');
+  await run(`UPDATE games SET status='cancelled' WHERE status::text IN ('waiting','playing')`);
+  const preserved=(await run(`SELECT (SELECT count(*) FROM profiles) profiles,(SELECT count(*) FROM games) games,(SELECT count(*) FROM private.game_effects) effects`)).rows[0];
+  await db.exec(resetSQL);
+  check(Number((await run(`SELECT sum(balance) n FROM wallets`)).rows[0].n)===0,'all beta balances zero');
+  check(Number((await run(`SELECT count(*) n FROM transactions`)).rows[0].n)===0,'fictional transactions erased');
+  check(Number((await run(`SELECT count(*) n FROM user_bonuses`)).rows[0].n)===0,'user bonus history erased');
+  check(Number((await run(`SELECT count(*) n FROM affiliate_commissions`)).rows[0].n)===0,'commission history erased');
+  check(JSON.stringify((await run(`SELECT (SELECT count(*) FROM profiles) profiles,(SELECT count(*) FROM games) games,(SELECT count(*) FROM private.game_effects) effects`)).rows[0])===JSON.stringify(preserved),'profiles, games and settlement tombstones retained');
+  await run(`UPDATE auth.users SET email_confirmed_at=now() WHERE id='${uid(1)}'`);
+  check(Number((await run(`SELECT balance FROM wallets WHERE user_id='${uid(1)}'`)).rows[0].balance)===0,'confirmation replay cannot restore old welcome credit');
+  resetDenied=false;
+  try { await db.exec(resetSQL); } catch { resetDenied=true; await db.exec('ROLLBACK'); }
+  check(resetDenied,'one-time reset replay denied');
   console.log(`PASS ${assertions} security/game assertions (local PostgreSQL; no deployed Supabase claim)`);
   await db.close();
 }

@@ -48,9 +48,9 @@ export function WalletOverview({
     return (
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary/90 p-6 text-white shadow-xl shadow-accent/20">
             <div className="relative z-10">
-                <p className="text-sm font-medium opacity-80">Saldo de teste · sem valor monetário</p>
+                <p className="text-sm font-medium opacity-80">Créditos fictícios · sem valor monetário</p>
                 <p className="mt-2 text-4xl font-bold tracking-tight">
-                    {Number(balance).toFixed(2)} créditos
+                    {Number(balance).toFixed(2)} MZN
                 </p>
             </div>
             <div className="mt-8 flex gap-3">

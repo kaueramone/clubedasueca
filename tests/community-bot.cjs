@@ -71,6 +71,16 @@ async function main() {
   ai = loadAI(async () => ({ ok: true, json: async () => ({ stop_reason: 'max_tokens', content: [{ type: 'text', text: decision('answer', 'Incomplete', ['rules']) }] }) }), { ANTHROPIC_API_KEY: 'fake' });
   check(await ai.getBotReply(plain('question')) === null, 'truncated provider response rejected');
   check(parse(decision('answer', 'No empate devolve-se a entrada.', ['results'])).includes('fictícios'), 'server enforces fictional-credit qualifier');
+  const custom = [{ id: 'custom', facts: 'Unique newly published platform information.' }];
+  check(parse(decision('answer', 'Custom information.', ['custom']), custom) === 'Custom information.', 'custom published topic accepted');
+  check(parse(decision('answer', 'Old facts.', ['rules']), custom) === null, 'unpublished source rejected');
+  calls = [];
+  ai = loadAI(fetch, { ANTHROPIC_API_KEY: 'fake' });
+  await ai.getBotReply(plain('question'), custom);
+  check(calls[0].body.system.includes('Unique newly published') && !calls[0].body.system.includes('Ás=11'), 'provider uses published DB facts exclusively');
+  check(calls[0].body.output_config.format.schema.properties.source_ids.items.enum.join(',') === 'custom', 'provider schema follows custom topic IDs');
+  calls = [];
+  check(await ai.getBotReply(plain('question'), []) === null && calls.length === 0, 'empty knowledge pauses bot without static fallback');
   // Run the actual authenticated webhook route with authoritative database fixtures.
   async function routeFixture(config = {}) {
     const inserted = [], pending = [], queries = [];
@@ -83,7 +93,7 @@ async function main() {
           select(fields) { queries.push({ table, fields }); return chain; },
           eq() { return chain; }, gte() { return chain; }, lte() { return chain; }, order() { return chain; },
           single: async () => ({ data: stored, error: null }),
-          limit: async n => { check(n === 24, 'bounded database context'); return { data: history.slice().reverse(), error: config.contextError ? {} : null }; },
+          limit: async n => { if (table === 'community_knowledge') return { data: config.emptyKnowledge ? [] : [{ topic_id: 'results', published_content: 'Published facts' }], error: config.knowledgeError ? {} : null }; check(n === 24, 'bounded database context'); return { data: history.slice().reverse(), error: config.contextError ? {} : null }; },
           in: async () => ({ data: profiles, error: null }),
           insert: async value => { inserted.push(value); return { error: null }; }
         }; return chain;
@@ -107,7 +117,7 @@ async function main() {
   check(route.received.history.length === 1, 'webhook loads prior conversation');
   check(route.inserted[0].content.length > 200, 'complete valid reply no longer cut to 200');
   check(route.queries.every(q => !q.fields.includes('*')), 'no private account data requested');
-  for (const config of [{ unauthorized: true }, { duplicate: true }, { stale: true }, { contextError: true }, { silent: true }, { bot: true }]) {
+  for (const config of [{ unauthorized: true }, { duplicate: true }, { stale: true }, { contextError: true }, { silent: true }, { bot: true }, { emptyKnowledge: true }, { knowledgeError: true }]) {
     route = await routeFixture(config);
     check(route.inserted.length === 0, 'webhook rejects unauthorised/duplicate/stale/failed-context/silent/bot events');
   }

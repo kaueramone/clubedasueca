@@ -16,11 +16,11 @@ export default async function AdminLayout({
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, is_banned')
         .eq('id', user.id)
         .single()
 
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || profile.role !== 'admin' || profile.is_banned) {
         redirect('/dashboard')
     }
 
