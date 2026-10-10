@@ -18,16 +18,26 @@ export function UpdatePasswordForm() {
                     htmlFor="password"
                     className="block text-sm font-medium text-gray-700"
                 >
-                    Nova Password
+                    Nova senha
                 </label>
                 <input
                     id="password"
                     name="password"
                     type="password"
                     required
+                    minLength={8}
+                    maxLength={128}
+                    autoComplete="new-password"
                     className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     placeholder="••••••••"
                 />
+                <p className="mt-2 text-xs text-gray-600">Entre 8 e 128 caracteres.</p>
+            </div>
+            <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirmar nova senha</label>
+                <input id="confirmPassword" name="confirmPassword" type="password" required minLength={8} maxLength={128} autoComplete="new-password"
+                    className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm"
+                    placeholder="Repita a nova senha" />
             </div>
 
             {state?.error && (
@@ -43,8 +53,8 @@ export function UpdatePasswordForm() {
                 </div>
             )}
 
-            <SubmitButton className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
-                Atualizar Password
+            <SubmitButton className="flex w-full justify-center rounded-xl bg-[#0F3D2E] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0b3026] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
+                Atualizar senha
             </SubmitButton>
         </form>
     )

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
+import { recoveryOrigin, passwordValidation } from '@/features/auth/recovery'
 
 
 import { createClient } from '@/lib/supabase/server'
@@ -26,11 +28,7 @@ async function verifyTurnstile(token: string | null): Promise<boolean> {
     }
 }
 
-async function getBaseUrl(): Promise<string> {
-    return process.env.NEXT_PUBLIC_BASE_URL || 'https://clubedasueca.co.mz'
-}
-
-export async function login(prevState: any, formData: FormData) {
+export async function login(prevState: unknown, formData: FormData) {
     const supabase = await createClient()
 
     const turnstileToken = formData.get('cf-turnstile-response') as string
@@ -70,7 +68,7 @@ export async function login(prevState: any, formData: FormData) {
     redirect('/dashboard')
 }
 
-export async function signup(prevState: any, formData: FormData) {
+export async function signup(prevState: unknown, formData: FormData) {
     const supabase = await createClient()
 
     const turnstileToken = formData.get('cf-turnstile-response') as string
@@ -134,30 +132,37 @@ export async function signout() {
 
 export async function forgotPassword(formData: FormData) {
     const supabase = await createClient()
-    const email = formData.get('email') as string
+    const email = String(formData.get('email') || '').trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return { error: 'Introduza um email válido.', success: false }
 
-    const baseUrl = await getBaseUrl()
+    const baseUrl = recoveryOrigin((await headers()).get('origin'), process.env.NEXT_PUBLIC_BASE_URL, process.env.NODE_ENV === 'development')
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${baseUrl}/auth/callback?next=/update-password`,
+        redirectTo: `${baseUrl}/auth/confirm`,
     })
 
     if (error) {
-        return { error: error.message }
+        return { error: 'Não foi possível enviar o email agora. Aguarde um pouco e tente novamente.', success: false }
     }
 
-    redirect('/login?message=Verifique o seu email para recuperar a password')
+    return { error: null, success: true }
 }
 
 export async function updatePassword(formData: FormData) {
     const supabase = await createClient()
-    const password = formData.get('password') as string
+    const password = formData.get('password')
+    const validation = passwordValidation(password, formData.get('confirmPassword'))
+    if (validation) return { error: validation }
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) return { error: 'A sessão de recuperação expirou. Solicite um novo link.' }
+    const { data: profile } = await supabase.from('profiles').select('is_banned').eq('id', user.id).single()
+    if (!profile || profile.is_banned) return { error: 'Conta indisponível. Contacte o apoio.' }
 
     const { error } = await supabase.auth.updateUser({
-        password,
+        password: password as string,
     })
 
     if (error) {
-        return { error: error.message }
+        return { error: error.code === 'same_password' ? 'Escolha uma senha diferente da atual.' : 'Não foi possível atualizar a senha. Verifique os requisitos e tente novamente.' }
     }
 
     revalidatePath('/', 'layout')

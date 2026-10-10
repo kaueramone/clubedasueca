@@ -6,10 +6,17 @@ import { SubmitButton } from '@/components/submit-button'
 
 const initialState = {
     error: null as string | null,
+    success: false,
 }
 
 export function ForgotPasswordForm() {
     const [state, formAction] = useActionState(async (_previous: typeof initialState, formData: FormData) => forgotPassword(formData), initialState)
+
+    if (state.success) return <div role="status" className="space-y-4 text-sm text-gray-700">
+        <p className="rounded-xl bg-green-50 border border-green-200 p-4">Se existir uma conta com esse email, receberá um link para escolher uma nova senha.</p>
+        <p>Verifique também a pasta de spam. Utilize o email mais recente; cada link só pode ser usado uma vez.</p>
+        <button type="button" onClick={() => window.location.reload()} className="text-accent underline">Pedir outro link</button>
+    </div>
 
     return (
         <form action={formAction} className="space-y-6">
@@ -43,7 +50,7 @@ export function ForgotPasswordForm() {
                 </div>
             )}
 
-            <SubmitButton className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
+            <SubmitButton className="flex w-full justify-center rounded-xl bg-[#0F3D2E] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#0b3026] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
                 Enviar Email de Recuperação
             </SubmitButton>
         </form>

@@ -8,7 +8,11 @@ import { GlobalHeader } from "@/components/layout/global-header";
 import { GlobalFooter } from "@/components/layout/global-footer";
 
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string; error?: string }> }) {
+    const params = await searchParams;
+    // Supabase can fall back to Site URL for old/unlisted email redirects.
+    if (params.code) redirect(`/auth/callback?${new URLSearchParams({ code: params.code })}`);
+    if (params.error) redirect('/auth/auth-code-error');
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
 

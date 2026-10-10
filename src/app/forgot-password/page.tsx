@@ -7,7 +7,7 @@ export default function ForgotPasswordPage() {
             <div className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-xl">
                 <div className="mb-8 text-center">
                     <h1 className="text-2xl font-bold text-gray-900">Recuperar Password</h1>
-                    <p className="text-ios-gray">Introduza o seu email para recuperar a conta</p>
+                    <p className="text-gray-600">Introduza o seu email para recuperar a conta</p>
                 </div>
 
                 <ForgotPasswordForm />
