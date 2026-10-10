@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, useMemo, type CSSProperties } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { playCard, cancelGame, leaveGame, playTimeoutCard, getFriendsForInvite, sendTableInvite } from './actions'
-import { tableFromSnapshot, trainingMove, settleTrainingTrick, secondsToDeadline, cardLabel } from './table-state'
+import { tableFromSnapshot, trainingMove, settleTrainingTrick, cardLabel } from './table-state'
 import { cn } from '@/lib/utils'
 import { generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
 import Image from 'next/image'
@@ -17,6 +17,7 @@ import { GameResultOverlay } from './components/game-result-overlay'
 import { TrumpAnimation } from './components/trump-animation'
 import { CardArt } from './components/card-art'
 import styles from './game-table.module.css'
+import { anchorServerClock, serverSecondsLeft, type ServerClock } from './server-clock'
 
 export function GameTable({ game, currentUser, isTraining = false, isDemoGuest = false }: { game?: any, currentUser?: any, isTraining?: boolean, isDemoGuest?: boolean }) {
     const router = useRouter()
@@ -53,10 +54,16 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
 
     const [gameResult, setGameResult] = useState<{ winnerTeam: string, scoreA: number, scoreB: number } | null>(null)
     const [isTrickProcessing, setIsTrickProcessing] = useState(false)
-    const [turnTimeLeft, setTurnTimeLeft] = useState(15)
+    const [turnTimeLeft, setTurnTimeLeft] = useState(0)
+    const [serverClock, setServerClock] = useState<ServerClock | null>(null)
+    const [sendingChat, setSendingChat] = useState(false)
+    const [chatError, setChatError] = useState<string | null>(null)
+    const sendingChatRef = useRef(false)
+    const chatRequestRef = useRef<{ text: string; id: string } | null>(null)
+    const seenMessagesRef = useRef<Set<string> | null>(null)
 
     // Chat State
-    const [messages, setMessages] = useState<{ sender: string, text: string, time: string, isBot?: boolean }[]>([])
+    const [messages, setMessages] = useState<{ sender: string, text: string, time: string, isBot?: boolean, authorId?: string }[]>([])
     const [showChat, setShowChat] = useState(false)
     const [newMessage, setNewMessage] = useState('')
     const [unreadCount, setUnreadCount] = useState(0)
@@ -238,18 +245,18 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     useEffect(() => {
         if (!gameState || gameResult || isTrickProcessing || roundRecap || gameState.status !== 'playing' || gameState.current_trick_cards.length === 4) return
         if (isTraining && (gameState.current_turn !== 0 || !storageReady)) return
-        const deadline = isTraining ? new Date(Date.now() + 15000).toISOString() : gameState.turn_deadline
-        if (!deadline) return
+        const clock = isTraining ? { remainingMs: 15000, receivedAt: performance.now() } : serverClock
+        if (!clock) return
         let attempted = false
         const tick = () => {
-            const remaining = secondsToDeadline(deadline)
+            const remaining = serverSecondsLeft(clock, performance.now())
             setTurnTimeLeft(remaining)
             if (remaining === 0 && !attempted) { attempted = true; timeoutActionRef.current() }
         }
         tick()
         const interval = setInterval(tick, 250)
         return () => clearInterval(interval)
-    }, [gameState.current_turn, gameState.turn_deadline, gameState.current_trick_cards.length, gameResult, isTrickProcessing, roundRecap, gameState.status, isTraining, storageReady])
+    }, [serverClock, gameState.current_turn, gameState.turn_deadline, gameState.current_trick_cards.length, gameResult, isTrickProcessing, roundRecap, gameState.status, isTraining, storageReady])
 
     const autoPlayOnline = useCallback(async () => {
         if (!game || isTraining) return
@@ -421,11 +428,14 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     }, [])
 
     // Realtime Subscription & Chat Channel
-    const [realtimeChannel, setRealtimeChannel] = useState<any>(null)
 
     const refreshSnapshotRef = useRef<() => Promise<void>>(async () => {})
     useEffect(() => {
         if (isTraining || !game?.id) return
+        seenMessagesRef.current = null
+        setMessages([])
+        setUnreadCount(0)
+        setServerClock(null)
         let disposed = false
         let inFlight = false
         let refreshAgain = false
@@ -437,6 +447,7 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             try {
                 do {
                     refreshAgain = false
+                    const startedAt = performance.now()
                     const { data, error } = await supabase.rpc('get_table_state', { p_game_id: game.id })
                     if (!disposed && !removed) {
                         if (error?.code === 'P0002') {
@@ -451,8 +462,26 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                             break
                         }
                         if (error) throw error
+                        const receivedAt = performance.now()
+                        setServerClock(anchorServerClock(data.game.turn_deadline, data.game.server_now, receivedAt, receivedAt - startedAt))
                         setGameState(tableFromSnapshot(data as any))
                         setConnectionError(null)
+                        const history = await supabase.from('game_messages').select('id,author_id,sender,text,created_at')
+                            .eq('game_id', game.id).order('created_at', { ascending: false }).order('id', { ascending: false }).limit(100)
+                        if (!disposed && !removed) {
+                            if (history.error) setChatError('Não foi possível atualizar o chat. A tentar novamente…')
+                            else {
+                                const rows = (history.data ?? []).reverse()
+                                const seen = seenMessagesRef.current
+                                const newCount = seen ? rows.filter(m => !seen.has(m.id) && m.author_id !== currentUser?.id).length : 0
+                                seenMessagesRef.current = new Set(rows.map(m => m.id))
+                                if (!seen || seen.size !== rows.length || rows.some(m => !seen.has(m.id))) {
+                                    setMessages(rows.map(m => ({ sender: m.sender, text: m.text, authorId: m.author_id,
+                                        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })))
+                                }
+                                if (!chatOpenRef.current && newCount) setUnreadCount(prev => prev + newCount)
+                            }
+                        }
                     }
                 } while (refreshAgain && !disposed && !removed)
             } catch {
@@ -473,15 +502,11 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 } else { void refresh() }
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'game_players', filter: `game_id=eq.${game.id}` }, () => { void refresh() })
-            .on('broadcast', { event: 'chat_message' }, (payload) => {
-                setMessages(prev => [...prev, payload.payload])
-                if (!chatOpenRef.current) setUnreadCount(prev => prev + 1)
-            })
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_messages', filter: `game_id=eq.${game.id}` }, () => { void refresh() })
             .subscribe(status => {
                 if (status === 'SUBSCRIBED') void refresh()
                 else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setConnectionError('Ligação interrompida. A recuperar o estado da mesa…')
             })
-        setRealtimeChannel(channel)
         void refresh()
         const onVisible = () => { if (document.visibilityState === 'visible') void refresh() }
         window.addEventListener('online', refresh)
@@ -494,31 +519,37 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
             document.removeEventListener('visibilitychange', onVisible)
             void supabase.removeChannel(channel)
         }
-    }, [game?.id, supabase, isTraining])
+    }, [game?.id, supabase, isTraining, currentUser?.id])
 
-    const handleSendMessage = useCallback((e: React.FormEvent) => {
+    const handleSendMessage = useCallback(async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!newMessage.trim()) return
-
-        const msg = {
-            sender: isTraining ? (gameState?.game_players?.[0]?.profiles?.username || 'Você') : (currentUser?.profiles?.username || 'Você'),
-            text: newMessage.trim(),
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }
-
+        const text = newMessage.trim()
+        if (!text || sendingChatRef.current) return
+        setChatError(null)
         if (isTraining) {
-            setMessages(prev => [...prev, msg])
-        } else if (realtimeChannel) {
-            setMessages(prev => [...prev, msg])
-            realtimeChannel.send({
-                type: 'broadcast',
-                event: 'chat_message',
-                payload: msg
-            })
+            setMessages(prev => [...prev, { sender: gameState?.game_players?.[0]?.profiles?.username || 'Você', text,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }])
+            setNewMessage('')
+            return
         }
-
-        setNewMessage('')
-    }, [newMessage, currentUser, isTraining, realtimeChannel])
+        sendingChatRef.current = true
+        setSendingChat(true)
+        if (chatRequestRef.current?.text !== text) chatRequestRef.current = { text, id: crypto.randomUUID() }
+        try {
+            const { error } = await supabase.rpc('send_game_message', {
+                p_game_id: game.id, p_text: text, p_request_id: chatRequestRef.current.id
+            })
+            if (error) throw error
+            chatRequestRef.current = null
+            setNewMessage('')
+            await refreshSnapshotRef.current()
+        } catch (error) {
+            setChatError(error instanceof Error ? error.message : (error as { message?: string })?.message || 'Mensagem não enviada. Tenta novamente.')
+        } finally {
+            sendingChatRef.current = false
+            setSendingChat(false)
+        }
+    }, [newMessage, isTraining, gameState?.game_players, game?.id, supabase])
 
     // --- Relative Player Positions ---
     const players = gameState?.game_players || []
@@ -704,6 +735,9 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 setNewMessage={setNewMessage}
                 onSendMessage={handleSendMessage}
                 currentUsername={currentUsername}
+                currentUserId={isTraining ? undefined : currentUser?.id}
+                sending={sendingChat}
+                error={chatError}
             />
 
             {connectionError && <p role="alert" className={styles.connection}>{connectionError}</p>}

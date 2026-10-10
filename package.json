@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint src",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "node tests/game-rules.cjs && node tests/table-state.cjs && node tests/banner-model.cjs && node tests/password-recovery.cjs && node tests/auth-email.cjs",
+    "test": "node tests/game-rules.cjs && node tests/table-state.cjs && node tests/server-clock.cjs && node tests/banner-model.cjs && node tests/password-recovery.cjs && node tests/auth-email.cjs",
     "test:db": "node tests/database-security.cjs"
   },
   "dependencies": {

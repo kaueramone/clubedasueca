@@ -58,6 +58,27 @@ async function main() {
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/108_review_accounting_and_admin.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010120123_support_reopenable_status.sql'),'utf8'));
   await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010122011_responsive_banner_templates.sql'),'utf8'));
+  await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010153401_secure_table_chat_and_server_clock.sql'),'utf8'));
+  // PGlite lacks pgcrypto: this UUID byte shim exercises shuffle logic, NOT RNG strength.
+  await db.exec(`CREATE SCHEMA extensions;
+    CREATE FUNCTION extensions.gen_random_bytes(n integer) RETURNS bytea LANGUAGE sql VOLATILE AS $$
+      SELECT decode(replace(gen_random_uuid()::text,'-',''),'hex') $$;`);
+  await db.exec(fs.readFileSync(path.join(root,'supabase/migrations/20261010153805_cryptographic_online_shuffle.sql'),'utf8'));
+  const decks=(await run(`SELECT private.secure_sueca_deck() deck FROM generate_series(1,200)`)).rows.map(r=>r.deck);
+  check(decks.every(d=>d.length===40 && new Set(d).size===40),'secure shuffle preserves all 40 unique cards');
+  check(new Set(decks.map(d=>d.join(','))).size===200,'secure shuffle generates distinct permutations (smoke test, not certification)');
+  // Force 255 first: the first draw (n=40) MUST reject it. All following zeroes are valid.
+  await db.exec(`CREATE OR REPLACE FUNCTION extensions.gen_random_bytes(n integer) RETURNS bytea LANGUAGE plpgsql VOLATILE AS $$
+    BEGIN
+      IF current_setting('test.rng_first',true)='yes' THEN
+        PERFORM set_config('test.rng_first','no',false); RETURN decode('ff','hex');
+      END IF;
+      RETURN decode('00','hex');
+    END $$; SELECT set_config('test.rng_first','yes',false);`);
+  const rejection=(await run(`SELECT private.secure_sueca_deck() deck`)).rows[0].deck;
+  check(rejection[39]==='hearts-2','shuffle rejects biased tail instead of modulo mapping 255');
+  await db.exec(`CREATE OR REPLACE FUNCTION extensions.gen_random_bytes(n integer) RETURNS bytea LANGUAGE sql VOLATILE AS $$
+    SELECT decode(replace(gen_random_uuid()::text,'-',''),'hex') $$;`);
   console.log('PASS migrations 106/107/108 and support status apply to isolated PostgreSQL');
   await deny(`INSERT INTO auth.users VALUES ('${uid(9)}','minor@example.invalid','{"birth_date":"2020-01-01"}',now())`,'minor via auth API rejected');
   for(let n=1;n<=5;n++) {
@@ -106,6 +127,41 @@ async function main() {
   check(snapshot.players.filter(p=>p.hand.length>0).length===1,'snapshot reveals own hand only');
   check(snapshot.players.every(p=>p.card_count===10),'snapshot public counts');
   check(Boolean(snapshot.game.trump_card && snapshot.game.turn_deadline),'snapshot trump/deadline');
+  check(Number.isFinite(Date.parse(snapshot.game.server_now)),'snapshot includes database clock');
+  const message=(await run(`SELECT send_game_message('${game}','Olá mesa','${uid(91)}') id`)).rows[0].id;
+  check((await run(`SELECT send_game_message('${game}','Olá mesa','${uid(91)}') id`)).rows[0].id===message,'chat retry is idempotent');
+  const history=(await run(`SELECT * FROM game_messages WHERE game_id='${game}'`)).rows;
+  check(history.length===1 && history[0].author_id===uid(1) && history[0].text==='Olá mesa','participant can read persisted authoritative message');
+  check(history[0].sender===(await run(`SELECT username FROM profiles WHERE id='${uid(1)}'`)).rows[0].username,'sender label comes from server profile');
+  await deny(`SELECT send_game_message('${game}','spam','${uid(92)}')`,'rapid chat denied');
+  await deny(`SELECT send_game_message('${game}',repeat('a',501),'${uid(93)}')`,'oversized chat denied');
+  await deny(`SELECT send_game_message('${game}','  ','${uid(93)}')`,'empty chat denied');
+  await deny(`INSERT INTO game_messages(game_id,author_id,request_id,sender,text) VALUES('${game}','${uid(2)}','${uid(93)}','Admin','forged')`,'direct forged author denied');
+  await deny(`UPDATE game_messages SET text='altered' WHERE id='${message}'`,'chat editing denied');
+  await deny(`DELETE FROM game_messages WHERE id='${message}'`,'chat deletion denied');
+  await asUser(uid(2));
+  check((await run(`SELECT * FROM game_messages WHERE game_id='${game}'`)).rows.length===1,'other participant receives history');
+  await asUser(uid(5));
+  check((await run(`SELECT * FROM game_messages WHERE game_id='${game}'`)).rows.length===0,'outsider cannot read chat');
+  await deny(`SELECT send_game_message('${game}','intrusion','${uid(94)}')`,'outsider chat denied');
+  await asUser(null,'anon');
+  await deny(`SELECT * FROM game_messages`,'anonymous history denied');
+  await deny(`SELECT send_game_message('${game}','intrusion','${uid(95)}')`,'anonymous chat denied');
+  await owner(); await run(`UPDATE profiles SET is_banned=true WHERE id='${uid(2)}'`);
+  await asUser(uid(2));
+  check((await run(`SELECT * FROM game_messages WHERE game_id='${game}'`)).rows.length===0,'banned participant cannot read chat');
+  await deny(`SELECT send_game_message('${game}','intrusion','${uid(96)}')`,'banned participant chat denied');
+  await owner(); await run(`UPDATE profiles SET is_banned=false WHERE id='${uid(2)}'`);
+  await run(`UPDATE game_messages SET created_at=clock_timestamp()-interval '61 seconds'`);
+  await run(`INSERT INTO game_messages(game_id,author_id,request_id,sender,text,created_at)
+    SELECT '${game}','${uid(1)}',gen_random_uuid(),'Test','fixture',clock_timestamp()-interval '3 seconds' FROM generate_series(1,20)`);
+  await asUser(uid(1));
+  await deny(`SELECT send_game_message('${game}','minute flood','${uid(98)}')`,'per-minute chat cap denied after cooldown');
+  await owner(); await run(`DELETE FROM game_messages WHERE text='fixture'`);
+  await asUser(uid(1));
+  await run(`SELECT send_game_message('${game}','após espera','${uid(97)}')`);
+  check((await run(`SELECT count(*) n FROM game_messages WHERE game_id='${game}'`)).rows[0].n===2,'chat resumes after rate window');
+
   const early=(await run(`SELECT public.process_turn_timeout('${game}') result`)).rows[0].result;
   check(Boolean(early.error),'early timeout refused');
   await owner(); await run(`UPDATE games SET turn_started_at=now()-interval '31 seconds' WHERE id='${game}'`);

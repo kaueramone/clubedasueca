@@ -29,10 +29,13 @@ export const GameChatToggle = memo(function GameChatToggle({ onClick, unreadCoun
 interface GameChatProps {
     showChat: boolean
     setShowChat: (show: boolean) => void
-    messages: { sender: string; text: string; time: string; isBot?: boolean }[]
+    messages: { sender: string; text: string; time: string; isBot?: boolean; authorId?: string }[]
     newMessage: string
     setNewMessage: (msg: string) => void
     onSendMessage: (e: React.FormEvent) => void
+    sending?: boolean
+    error?: string | null
+    currentUserId?: string
     currentUsername: string
 }
 
@@ -44,6 +47,9 @@ export const GameChat = memo(function GameChat({
     setNewMessage,
     onSendMessage,
     currentUsername,
+    currentUserId,
+    sending = false,
+    error,
 }: GameChatProps) {
     const chatEndRef = useRef<HTMLDivElement>(null)
 
@@ -65,7 +71,7 @@ export const GameChat = memo(function GameChat({
             </div>
         ) : (
             messages.map((msg, idx) => {
-                const isMe = msg.sender === currentUsername
+                const isMe = currentUserId ? msg.authorId === currentUserId : msg.sender === currentUsername
                 return (
                     <div key={`${keyPrefix}-${idx}-${msg.sender}-${msg.time}`} className={cn("flex flex-col max-w-[85%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}>
                         <span className="text-[10px] text-gray-400 mb-0.5 px-1 font-bold">
@@ -91,6 +97,8 @@ export const GameChat = memo(function GameChat({
             <div className="relative flex items-center">
                 <input
                     type="text"
+                    maxLength={500}
+                    disabled={sending}
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Escreve uma mensagem..."
@@ -99,13 +107,14 @@ export const GameChat = memo(function GameChat({
                 />
                 <button
                     type="submit"
-                    disabled={!newMessage.trim()}
+                    disabled={sending || !newMessage.trim()}
                     className="absolute right-1 w-11 h-11 flex items-center justify-center bg-accent text-accent-foreground rounded-full hover:bg-accent/90 disabled:opacity-50 disabled:hover:bg-accent transition-colors"
                     aria-label="Enviar mensagem"
                 >
                     <Send className="w-4 h-4" />
                 </button>
             </div>
+            {error && <p role="alert" className="text-sm text-red-300 mt-2">{error}</p>}
         </form>
     )
 
