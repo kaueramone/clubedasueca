@@ -30,6 +30,6 @@ Desativar o Send Email Hook no painel Supabase primeiro, restaurando o envio pad
 
 ## Estado em 10/10/2026
 
-Implementação e 49 verificações locais concluídas, além das regressões existentes. Domínios .pt e .co.mz verificados no Resend; quatro registos por zona publicados na Cloudflare com TTL 300, sem proxy. Duas chaves restritas configuradas na Vercel. A ativação e a entrega real são registadas no relatório de verificação após publicação.
+Implementação e 49 verificações locais concluídas, além das regressões existentes. Domínios .pt e .co.mz verificados no Resend; quatro registos por zona publicados na Cloudflare com TTL 300, sem proxy. Duas chaves restritas configuradas na Vercel. Hook HTTPS ativo e confirmado após recarregar o painel. Os dois testes de remetente foram entregues segundo o fornecedor. Ver [relatório de verificação](../../auditoria/2026-09-24/AUTH-EMAIL-2026-10-10.md) para evidência e limites dos testes.
 
 Fontes: https://supabase.com/docs/guides/auth/auth-hooks/send-email-hook ; https://resend.com/docs/api-reference/emails/send-batch-emails
