@@ -13,31 +13,40 @@ import { registerReferral } from '@/features/affiliates/actions'
 
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY
 
-async function verifyTurnstile(token: string | null): Promise<boolean> {
-    if (!token || !TURNSTILE_SECRET) return false
+async function verifyTurnstile(token: FormDataEntryValue | null): Promise<string | null> {
+    if (typeof token !== 'string' || !token || token.length > 2048) return 'Aguarda a verificação de segurança e tenta novamente.'
+    if (!TURNSTILE_SECRET) {
+        console.error('[TURNSTILE_VERIFY]', 'missing-server-secret')
+        return 'A verificação de segurança está temporariamente indisponível. Tenta novamente mais tarde.'
+    }
     try {
         const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ secret: TURNSTILE_SECRET, response: token }),
+            signal: AbortSignal.timeout(10000),
         })
+        if (!res.ok) throw new Error('provider-http-error')
         const data = await res.json()
-        return data.success === true
+        if (data.success === true) return null
+        const codes: string[] = Array.isArray(data['error-codes']) ? data['error-codes'].filter((code: unknown) => typeof code === 'string' && /^[a-z-]{1,50}$/.test(code)) : []
+        console.warn('[TURNSTILE_VERIFY]', codes.join(',') || 'rejected')
+        return codes.includes('timeout-or-duplicate')
+            ? 'A verificação de segurança expirou. Tenta novamente.'
+            : 'Verificação de segurança falhou. Por favor tenta novamente.'
     } catch {
-        return false
+        console.error('[TURNSTILE_VERIFY]', 'provider-unavailable')
+        return 'Não foi possível verificar a segurança. Tenta novamente dentro de instantes.'
     }
 }
 
 export async function login(prevState: unknown, formData: FormData) {
     const supabase = await createClient()
 
-    const turnstileToken = formData.get('cf-turnstile-response') as string
-    const isHuman = await verifyTurnstile(turnstileToken)
-    if (!isHuman) {
-        return { error: 'Verificação de segurança falhou. Por favor tente novamente.' }
-    }
+    const securityError = await verifyTurnstile(formData.get('cf-turnstile-response'))
+    if (securityError) return { error: securityError }
 
-    const email = formData.get('email') as string
+    const email = String(formData.get('email') || '').trim()
     const password = formData.get('password') as string
 
     const { error, data } = await supabase.auth.signInWithPassword({
@@ -46,7 +55,11 @@ export async function login(prevState: unknown, formData: FormData) {
     })
 
     if (error) {
-        return { error: error.message }
+        const message = error.code === 'invalid_credentials' ? 'Email ou senha incorretos.'
+            : error.code === 'email_not_confirmed' ? 'Confirma o teu email antes de iniciar sessão.'
+            : error.code === 'over_request_rate_limit' || error.status === 429 ? 'Muitas tentativas. Aguarda um pouco e tenta novamente.'
+            : 'Não foi possível iniciar sessão. Tenta novamente.'
+        return { error: message }
     }
 
     if (data.user) {
@@ -71,11 +84,8 @@ export async function login(prevState: unknown, formData: FormData) {
 export async function signup(prevState: unknown, formData: FormData) {
     const supabase = await createClient()
 
-    const turnstileToken = formData.get('cf-turnstile-response') as string
-    const isHuman = await verifyTurnstile(turnstileToken)
-    if (!isHuman) {
-        return { error: 'Verificação de segurança falhou. Por favor tente novamente.' }
-    }
+    const securityError = await verifyTurnstile(formData.get('cf-turnstile-response'))
+    if (securityError) return { error: securityError }
 
     const email = formData.get('email') as string
     const password = formData.get('password') as string

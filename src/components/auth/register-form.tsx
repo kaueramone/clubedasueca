@@ -3,7 +3,6 @@
 import { useActionState } from 'react'
 import { useState } from 'react'
 import { useTurnstile } from './use-turnstile'
-import Link from 'next/link'
 import { signup } from '@/app/auth/actions'
 import { SubmitButton } from '@/components/submit-button'
 import { Eye, EyeOff } from 'lucide-react'
@@ -14,7 +13,7 @@ const initialState = {
 }
 
 export function RegisterForm() {
-    const { containerRef: turnstileRef, reset } = useTurnstile()
+    const { containerRef: turnstileRef, reset, token, error: securityError } = useTurnstile()
     const [state, formAction] = useActionState(async (previous: typeof initialState, formData: FormData) => {
         try { return await signup(previous, formData) } finally { reset() }
     }, initialState)
@@ -121,9 +120,12 @@ export function RegisterForm() {
                 </div>
             )}
 
+            <input type="hidden" name="cf-turnstile-response" value={token} />
             <div ref={turnstileRef} className="flex justify-center" />
+            <p role="status" className="text-sm text-gray-600">{securityError || (token ? 'Verificação de segurança concluída.' : 'A verificar segurança…')}</p>
+            {securityError && <button type="button" onClick={reset} className="text-sm text-accent underline">Tentar verificação novamente</button>}
 
-            <SubmitButton className="flex w-full justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-[0.98] mt-2">
+            <SubmitButton disabled={!token} className="flex w-full justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary transition-all active:scale-[0.98] mt-2">
                 Criar Conta
             </SubmitButton>
         </form>

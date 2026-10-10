@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTurnstile } from './use-turnstile'
 import Link from 'next/link'
 import { Eye, EyeOff } from 'lucide-react'
@@ -14,9 +14,15 @@ const initialState = {
 }
 
 export function LoginForm() {
-    const { containerRef: turnstileRef, reset } = useTurnstile()
+    const { containerRef: turnstileRef, reset, token, error: securityError } = useTurnstile()
+    const [email, setEmail] = useState('')
+    const passwordRef = useRef<HTMLInputElement>(null)
     const [state, formAction] = useActionState(async (previous: typeof initialState, formData: FormData) => {
-        try { return await login(previous, formData) } finally { reset() }
+        try { return await login(previous, formData) } finally {
+            if (passwordRef.current) passwordRef.current.value = ''
+            setShowPassword(false)
+            reset()
+        }
     }, initialState)
     const [showPassword, setShowPassword] = useState(false)
     return (
@@ -32,6 +38,9 @@ export function LoginForm() {
                     id="email"
                     name="email"
                     type="email"
+                    autoComplete="username"
+                    value={email}
+                    onChange={event => setEmail(event.target.value)}
                     required
                     className="mt-1 block w-full rounded-lg border border-gray-300 bg-ios-gray6 px-4 py-3 text-gray-900 focus:border-accent focus:outline-none focus:ring-accent sm:text-sm transition-all"
                     placeholder="seu@email.com"
@@ -47,6 +56,8 @@ export function LoginForm() {
                 </label>
                 <div className="relative mt-1">
                     <input
+                        ref={passwordRef}
+                        autoComplete="current-password"
                         id="password"
                         name="password"
                         type={showPassword ? "text" : "password"}
@@ -56,6 +67,8 @@ export function LoginForm() {
                     />
                     <button
                         type="button"
+                        aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        aria-pressed={showPassword}
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                     >
@@ -65,7 +78,7 @@ export function LoginForm() {
             </div>
 
             {state?.error && (
-                <div className="rounded-md bg-red-50 p-4">
+                <div role="alert" className="rounded-md bg-red-50 p-4">
                     <div className="flex">
                         <div className="ml-3">
                             <h3 className="text-sm font-medium text-red-800">Erro</h3>
@@ -88,9 +101,12 @@ export function LoginForm() {
                 </div>
             </div>
 
+            <input type="hidden" name="cf-turnstile-response" value={token} />
             <div ref={turnstileRef} className="flex justify-center" />
+            <p role="status" className="text-sm text-gray-600">{securityError || (token ? 'Verificação de segurança concluída.' : 'A verificar segurança…')}</p>
+            {securityError && <button type="button" onClick={reset} className="text-sm text-accent underline">Tentar verificação novamente</button>}
 
-            <SubmitButton className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
+            <SubmitButton disabled={!token} className="flex w-full justify-center rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-all active:scale-[0.98]">
                 Entrar
             </SubmitButton>
         </form>

@@ -6,9 +6,11 @@ import { GlobalLoader } from './global-loader'
 export function SubmitButton({
     children,
     className,
+    disabled = false,
 }: {
     children: React.ReactNode
     className?: string
+    disabled?: boolean
 }) {
     const { pending } = useFormStatus()
 
@@ -16,7 +18,7 @@ export function SubmitButton({
         <>
             <button
                 type="submit"
-                disabled={pending}
+                disabled={pending || disabled}
                 className={`${className} ${pending ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
                 {pending ? 'A processar...' : children}
