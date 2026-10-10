@@ -11,7 +11,7 @@ interface PlayerAvatarProps {
 
 export const PlayerAvatar = memo(function PlayerAvatar({ player, gameStatus, borderColorClass, onInvite }: PlayerAvatarProps) {
     return (
-        <div className={`h-12 w-12 rounded-full border-2 ${borderColorClass} bg-black/20 overflow-hidden shadow-lg relative`}>
+        <div className={`h-12 w-12 rounded-full border-2 ${borderColorClass} bg-black/20 overflow-hidden shadow-lg relative`} style={gameStatus === 'waiting' && onInvite ? { width: 44, height: 44 } : undefined}>
             {player?.profiles?.avatar_url ? (
                 <Image src={player.profiles.avatar_url} alt={player.profiles.username || 'Jogador'} fill sizes="64px" className="object-cover" />
             ) : player?.profiles?.username ? (

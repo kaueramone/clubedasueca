@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo, type CSSProperties } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { playCard, cancelGame, leaveGame, playTimeoutCard, getFriendsForInvite, sendTableInvite } from './actions'
 import { tableFromSnapshot, trainingMove, settleTrainingTrick, secondsToDeadline, cardLabel } from './table-state'
 import { cn } from '@/lib/utils'
-import { getCardAssetPath, generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
+import { generateDeck, shuffleDeck, getTrickWinner, isValidMove, getCardSuit, getCardValue, sortHand } from './utils'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Clock, User, ArrowLeft, LogOut, RotateCcw, UserPlus, X, Check } from 'lucide-react'
@@ -15,6 +15,8 @@ import { ScoreBoard } from './components/score-board'
 import { GameChat, GameChatToggle } from './components/game-chat'
 import { GameResultOverlay } from './components/game-result-overlay'
 import { TrumpAnimation } from './components/trump-animation'
+import { CardArt } from './components/card-art'
+import styles from './game-table.module.css'
 
 export function GameTable({ game, currentUser, isTraining = false, isDemoGuest = false }: { game?: any, currentUser?: any, isTraining?: boolean, isDemoGuest?: boolean }) {
     const router = useRouter()
@@ -72,7 +74,6 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
     const [showTrumpAnimation, setShowTrumpAnimation] = useState(false)
     const [isFadingOutTrump, setIsFadingOutTrump] = useState(false)
     const [showTrumpExpanded, setShowTrumpExpanded] = useState(false)
-    const trumpBadgeRef = useRef<HTMLDivElement>(null)
     const hasShownTrumpRef = useRef(false)
 
     // Audio refs
@@ -590,68 +591,49 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
         return 'border-[#CE1126]'
     }
 
-    const renderCard = (card: string, onClick?: () => void, isOpponent = false) => {
-        const src = getCardAssetPath(card)
+    const renderSeat = (player: any, side: 'Top' | 'Left' | 'Right', offset: number) => {
+        // Multiplayer exposes only the count; never request opponents' card faces.
+        const count = player?.hand_count ?? player?.hand?.length ?? 0
+        const active = gameState.status === 'playing' && player?.position === gameState.current_turn
+        const name = player?.profiles?.username?.split(' ')[0] || 'Aguardar'
         return (
-            <div
-                onClick={onClick}
-                className={cn(
-                    "relative transition-all select-none filter drop-shadow-md",
-                    onClick ? "cursor-pointer active:scale-95 z-0" : "",
-                    isOpponent ? "w-14 h-20 sm:w-20 sm:h-28 short:w-10 short:h-14" : "w-[5.2rem] h-[7.8rem] short:w-14 short:h-20 sm:w-[6.5rem] sm:h-[9.75rem] lg:w-32 lg:h-48"
-                )}
-            >
-                <Image
-                    src={src}
-                    alt={cardLabel(card)}
-                    fill
-                    className="object-contain"
-                    sizes="(max-width: 768px) 100px, 150px"
-                    priority={!isOpponent}
-                />
+            <div className={cn(styles.seat, styles[`seat${side}`])} data-active={active}>
+                <div className={styles.player}>
+                    <PlayerAvatar player={player} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(player)} onInvite={isHost && !player ? () => openSeatInvite((myPos + offset) % 4) : undefined} />
+                    <span className={styles.playerName} title={player?.profiles?.username}>{name}</span>
+                    {active && <span className={styles.turnLabel}>A jogar</span>}
+                </div>
+                {count > 0 && <div className={styles.opponentHand} aria-label={`${name}: ${count} cartas`}>
+                    <div className={styles.opponentStack} aria-hidden="true">
+                        {Array.from({ length: Math.min(count, 3) }, (_, i) => <div key={i} className={styles.opponentCard} style={{ '--stack-index': i } as CSSProperties}><CardArt back /></div>)}
+                    </div>
+                    <span className={styles.cardCount} aria-hidden="true">{count}</span>
+                </div>}
             </div>
         )
     }
-
-    const renderCardBack = (rotate = false) => {
-        return (
-            <div className={cn(
-                "relative filter drop-shadow-sm",
-                "w-14 h-20 sm:w-20 sm:h-28 short:w-9 short:h-12",
-                rotate ? "rotate-90" : ""
-            )}>
-                <Image
-                    src="/cards/card_back.png"
-                    alt="Carta virada"
-                    fill
-                    className="object-cover rounded-md"
-                />
-            </div>
-        )
-    }
-
-    const getOpponentCards = (player: any) => {
-        // Em multiplayer, get_table_state devolve hand_count (a mão real dos
-        // adversários nunca chega ao cliente). No treino, usa o tamanho da mão local.
-        const count = player?.hand_count ?? player?.hand?.length ?? 0;
-        return Array(count).fill(0).map((_, i) => i);
-    }
+    const isMyTurn = gameState.status === 'playing' && gameState.current_turn === myPos && !roundRecap && !gameResult
+    const suitNames: Record<string, string> = { hearts: 'Copas', diamonds: 'Ouros', clubs: 'Paus', spades: 'Espadas' }
+    const leadCard = gameState.current_trick_cards[0]?.card
+    const handHint = selectedCard ? `${cardLabel(selectedCard)} · Toca novamente para jogar.`
+        : leadCard ? `Segue ${suitNames[getCardSuit(leadCard)]}, se tiveres esse naipe.`
+        : 'Toca para selecionar; toca novamente para jogar.'
 
     const currentUsername = isTraining
         ? (gameState?.game_players?.[0]?.profiles?.username || 'Você')
         : (currentUser?.profiles?.username || 'Você')
 
     return (
-        <div className="relative h-full w-full bg-[#35654d] overflow-hidden flex flex-col items-center justify-center p-3 sm:p-4 short:p-1 short:px-safe select-none">
+        <div className={styles.table} data-testid="game-table">
             {/* Background Images */}
-            <div className="absolute inset-0 z-0">
+            <div className={styles.background}>
                 <Image src="/images/mesa-horizontal.png" alt="Mesa de jogo" fill sizes="100vw" className="object-cover hidden md:block" priority />
                 <Image src="/images/mesa-vert.png" alt="Mesa de jogo" fill sizes="100vw" className="object-cover md:hidden" priority />
                 <div className="absolute inset-0 bg-black/10 mix-blend-multiply" />
             </div>
 
-            {/* Left Controls Container (Exit + Chat) */}
-            <div className="absolute top-4 left-4 z-40 flex items-center gap-2">
+            <header className={styles.toolbar} aria-label="Controlos e placar">
+            <div className={styles.controls}>
                 {/* Exit/Back Button (Training or Demo) */}
                 {(isTraining || isDemoGuest) && (
                     <button
@@ -710,7 +692,10 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 />
             </div>
 
-            {/* Chat Panels (positioned relative to game container, outside controls div) */}
+            <ScoreBoard scoreA={scores.A} scoreB={scores.B} myTeam={myPlayer?.team || 'A'} />
+            </header>
+
+            {/* Chat Panels */}
             <GameChat
                 showChat={showChat}
                 setShowChat={setShowChat}
@@ -721,72 +706,23 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 currentUsername={currentUsername}
             />
 
-            {/* Scoreboard */}
-            <ScoreBoard scoreA={scores.A} scoreB={scores.B} myTeam={myPlayer?.team || 'A'} />
-            {connectionError && <p role="alert" className="absolute top-28 inset-x-3 z-50 bg-red-950 text-white p-2 rounded text-xs text-center">{connectionError}</p>}
+            {connectionError && <p role="alert" className={styles.connection}>{connectionError}</p>}
 
-            {/* AFK Timer */}
-            {gameState.current_turn === myPos && !roundRecap && !gameResult && gameState.status === 'playing' && (
-                <div className="absolute top-20 right-4 z-30 flex items-center gap-2 bg-yellow-900/40 backdrop-blur-md px-3 py-1 rounded-full border border-yellow-500/50" role="timer" aria-label={`Tempo restante: ${turnTimeLeft} segundos`}>
-                    <Clock className="w-4 h-4 text-yellow-300 animate-pulse" />
-                    <span className="text-yellow-300 font-mono font-bold">{turnTimeLeft}s</span>
-                </div>
-            )}
-
-            {/* --- Players --- */}
-
-            {/* Top Player (Partner) */}
-            <div className="absolute top-[8%] sm:top-8 short:top-[5%] flex flex-col items-center z-10 w-full short:scale-75 short:origin-top">
-                <div className="flex flex-col items-center mb-[-10px] z-20">
-                    <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full mb-1">{pTop?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
-                    <PlayerAvatar player={pTop} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pTop)} onInvite={isHost && !pTop ? () => openSeatInvite((myPos + 2) % 4) : undefined} />
-                </div>
-                <div className="flex -space-x-[50px] sm:-space-x-[70px] short:-space-x-[60px] h-20 short:h-12 items-start justify-center">
-                    {getOpponentCards(pTop).map(i => (
-                        <div key={i} className="transform scale-75 origin-top">{renderCardBack()}</div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Left Player (Opponent) */}
-            <div className="absolute left-6 short:left-8 sm:left-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-left">
-                <div className="flex flex-col items-center shrink-0">
-                    <PlayerAvatar player={pLeft} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pLeft)} onInvite={isHost && !pLeft ? () => openSeatInvite((myPos + 1) % 4) : undefined} />
-                    <div className="flex flex-col items-center mt-1">
-                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pLeft?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
+            <section className={styles.arena} aria-label="Mesa e jogadores">
+                {renderSeat(pTop, 'Top', 2)}
+                {renderSeat(pLeft, 'Left', 1)}
+                {renderSeat(pRight, 'Right', 3)}
+                <div className={styles.trick} aria-label="Vaza atual">
+                    <div className={styles.tableMark}>
+                        <Image src="/images/favicon.png" alt="" fill sizes="256px" className="object-contain" aria-hidden="true" />
                     </div>
-                </div>
-                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] short:-space-y-[44px] ml-2">
-                    {getOpponentCards(pLeft).map(i => (
-                        <div key={i} className="transform -rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Right Player (Opponent) */}
-            <div className="absolute right-6 short:right-8 sm:right-[10%] top-1/2 -translate-y-1/2 flex flex-row items-center z-10 gap-2 sm:gap-4 short:gap-1 short:scale-75 short:origin-right">
-                <div className="flex flex-col -space-y-[100px] sm:-space-y-[120px] short:-space-y-[44px] mr-2">
-                    {getOpponentCards(pRight).map(i => (
-                        <div key={i} className="transform rotate-90 scale-75 shadow-sm">{renderCardBack()}</div>
-                    ))}
-                </div>
-                <div className="flex flex-col items-center shrink-0">
-                    <PlayerAvatar player={pRight} gameStatus={gameState.status} borderColorClass={getAvatarBorderColor(pRight)} onInvite={isHost && !pRight ? () => openSeatInvite((myPos + 3) % 4) : undefined} />
-                    <div className="flex flex-col items-center mt-1">
-                        <span className="text-[10px] sm:text-xs font-bold text-white bg-black/50 px-2 py-0.5 rounded-full line-clamp-1 max-w-[60px] text-center">{pRight?.profiles?.username?.split(' ')[0] || 'Aguardar'}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Center (Table) */}
-            <div className="relative w-48 h-48 short:!w-40 short:!h-40 sm:w-64 sm:h-64 rounded-full border-4 border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden short:-translate-y-[20%]">
-                <div className="absolute inset-0 z-0 opacity-10 flex items-center justify-center pointer-events-none p-8">
-                    <Image src="/images/favicon.png" alt="" fill sizes="256px" className="object-contain p-4" aria-hidden="true" />
-                </div>
+                    {isMyTurn && <div className={styles.timer} data-urgent={turnTimeLeft <= 5} role="timer" aria-label={`Tempo restante: ${turnTimeLeft} segundos`}>
+                        <Clock className="w-3.5 h-3.5" aria-hidden="true" /><span>{turnTimeLeft}s</span>
+                    </div>}
 
                 {/* Waiting State Overlay */}
                 {gameState.status === 'waiting' && !isTraining && (
-                    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm text-center p-4">
+                    <div className={styles.tableOverlay}>
                         <User className="w-8 h-8 text-white/50 mb-2" />
                         <h3 className="text-white font-bold text-sm sm:text-base">Aguardando Jogadores</h3>
                         <p className="text-white/70 text-xs mt-1 mb-3">
@@ -803,115 +739,52 @@ export function GameTable({ game, currentUser, isTraining = false, isDemoGuest =
                 )}
 
                 {roundRecap && (
-                    <div
-                        onClick={dismissRecap}
-                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') dismissRecap() }}
-                        tabIndex={0}
-                        className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 rounded-full cursor-pointer hover:bg-black/70 transition-colors animate-in fade-in"
-                        role="button"
-                        aria-label={`${roundRecap.winner} ganhou ${roundRecap.points} pontos`}
-                    >
-                        <div className="text-center space-y-1 p-4 short:p-2 short:space-y-0">
-                            <p className="text-xs short:text-[10px] font-bold text-white/70 uppercase tracking-widest short:tracking-normal">{roundRecap.explanation}</p>
-                            <div className="flex flex-col items-center">
-                                <p className="text-xl short:text-sm font-bold text-white shadow-black drop-shadow-md">{roundRecap.winner}</p>
-                                <p className="text-2xl short:text-lg font-black text-[#FFD700]">+{roundRecap.points}</p>
-                            </div>
-                            <p className="text-[10px] text-white/50 mt-2">Próxima em {roundRecap.timeLeft}s...</p>
-                        </div>
-                    </div>
+                    <button type="button" onClick={dismissRecap} className={cn(styles.tableOverlay, styles.recap)} aria-label={`${roundRecap.winner} ganhou ${roundRecap.points} pontos. Continuar.`}>
+                        <strong>{roundRecap.winner} · +{roundRecap.points}</strong>
+                        <span>{roundRecap.explanation}</span>
+                        <small>Próxima em {roundRecap.timeLeft}s · Toca para continuar</small>
+                    </button>
                 )}
-
-                <div className="absolute inset-0 flex items-center justify-center">
-                    {gameState.current_trick_cards?.map((c: any, i: number) => {
-                        const player = gameState.game_players.find((p: any) => p.user_id === c.player_id)
-                        const pos = player?.position
-                        const relativePos = (pos - myPos + 4) % 4
-
-                        let style = {}
-                        if (relativePos === 0) style = { transform: 'translateY(20px)' }
-                        if (relativePos === 1) style = { transform: 'translateX(-20px) rotate(90deg)' }
-                        if (relativePos === 2) style = { transform: 'translateY(-20px)' }
-                        if (relativePos === 3) style = { transform: 'translateX(20px) rotate(-90deg)' }
-
-                        return (
-                            <div key={`trick-${c.player_id}`} className="absolute transition-all duration-300" style={style}>
-                                {renderCard(c.card, undefined, false)}
-                            </div>
-                        )
-                    })}
+                {gameState.current_trick_cards?.map((c: any) => {
+                    const player = gameState.game_players.find((p: any) => p.user_id === c.player_id)
+                    const relativePos = ((player?.position ?? 0) - myPos + 4) % 4
+                    return <div key={`trick-${c.player_id}`} className={styles.playedCard} data-seat={relativePos}>
+                        <CardArt card={c.card} label={`${player?.profiles?.username || 'Jogador'}: ${cardLabel(c.card)}`} />
+                    </div>
+                })}
                 </div>
-            </div>
+            </section>
 
-<p className="absolute bottom-0 inset-x-0 text-center text-[9px] bg-black/70 text-white z-40">Teste gratuito · Sem dinheiro real · Saldos repostos a zero no lançamento</p>
-            {/* Bottom Player (Me) */}
-            <div className="absolute bottom-6 sm:bottom-10 short:!bottom-3 w-full flex flex-col items-center z-30 overflow-visible">
-                <p id="hand-instructions" className="text-[11px] short:text-[10px] text-white bg-black/70 rounded px-2 py-1 short:py-0 mb-1 short:mb-0 text-center max-w-full">
-                    {gameState.current_turn === myPos ? 'A tua vez: toca para selecionar; toca novamente para jogar.' : 'Aguarda a tua vez.'} Desliza para ver todas as cartas. Deves seguir o naipe de saída, se o tiveres.
+            <section className={styles.handDock} aria-label="A tua mão">
+                <p id="hand-instructions" className={styles.handHint} data-active={isMyTurn}>
+                    <strong>{connectionError ? 'A recuperar ligação…' : roundRecap ? 'Vaza concluída' : loading ? 'A confirmar jogada…' : isMyTurn ? 'A tua vez' : gameState.status === 'waiting' ? 'À espera de jogadores' : 'Aguarda a tua vez'}</strong>
+                    {handHint}
                 </p>
-                <div className="w-full overflow-x-auto overscroll-x-contain px-3 pb-2 pt-3 short:pb-1 short:pt-2" role="group" aria-label="As tuas cartas" aria-describedby="hand-instructions">
-                    <div className="flex gap-1 w-max min-w-full justify-center">
+                <div className={styles.handCards} role="group" aria-label="As tuas cartas" aria-describedby="hand-instructions">
                     {sortHand(myPlayer?.hand || []).map((card: string) => {
-                        const lead = gameState.current_trick_cards[0]?.card
-                        const legal = isValidMove(card, myPlayer.hand, lead ? getCardSuit(lead) : null)
-                        const enabled = legal && gameState.current_turn === myPos && !loading && !isTrickProcessing && !roundRecap && !connectionError && gameState.status === 'playing'
-                        return <button key={card} type="button" aria-label={`${cardLabel(card)}${legal ? '' : ', deves seguir o naipe'}`} aria-pressed={selectedCard === card} disabled={!enabled} onClick={() => handlePlayCard(card)} className={cn('relative shrink-0 w-14 h-20 sm:w-20 sm:h-28 short:!w-11 short:!h-[62px] rounded bg-white focus-visible:outline focus-visible:outline-4 focus-visible:outline-yellow-300 transition-transform', selectedCard === card && '-translate-y-2 ring-4 ring-yellow-300', !legal && 'opacity-40')}>
-                            <Image src={getCardAssetPath(card)} alt="" fill sizes="(max-height: 480px) 44px, (max-width: 640px) 56px, 80px" className="object-contain" />
+                        const legal = isValidMove(card, myPlayer.hand, leadCard ? getCardSuit(leadCard) : null)
+                        const enabled = legal && isMyTurn && !loading && !isTrickProcessing && !connectionError
+                        return <button key={card} type="button" aria-label={`${cardLabel(card)}${legal ? '' : ', deves seguir o naipe'}`} aria-pressed={selectedCard === card} disabled={!enabled} onClick={() => handlePlayCard(card)} className={styles.handCard} data-legal={legal}>
+                            <CardArt card={card} />
                         </button>
                     })}
-                    </div>
                 </div>
-
-                <div className="flex items-center gap-3 short:gap-1.5 bg-black/40 px-6 py-2 short:px-3 short:py-0.5 rounded-full backdrop-blur-md border border-white/10 shadow-xl">
-                    <div className="h-10 w-10 short:h-7 short:w-7 rounded-full bg-gray-200 border-2 border-white overflow-hidden relative">
-                        {myPlayer?.profiles?.avatar_url ? (
-                            <Image src={myPlayer?.profiles.avatar_url} alt={myPlayer?.profiles?.username || 'Eu'} fill sizes="80px" className="object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400"><User className="w-6 h-6" /></div>
-                        )}
+                <div className={styles.playerFooter}>
+                    <div className={styles.self}>
+                        <div className={styles.selfAvatar}>
+                            {myPlayer?.profiles?.avatar_url ? <Image src={myPlayer.profiles.avatar_url} alt="" fill sizes="32px" className="object-cover" /> : <User className="w-5 h-5" aria-hidden="true" />}
+                        </div>
+                        <span className={styles.selfName}>{myPlayer?.profiles?.username || 'Você'}</span>
                     </div>
-                    <span className="text-white font-bold text-shadow-sm">{myPlayer?.profiles?.username || 'Eu'}</span>
-                    <div className="h-full w-px bg-white/20 mx-2" />
-                    {gameState.trump_card && (() => {
-                        // Compute fixed position from badge ref so the popover escapes all stacking contexts
-                        const rect = trumpBadgeRef.current?.getBoundingClientRect()
-                        const popoverStyle: React.CSSProperties = rect ? {
-                            position: 'fixed',
-                            bottom: window.innerHeight - rect.top + 12,
-                            left: rect.left + rect.width / 2,
-                            transform: 'translateX(-50%)',
-                            zIndex: 9999,
-                            pointerEvents: 'none',
-                        } : { display: 'none' }
-
-                        return (
-                            <>
-                                <div
-                                    ref={trumpBadgeRef}
-                                    className="flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-300 px-3 py-0.5 sm:py-1 rounded-full shadow-[0_0_10px_rgba(255,215,0,0.4)] mt-[-2px] cursor-pointer select-none"
-                                    onMouseEnter={() => setShowTrumpExpanded(true)}
-                                    onMouseLeave={() => setShowTrumpExpanded(false)}
-                                    onTouchStart={() => setShowTrumpExpanded(prev => !prev)}
-                                >
-                                    <span className="text-[10px] sm:text-xs font-black text-white uppercase tracking-widest drop-shadow-md pr-1">Trunfo</span>
-                                    <div className="relative w-6 h-8 sm:w-7 sm:h-10 overflow-hidden rounded-[4px] shadow-sm border border-white/50 bg-white transform rotate-3">
-                                        <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill sizes="80px" className="object-cover" />
-                                    </div>
-                                </div>
-                                {/* Popover rendered with fixed position — escapes all stacking contexts */}
-                                {showTrumpExpanded && (
-                                    <div style={popoverStyle} className="flex flex-col items-center gap-1">
-                                        <div className="relative w-20 h-28 rounded-lg shadow-2xl border-2 border-yellow-300 bg-white overflow-hidden">
-                                            <Image src={getCardAssetPath(gameState.trump_card)} alt={`Trunfo: ${gameState.trump_card}`} fill sizes="80px" className="object-cover" />
-                                        </div>
-                                        <span className="text-[9px] font-bold text-yellow-200 uppercase tracking-widest drop-shadow">Trunfo</span>
-                                    </div>
-                                )}
-                            </>
-                        )
-                    })()}
+                    {gameState.trump_card && <div className={styles.trump}>
+                        <button type="button" className={styles.trumpButton} aria-label={`Trunfo: ${cardLabel(gameState.trump_card)}`} aria-expanded={showTrumpExpanded} onClick={() => setShowTrumpExpanded(prev => !prev)} onBlur={() => setShowTrumpExpanded(false)}>
+                            <span>Trunfo</span><span className={styles.trumpMini}><CardArt card={gameState.trump_card} /></span>
+                        </button>
+                        {showTrumpExpanded && <div className={styles.trumpPopover}><CardArt card={gameState.trump_card} label={`Trunfo: ${cardLabel(gameState.trump_card)}`} /></div>}
+                    </div>}
                 </div>
-            </div>
+            </section>
+            <p className={styles.beta}>Teste gratuito · Sem dinheiro real · Saldos repostos a zero no lançamento</p>
 
             {/* Trump Card Intro Animation */}
             {showTrumpAnimation && gameState.trump_card && (

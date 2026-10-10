@@ -1,7 +1,6 @@
 import { memo } from 'react'
 import { cn } from '@/lib/utils'
-import Image from 'next/image'
-import { getCardAssetPath } from '../utils'
+import { CardArt } from './card-art'
 
 interface TrumpAnimationProps {
     trumpCard: string
@@ -30,14 +29,7 @@ export const TrumpAnimation = memo(function TrumpAnimation({ trumpCard, isFading
                 <div className="transform scale-[1.1] sm:scale-[1.4] shadow-[0_0_40px_rgba(255,215,0,0.6)] rounded-xl relative">
                     <div className="absolute inset-0 bg-[#FFD700] rounded-xl blur-md opacity-40 animate-pulse" />
                     <div className="relative w-[5.2rem] h-[7.8rem] sm:w-[6.5rem] sm:h-[9.75rem] lg:w-32 lg:h-48 filter drop-shadow-md">
-                        <Image
-                            src={getCardAssetPath(trumpCard)}
-                            alt={`Trunfo: ${trumpCard}`}
-                            fill
-                            className="object-contain"
-                            sizes="(max-width: 768px) 100px, 150px"
-                            priority
-                        />
+                        <CardArt card={trumpCard} label={`Trunfo: ${trumpCard}`} />
                     </div>
                 </div>
             </div>

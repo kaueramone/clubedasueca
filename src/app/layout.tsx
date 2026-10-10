@@ -25,7 +25,7 @@ export default async function RootLayout({
 }>) {
     return (
         <html lang="pt-MZ" className="dark">
-            <body className={`${inter.variable} ${playfair.variable} font-sans min-h-screen bg-background text-foreground`}>
+            <body className={`${inter.variable} ${playfair.variable} font-sans min-h-dvh bg-background text-foreground`}>
                 {children}
             </body>
         </html>

@@ -53,6 +53,9 @@ export const GameChat = memo(function GameChat({
         }
     }, [messages, showChat])
 
+    // Off-screen controls must not remain reachable by keyboard or screen readers.
+    if (!showChat) return null
+
     const renderMessages = (keyPrefix: string) => (
         messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-gray-500 text-sm text-center px-4">
@@ -84,20 +87,20 @@ export const GameChat = memo(function GameChat({
     )
 
     const renderInput = () => (
-        <form onSubmit={onSendMessage} className="p-3 border-t border-white/10 bg-black/40">
+        <form onSubmit={onSendMessage} className="p-3 border-t border-white/10 bg-black/40" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
             <div className="relative flex items-center">
                 <input
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Escreve uma mensagem..."
-                    className="w-full bg-white/10 border border-white/10 text-white text-sm rounded-full pl-4 pr-10 py-2.5 outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all placeholder:text-gray-500"
+                    className="w-full bg-white/10 border border-white/10 text-white text-base md:text-sm rounded-full pl-4 pr-14 py-3 outline-none focus:ring-1 focus:ring-accent focus:border-accent transition-all placeholder:text-gray-500"
                     aria-label="Mensagem de chat"
                 />
                 <button
                     type="submit"
                     disabled={!newMessage.trim()}
-                    className="absolute right-1 w-8 h-8 flex items-center justify-center bg-accent text-accent-foreground rounded-full hover:bg-accent/90 disabled:opacity-50 disabled:hover:bg-accent transition-colors"
+                    className="absolute right-1 w-11 h-11 flex items-center justify-center bg-accent text-accent-foreground rounded-full hover:bg-accent/90 disabled:opacity-50 disabled:hover:bg-accent transition-colors"
                     aria-label="Enviar mensagem"
                 >
                     <Send className="w-4 h-4" />
@@ -111,7 +114,7 @@ export const GameChat = memo(function GameChat({
             {/* Mobile: Fullscreen slide-from-right overlay */}
             <div
                 className={cn(
-                    "fixed inset-0 z-[100] flex flex-col bg-black/90 backdrop-blur-xl transition-transform duration-300 ease-in-out md:hidden",
+                    "fixed inset-0 z-[100] flex flex-col bg-black/90 backdrop-blur-xl transition-transform duration-300 ease-in-out md:hidden pt-safe px-safe",
                     showChat ? "translate-x-0" : "translate-x-full"
                 )}
                 role="log"
@@ -122,7 +125,7 @@ export const GameChat = memo(function GameChat({
                         <MessageCircle className="w-5 h-5 text-accent" />
                         Chat da Mesa
                     </h3>
-                    <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10" aria-label="Fechar chat">
+                    <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-white transition-colors p-2 min-w-11 min-h-11 flex items-center justify-center rounded-full hover:bg-white/10" aria-label="Fechar chat">
                         <X className="w-6 h-6" />
                     </button>
                 </div>

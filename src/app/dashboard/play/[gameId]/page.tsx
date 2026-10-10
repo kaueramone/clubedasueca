@@ -19,5 +19,5 @@ export default async function GamePage({ params }: { params: Promise<{ gameId: s
     const snapshot = data as unknown as Parameters<typeof tableFromSnapshot>[0];
     const game = tableFromSnapshot(snapshot);
     if (!game.game_players.some(p => p.user_id === user.id)) redirect("/dashboard/play");
-    return <div className="h-[calc(100dvh-4rem)] -m-4 md:-m-8 overflow-hidden bg-ios-gray6"><GameTable game={game} currentUser={user} /></div>;
+    return <div className="fixed inset-0 z-50 h-dvh overflow-hidden bg-ios-gray6"><GameTable game={game} currentUser={user} /></div>;
 }

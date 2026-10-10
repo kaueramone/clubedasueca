@@ -23,7 +23,7 @@ export default function TrainingPage() {
     }, [supabase])
 
     return (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-ios-gray6">
+        <div className="fixed inset-0 z-50 h-dvh overflow-hidden bg-ios-gray6">
             <GameTable
                 isTraining={true}
                 currentUser={user}
