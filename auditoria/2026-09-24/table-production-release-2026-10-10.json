@@ -1,0 +1,19 @@
+{
+  "deployment": "dpl_6g8x7zuNEQU59xsrHvQqkBf7zCjE",
+  "commit": "f7897b3c755902452cd286e805774425c1c8c1b1",
+  "pages": [
+    {
+      "domain": "clubedasueca.co.mz",
+      "http": 200
+    },
+    {
+      "domain": "clubedasueca.pt",
+      "http": 200
+    }
+  ],
+  "checks": {
+    "authenticatedChatRpc": true,
+    "serverClock": true,
+    "removedUntrustedChatBroadcast": true
+  }
+}

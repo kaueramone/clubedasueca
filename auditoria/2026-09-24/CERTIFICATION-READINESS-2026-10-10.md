@@ -67,3 +67,13 @@ Nenhum contacto foi enviado à IGJ, nenhum laboratório foi contratado e nenhuma
 ## Security Advisor após as migrações
 
 A nova tabela tem RLS e política de leitura; as quatro funções de cartas deixaram de ter `search_path` mutável. O Advisor continua a assinalar as duas projeções públicas deliberadas (`public_profiles` e `blog_authors`) como [views SECURITY DEFINER](https://supabase.com/docs/guides/database/database-linter?lint=0010_security_definer_view), funções privilegiadas expostas com guardas de autorização e [proteção contra senhas vazadas desativada](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). Os controlos privados sem política usam negação por defeito. Os avisos não foram ocultados nem o projeto declarado livre de vulnerabilidades.
+
+## Publicação e conferência final
+
+- Commit de código: `f7897b3c755902452cd286e805774425c1c8c1b1`.
+- Deployment Vercel: `dpl_6g8x7zuNEQU59xsrHvQqkBf7zCjE`, estado READY, aliases de produção atribuídos em .co.mz, .pt, .com e .com.br.
+- .co.mz e .pt responderam HTTP 200; os bundles públicos incluem `send_game_message` e `server_now` e não incluem o antigo evento `chat_message`.
+- HTTP anónimo: envio, leitura de chat e snapshot recusados com 401 / SQLSTATE 42501.
+- Navegador publicado: treino em viewport mobile, chat aberto/fechado e mensagem enviada, contador de 15 segundos decrescente, sem erros de console ou transbordamento horizontal. É conferência visual do treino; não é uma nova partida online em quatro navegadores.
+- Fixture online revertida: quatro perfis QA continuam bloqueados, zero sessões QA, zero mensagens de teste persistidas.
+- Evidências: `table-hardening-verification-2026-10-10.json`, `table-anonymous-http-2026-10-10.json`, `table-production-release-2026-10-10.json` e capturas `chat-mobile-after-hardening-2026-10-10.png` / `table-mobile-after-hardening-2026-10-10.png`.

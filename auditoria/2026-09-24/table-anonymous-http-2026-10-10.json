@@ -1,0 +1,20 @@
+[
+  {
+    "test": "anonymous chat send",
+    "status": "PASS",
+    "http": 401,
+    "code": "42501"
+  },
+  {
+    "test": "anonymous chat history",
+    "status": "PASS",
+    "http": 401,
+    "code": "42501"
+  },
+  {
+    "test": "anonymous table snapshot",
+    "status": "PASS",
+    "http": 401,
+    "code": "42501"
+  }
+]
