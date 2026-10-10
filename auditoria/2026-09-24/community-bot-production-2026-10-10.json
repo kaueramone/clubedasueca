@@ -1,0 +1,51 @@
+{
+  "deployment": "dpl_GDXbHYY3ZxPPdJePB7WLE8c4zE5E",
+  "commit": "c29926ad0d805d3a0d5ffe1cee0aee8415665a9f",
+  "messages": [
+    {
+      "id": "303c83a2-114b-443a-a7c4-b0ffe0477f75",
+      "content": "Teste de atendimento: como é dividido o prémio da mesa?",
+      "user_id": "79777c41-a722-4490-aa5f-dba4bf70f735",
+      "created_at": "2026-10-10T16:44:40.546437+00:00"
+    },
+    {
+      "id": "8fef5ed7-0f1d-49f2-b4a0-a6416002794f",
+      "content": "Num jogo de Sueca, o pote soma as quatro entradas. Em caso de vitória, é aplicada uma taxa simulada de 20% e o restante é dividido igualmente pelos dois vencedores. Em empate, cada jogador recebe a sua entrada de volta, sem taxa. Lembrete: no beta os créditos são fictícios e sem valor monetário.",
+      "user_id": "00000000-0000-0000-0000-000000000001",
+      "created_at": "2026-10-10T16:44:46.64261+00:00"
+    },
+    {
+      "id": "57148063-3eb0-4ce1-9090-64101ccc16a7",
+      "content": "e no empate?",
+      "user_id": "79777c41-a722-4490-aa5f-dba4bf70f735",
+      "created_at": "2026-10-10T16:45:09.236527+00:00"
+    },
+    {
+      "id": "dc2c7792-40cd-4954-9a82-ce27c9968b3a",
+      "content": "Em caso de empate, cada jogador recebe de volta a sua entrada, sem taxa. Lembrete: no beta os créditos são fictícios e não têm valor monetário.",
+      "user_id": "00000000-0000-0000-0000-000000000001",
+      "created_at": "2026-10-10T16:45:12.662114+00:00"
+    },
+    {
+      "id": "a156df09-2282-40d6-9e72-06065ec40f03",
+      "content": "Teste de âmbito: qual é a capital da França?",
+      "user_id": "79777c41-a722-4490-aa5f-dba4bf70f735",
+      "created_at": "2026-10-10T16:45:28.154155+00:00"
+    },
+    {
+      "id": "d884f981-9edc-401a-a771-926171c40fe6",
+      "content": "Estou aqui apenas para ajudar com assuntos da Clube da Sueca. Tens alguma dúvida sobre o jogo ou a plataforma?",
+      "user_id": "00000000-0000-0000-0000-000000000001",
+      "created_at": "2026-10-10T16:45:31.185306+00:00"
+    },
+    {
+      "id": "33d5d3ed-5cad-4eef-93bc-d237bf08790a",
+      "content": "@QA-Mobile-1, vamos jogar outra partida?",
+      "user_id": "376be861-7ad9-4ea8-b737-76d3bf936231",
+      "created_at": "2026-10-10T16:45:48.169806+00:00"
+    }
+  ],
+  "receipts": 4,
+  "recorded_at": "2026-10-10T16:46:27.733536+00:00",
+  "bot_replies_after_human_mention": 0
+}

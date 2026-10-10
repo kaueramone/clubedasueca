@@ -19,4 +19,16 @@ References used for the provider integration:
 - https://platform.claude.com/docs/en/api/models/list
 - https://platform.claude.com/docs/en/build-with-claude/structured-outputs
 
-Maintenance: update src/features/global-chat/knowledge.ts with changes to product behaviour, offers, licensing or payment availability. Never populate it from untrusted community messages. Repeat the synthetic live evaluation after a model/prompt change. Production release and end-to-end test evidence will be appended after deployment.
+Maintenance: update src/features/global-chat/knowledge.ts with changes to product behaviour, offers, licensing or payment availability. Never populate it from untrusted community messages. Repeat the synthetic live evaluation after a model/prompt change.
+
+## Production release verification
+
+Deployment dpl_GDXbHYY3ZxPPdJePB7WLE8c4zE5E reached READY with code c29926ad0d805d3a0d5ffe1cee0aee8415665a9f and all public domain aliases. No credentials or sessions were issued during verification.
+
+Two previously authorised QA accounts were temporarily enabled only for the existing webhook claim check, without logging in, changing their credentials, using real accounts or changing balances. Four synthetic chat messages exercised the actual database trigger → authenticated webhook → model → stored bot response:
+- Open question about simulated winnings: correct answer, longer than the former 200-character cut-off.
+- Same-speaker follow-up “e no empate?”: correct contextual answer explaining entry refund without fee.
+- External question about France: exact fixed platform-only response.
+- Explicit player-to-player invitation: receipt recorded, no bot message during the subsequent 39-second observation window.
+
+All four receipts were observed. Both QA accounts were restored to banned, with no active Auth sessions; the four QA messages and three bot test replies were removed by their exact IDs. No real player messages were removed. Evidence: community-bot-production-2026-10-10.json.
