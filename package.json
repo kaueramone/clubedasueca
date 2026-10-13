@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node tests/game-rules.cjs && node tests/table-state.cjs && node tests/server-clock.cjs && node tests/banner-model.cjs && node tests/password-recovery.cjs && node tests/auth-email.cjs && node tests/login-security.cjs && node tests/community-bot.cjs",
     "test:db": "node tests/database-security.cjs",
-    "test:identity": "node tests/identity-document.cjs && node tests/identity-document-ui.cjs && node tests/gemini-identity.cjs"
+    "test:identity": "node tests/identity-document.cjs && node tests/identity-document-ui.cjs && node tests/gemini-identity.cjs && node tests/identity-camera.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

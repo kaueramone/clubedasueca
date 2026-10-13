@@ -3,13 +3,14 @@ import { useState } from "react";
 import { deposit } from "../actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-export function DepositPageClient() {
+export function DepositPageClient({ identityError }: { identityError: string | null }) {
   const [amount, setAmount] = useState("100");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const router = useRouter();
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (identityError) return;
     setLoading(true);
     setMessage("");
     try {
@@ -35,6 +36,10 @@ export function DepositPageClient() {
         Sem cobrança. Os créditos não têm valor monetário, não podem ser
         levantados e serão repostos a zero no lançamento oficial.
       </p>
+      {identityError ? <div role="alert" className="rounded-lg border border-accent/50 bg-accent/10 p-4 space-y-2">
+        <p>{identityError}</p>
+        <Link href="/dashboard/profile" className="font-semibold underline">Validar documento no Perfil</Link>
+      </div> : <p className="text-sm text-muted-foreground">Documento conferido: idade mínima de 18 anos, validade e nome compatível com o perfil.</p>}
       <form onSubmit={submit} className="space-y-4">
         <label htmlFor="amount" className="block">
           Quantidade de créditos
@@ -55,7 +60,7 @@ export function DepositPageClient() {
           de teste.
         </p>
         <button
-          disabled={loading}
+          disabled={loading || !!identityError}
           className="w-full rounded bg-accent p-3 font-bold disabled:opacity-50"
         >
           {loading ? "A adicionar…" : "Adicionar gratuitamente"}

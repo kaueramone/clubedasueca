@@ -24,6 +24,7 @@ export async function deposit(formData: FormData) {
   if (error)
     return {
       error:
+        error.message.startsWith('IDENTITY_REQUIRED: ') ? error.message.slice('IDENTITY_REQUIRED: '.length) :
         "Não foi possível adicionar os créditos. Confirme o limite da carteira e tente novamente.",
     };
   revalidatePath("/dashboard", "layout");

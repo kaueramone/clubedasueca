@@ -6,8 +6,9 @@ export default function Page() {
             <h2>Registo e idade</h2>
             <p>O registo pede nome, data de nascimento, nacionalidade e email. A plataforma destina-se a maiores de 18 anos. A indicação destes dados não equivale a verificação documental.</p>
             <h2>Documentos e pagamentos</h2>
-            <p>No Perfil, pode importar a frente e o verso do seu BI de Moçambique. Ao clicar em Salvar Dados do BI, o leitor extrai nome, número, nascimento e validade e guarda os dados e fotografias na sua ficha. Confira o resultado apresentado após guardar. Documentos com validade indicada já terminada não são aceites neste envio.</p>
-            <p>O BI fica anexado de forma privada à sua ficha, acessível a si e aos administradores para gestão da conta. A leitura e a conferência da data não verificam a autenticidade, não consultam o registo civil e não constituem aprovação de identidade ou autorização para pagamentos.</p>
+            <p>Para adicionar créditos de teste, é obrigatório enviar no Perfil um BI, passaporte, Cartão de Cidadão ou título de residência com fotografia, nome, número, nascimento e data de validade legíveis. Nos cartões, envie frente e verso; no passaporte, a página de identificação completa. Pode usar a câmara com moldura de alinhamento ou a galeria.</p>
+            <p>A plataforma confere se a data de nascimento no documento indica pelo menos 18 anos, se está dentro da validade e se o nome corresponde ao Nome Completo do perfil. A comparação tolera acentos, ordem dos nomes e partículas portuguesas, mas exige os restantes nomes completos. Estas condições voltam a ser conferidas em cada adição de créditos. Documentos antigos sem conferência de fotografia precisam de novo envio.</p>
+            <p>As imagens são processadas pelo Google Gemini e guardadas de forma privada na sua ficha, acessíveis a si e aos administradores. A extração e estas conferências não comprovam a autenticidade nem confirmam que quem enviou é o titular; não consultam o registo civil nem constituem autorização para pagamentos reais.</p>
             <p>Não envie documentos de identidade, dados de carteira móvel ou PIN pelo chat. Não há levantamentos no beta. Os procedimentos de identificação e pagamentos para uma eventual operação licenciada serão publicados antes do lançamento.</p>
     </DocumentStaticPage>
 }

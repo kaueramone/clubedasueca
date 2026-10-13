@@ -24,11 +24,11 @@ model = load('src/lib/identity-document.ts');
 let extracted, extractionError;
 const route = load('src/app/api/profile/identity/route.ts');
 const uid = n => `10000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
-const valid = { full_name: 'UTILIZADOR DE TESTE', document_number: 'TESTE00001', birth_date: '1990-01-01', expiry_date: '2099-12-31', country: 'MOZ', document_type: 'id' };
+const valid = { full_name: 'UTILIZADOR DE TESTE', document_number: 'TESTE00001', birth_date: '1990-01-01', expiry_date: '2099-12-31', country: 'MOZ', document_type: 'id', photo_present: true };
 function fixture({ anonymous = false, guest = false, banned = false, admin = false, previous = null, uploadFail = -1, writeFail = false } = {}) {
   const calls = []; let uploads = 0; extracted = valid; extractionError = '';
   client = { auth: { getUser: async () => ({ data: { user: anonymous ? null : { id: uid(1), is_anonymous: guest } } }) }, from(table) {
-    return { select: () => ({ eq: () => ({ single: async () => ({ data: { role: admin ? 'admin' : 'user', is_banned: banned } }), maybeSingle: async () => ({ data: table === 'profile_identity_documents' ? previous : null }) }) }) };
+    return { select: () => ({ eq: () => ({ single: async () => ({ data: { role: admin ? 'admin' : 'user', is_banned: banned, full_name: valid.full_name } }), maybeSingle: async () => ({ data: table === 'profile_identity_documents' ? previous : null }) }) }) };
   } };
   service = { rpc: async () => ({data:true,error:null}), storage: { from: () => ({
     upload: async (path) => { calls.push(['upload', path]); return { error: uploads++ === uploadFail ? {} : null }; },
@@ -50,11 +50,15 @@ function request({ fields = valid, consent = model.BI_CONSENT_VERSION, origin = 
   return { url: 'https://clubedasueca.co.mz/api/profile/identity', headers: new Headers({ origin }), formData: async () => form };
 }
 async function main() {
+  check(model.identityNamesMatch('João da Silva Santos', 'Santos João Silva'), 'name accents order and connectors tolerated');
+  check(!model.identityNamesMatch('João da Silva Santos', 'João Silva'), 'missing surname rejected');
+  check(model.isAdult('2008-10-13','2026-10-13') && !model.isAdult('2008-10-14','2026-10-13'), 'exact eighteenth birthday');
+  for (const type of ['id','passport','citizen_card','residence_permit']) check(model.validateIdentityFields({...valid, country:'PRT',document_type:type}).document_type===type,'international document type accepted');
   for (const date of ['2026-02-30', '2026-13-01', '2026-00-20', '', '2026-1-1']) check(!model.isCalendarDate(date), 'strict date rejects ' + date);
   check(model.isCalendarDate('2024-02-29'), 'leap date accepted');
   check(model.mozambiqueToday(new Date('2026-10-12T22:01:00Z')) === '2026-10-13', 'Maputo midnight boundary');
   check(model.validateIdentityFields({ ...valid, expiry_date: '2026-10-13' }, '2026-10-13').expiry_date === '2026-10-13', 'expiry day inclusive');
-  for (const bad of [{ expiry_date: '2026-10-12' }, { expiry_date: '' }, { birth_date: '2026-10-14' }, { country: 'PRT' }, { document_type: 'passport' }, { full_name: '<script>' }, { document_number: '' }]) {
+  for (const bad of [{ expiry_date: '2026-10-12' }, { expiry_date: '' }, { birth_date: '2026-10-14' }, { country: 'PT' }, { document_type: 'driving_license' }, { photo_present: false }, { birth_date: '2010-01-01' }, { full_name: '<script>' }, { document_number: '' }]) {
     assert.throws(() => model.validateIdentityFields({ ...valid, ...bad }, '2026-10-13')); checks++;
   }
   for (const options of [{ anonymous: true }, { guest: true }, { banned: true }]) {
@@ -67,6 +71,8 @@ async function main() {
   calls = fixture(); check((await route.POST(request())).status === 200, 'valid BI saved'); check(calls.filter(c => c[0] === 'upload').length === 2, 'two attachments');
   const written = calls.find(c => c[0] === 'write')[1]; check(written.source === 'gemini_server_extraction', 'server extraction provenance');
   calls = fixture(); extracted = {...valid, expiry_date:'2000-01-01'}; check((await route.POST(request())).status === 422 && !calls.some(c=>c[0]==='upload'), 'expired extracted document never uploaded');
+  calls = fixture(); extracted = {...valid, full_name:'OUTRA PESSOA'}; check((await route.POST(request())).status === 422 && !calls.some(c=>c[0]==='upload'), 'name mismatch never uploaded');
+  calls = fixture(); extracted = {...valid, birth_date:'2010-01-01'}; check((await route.POST(request())).status === 422 && !calls.some(c=>c[0]==='upload'), 'minor never uploaded');
   calls = fixture(); extractionError = 'Provider unavailable'; check((await route.POST(request())).status === 422 && !calls.some(c=>c[0]==='upload'), 'AI failure never uploads or saves');
   calls = fixture(); service.rpc = async()=>({data:false,error:null}); check((await route.POST(request())).status === 429 && !calls.some(c=>c[0]==='upload'), 'rate limit denies extraction');
   calls = fixture(); check((await route.POST(request({fields:{...valid, document_number:'FORGED999'}}))).status===200 && calls.find(c=>c[0]==='write')[1].document_number===valid.document_number, 'client supplied fields ignored'); check(written.user_id === uid(1) && written.authenticity_verified === false, 'server derives owner and never approves authenticity');
@@ -101,7 +107,38 @@ async function main() {
   check(!(await db.query(`select public.claim_identity_extraction('${uid(1)}') as claimed`)).rows[0].claimed,'seventh request blocked');
   await db.exec('reset role'); await db.exec(`update private.identity_extraction_limits set window_started=now()-interval '11 minutes'`);
   await as(uid(1),'service_role'); check((await db.query(`select public.claim_identity_extraction('${uid(1)}') as claimed`)).rows[0].claimed,'quota window reset');
+  await creditChecks(db);
   await db.close();
   console.log(`PASS ${checks} BI date, mapping, API authorization, storage cleanup and PostgreSQL RLS checks. Mocked Storage; no personal BI used.`);
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
+
+async function creditChecks(db) {
+  await db.exec(`reset role;
+    alter table public.profiles add column full_name text, add column is_banned boolean default false;
+    create table public.wallets(id uuid primary key default gen_random_uuid(),user_id uuid,balance numeric default 0,updated_at timestamptz);
+    create table public.transactions(id uuid default gen_random_uuid(),wallet_id uuid,amount numeric,type text,description text);
+    create table public.audit_logs(user_id uuid,action text,entity_type text,entity_id uuid,details jsonb);
+    create function private.require_player(id uuid) returns void language plpgsql as $$begin if id is distinct from auth.uid() then raise exception 'Forbidden'; end if; end$$;
+    create function private.require_beta() returns void language sql as $$select$$;
+    insert into public.wallets(user_id) values('${uid(1)}'),('${uid(2)}'),('${uid(3)}');
+    update public.profiles set full_name='João da Silva Santos' where id='${uid(1)}';`);
+  await db.exec(fs.readFileSync('supabase/migrations/20261013093827_document_credit_eligibility.sql','utf8'));
+  const asUser = () => db.exec(`reset role; set role authenticated; select set_config('request.jwt.claim.sub','${uid(1)}',false);`);
+  const noDeposit = async () => { let denied=false; try { await db.query(`select public.process_deposit('${uid(1)}',100)`); } catch(e) { denied=/IDENTITY_REQUIRED/.test(e.message); } check(denied,'direct RPC blocks ineligible document'); };
+  await asUser(); await noDeposit(); // Legacy OCR has not checked the portrait.
+  await db.exec(`reset role; update public.profile_identity_documents set full_name='Santos Joao Silva',photo_present=true where user_id='${uid(1)}'`);
+  await asUser(); check((await db.query('select public.identity_credit_status() as error')).rows[0].error===null,'eligible document status');
+  check((await db.query(`select public.process_deposit('${uid(1)}',100) as deposit`)).rows[0].deposit.new_balance===100,'valid document permits actual credit RPC');
+  for (const assignment of ["expiry_date=current_date-1", "birth_date=current_date-interval '17 years'", "photo_present=false", "full_name='Outra Pessoa'"]) {
+    await db.exec(`reset role; update public.profile_identity_documents set expiry_date='2099-01-01',birth_date='1990-01-01',photo_present=true,full_name='Santos Joao Silva' where user_id='${uid(1)}'; update public.profile_identity_documents set ${assignment} where user_id='${uid(1)}';`);
+    await asUser(); await noDeposit();
+  }
+  await db.exec(`reset role; update public.profile_identity_documents set expiry_date=(now() at time zone 'Africa/Maputo')::date,birth_date=((now() at time zone 'Africa/Maputo')::date-interval '18 years')::date,photo_present=true,full_name='Santos Joao Silva',document_type='passport',country='PRT',back_path=null where user_id='${uid(1)}'`);
+  await asUser(); check((await db.query('select public.identity_credit_status() as error')).rows[0].error===null,'passport, eighteenth birthday and expiry today accepted');
+  await db.exec(`reset role; update public.profiles set full_name='Outra Pessoa' where id='${uid(1)}'`);
+  await asUser(); await noDeposit();
+  await db.exec(`reset role; delete from public.profile_identity_documents where user_id='${uid(1)}'`);
+  await asUser(); await noDeposit();
+  await db.exec('reset role'); check((await db.query(`select balance from public.wallets where user_id='${uid(1)}'`)).rows[0].balance==='100','blocked credits never changed balance');
+}

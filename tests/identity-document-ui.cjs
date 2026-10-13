@@ -18,7 +18,8 @@ const box = { exports: {}, URL, FormData, AbortController, Date, fetch: async (u
   if (name === 'react') return { useCallback: fn => fn, useEffect() {}, useRef: value => ({ current: value }), useState: initial => { const i = index++; if (!(i in state)) state[i] = initial; return [state[i], value => { state[i] = value; }]; } };
   if (name.endsWith('/card')) return { Card: 'card' };
   if (name.endsWith('/button')) return { Button: 'button' };
-  if (name === '@/lib/identity-document') return { BI_CONSENT_VERSION: 'bi-storage-gemini-2026-10-13' };
+  if (name.endsWith('/identity-camera')) return { IdentityCamera: 'camera' };
+  if (name === '@/lib/identity-document') return { BI_CONSENT_VERSION: 'bi-storage-gemini-2026-10-13', DOCUMENT_TYPES:{id:'BI',passport:'Passaporte'} };
   if (name === '@/lib/prepare-identity-photos') return { prepareIdentityPhotos: async () => { calls.push(['PREPARE']); return [photo, photo]; } };
   throw new Error(name);
 } };
@@ -26,7 +27,7 @@ vm.runInNewContext(source, box);
 function walk(node, result = []) { if (!node || typeof node !== 'object') return result; if (Array.isArray(node)) { node.forEach(n => walk(n, result)); return result; } result.push(node); walk(node.props?.children, result); return result; }
 async function main() {
   const nodes = walk(box.exports.IdentityDocument({}));
-  const button = nodes.find(n => n.type === 'button' && n.props.children === 'Salvar Dados do BI');
+  const button = nodes.find(n => n.type === 'button' && n.props.children === 'Salvar documento');
   assert.ok(button && !button.props.disabled);
   assert.equal(nodes.filter(n => n.type === 'button' && /Ler dados|Confirmar dados/.test(n.props.children)).length, 0);
   await button.props.onClick();

@@ -16,6 +16,6 @@ async function preparePhoto(file: File) {
     return blob
   } finally { image.close() }
 }
-export async function prepareIdentityPhotos(front: File, back: File) {
-  return Promise.all([preparePhoto(front), preparePhoto(back)])
+export async function prepareIdentityPhotos(front: File, back: File | null) {
+  return Promise.all((back ? [front, back] : [front]).map(preparePhoto))
 }
