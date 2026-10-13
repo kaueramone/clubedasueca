@@ -3,11 +3,16 @@ const ts = require('typescript');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const { PGlite } = require('@electric-sql/pglite');
-let client, service, model, checks = 0;
+let client, service, model, sdk, checks = 0;
 const check = (ok, message) => { assert.ok(ok, message); checks++; };
 function load(file) {
   const source = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
-  const box = { exports: {}, URL, Response, File, FormData, Intl, Date, Uint8Array, crypto, process: { env: {} }, require(name) {
+  const box = { exports: {}, URL, Response, File, FormData, Blob, Intl, Date, Uint8Array, crypto,
+    location: { origin: 'https://clubedasueca.co.mz' },
+    createImageBitmap: async () => ({ width: 1000, height: 600, close() {} }),
+    document: { createElement: () => ({ getContext: () => ({ fillRect() {}, drawImage() {}, getImageData: () => ({}) }), toBlob: callback => callback(new Blob([new Uint8Array(120)], { type: 'image/jpeg' })) }) },
+    process: { env: {} }, require(name) {
+    if (name === '@microblink/blinkid-core') return sdk;
     if (name === '@/lib/identity-document' || name === './identity-document') return model;
     if (name === '@/lib/supabase/server') return { createClient: async () => client };
     if (name === '@/lib/supabase/service') return { createServiceClient: () => service };
@@ -56,6 +61,20 @@ async function main() {
   const result = { fullName: text(valid.full_name), documentNumber: text(valid.document_number), dateOfBirth: date(1990, 1, 1), dateOfExpiry: date(2099, 12, 31), documentClassInfo: { isoAlpha3CountryCode: 'MOZ', documentType: { id: 'id' } } };
   check(reader.extractIdentityFields(result).document_number === valid.document_number, 'SDK output mapped');
   assert.throws(() => reader.extractIdentityFields({ ...result, dataMatchResult: { overallState: 'failed' } })); checks++;
+  for (const completeAfter of [1, 2]) {
+    let processed = 0, forcedTransitions = 0, deleted = 0, terminated = 0;
+    const status = () => processed >= completeAfter ? 'document-scanned' : processed ? 'side-scanned' : 'scanning-side-in-progress';
+    const session = { getScanningStatus: async () => status(),
+      process: async () => { if (status() === 'document-scanned') throw new Error('Document has already been scanned'); processed++; return {}; },
+      resolveCurrentStep: async () => { forcedTransitions++; throw new Error('Document has already been scanned'); },
+      getResult: async () => result, delete: async () => { deleted++; } };
+    sdk = { loadBlinkIdCore: async () => ({ buildDocumentPhotoSettings: async () => ({}), createScanningSession: async settings => { check(settings.scanningMode === 'automatic', 'automatic photo mode'); return session; }, terminate: async () => { terminated++; } }) };
+    const file = new File([new Uint8Array(120)], 'fixture.jpg', { type: 'image/jpeg' });
+    const read = await reader.readIdentityDocument(file, file, 'fixture-license', () => {}, () => false);
+    check(read.fields.document_number === valid.document_number && read.photos.length === 2, 'fields and both attachments returned');
+    check(processed === completeAfter && forcedTransitions === 0, 'no manual transition or scan after completion');
+    check(deleted === 1 && terminated === 1, 'SDK session and worker released');
+  }
   for (const options of [{ anonymous: true }, { guest: true }, { banned: true }]) {
     const calls = fixture(options); check((await route.POST(request())).status === 401, 'unauthorized write denied'); check(calls.length === 0, 'no storage side effects');
   }

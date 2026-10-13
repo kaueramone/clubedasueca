@@ -45,12 +45,13 @@ export async function readIdentityDocument(front: File, back: File, licenseKey: 
     try {
       for (let i = 0; i < photos.length; i++) {
         if (cancelled()) throw new Error('Leitura cancelada.')
+        // Automatic mode owns side transitions. Never submit another image after completion.
+        if (await session.getScanningStatus() === 'document-scanned') break
         progress(i === 0 ? 'A ler a frente do BI…' : 'A ler o verso do BI…')
         const processed = await session.process(photos[i].pixels)
         if ('error' in processed) throw new Error('Não foi possível ler a fotografia. Repita com boa luz e sem reflexos.')
         const state = await session.getScanningStatus()
-        if (state === 'document-scanned' && i === 0) throw new Error('Não foi possível confirmar a leitura das duas faces do BI. Repita as fotografias.')
-        if (state === 'side-scanned') await session.resolveCurrentStep()
+        if (state === 'document-scanned') break
       }
       if (await session.getScanningStatus() !== 'document-scanned') throw new Error('Leitura incompleta. Repita as duas fotografias, mostrando o BI por inteiro.')
       const fields = extractIdentityFields(await session.getResult())
