@@ -15,6 +15,12 @@ export function AgeGate({ initialDecision, children }: { initialDecision: Decisi
 
     useEffect(() => {
         const element = dialog.current
+        const preventCancel = (event: Event) => event.preventDefault()
+        const keepOpen = () => {
+            if (blocked && element?.isConnected && !element.open) element.showModal()
+        }
+        element?.addEventListener('cancel', preventCancel)
+        element?.addEventListener('close', keepOpen)
         if (blocked && element && !element.matches(':modal')) {
             element.removeAttribute('open')
             element.showModal()
@@ -22,7 +28,11 @@ export function AgeGate({ initialDecision, children }: { initialDecision: Decisi
         if (blocked && decision === 'minor-v1') element?.focus()
         const previous = document.body.style.overflow
         if (blocked) document.body.style.overflow = 'hidden'
-        return () => { document.body.style.overflow = previous }
+        return () => {
+            element?.removeEventListener('cancel', preventCancel)
+            element?.removeEventListener('close', keepOpen)
+            document.body.style.overflow = previous
+        }
     }, [blocked, decision])
 
     function choose(value: Decision) {

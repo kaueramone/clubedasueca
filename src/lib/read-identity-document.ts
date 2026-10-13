@@ -41,7 +41,7 @@ export async function readIdentityDocument(front: File, back: File, licenseKey: 
   }, value => { if (!cancelled()) progress(`A carregar o leitor… ${Math.round(value.progress)}%`) })
   try {
     if (cancelled()) throw new Error('Leitura cancelada.')
-    const session = await core.createScanningSession(await core.buildDocumentPhotoSettings())
+    const session = await core.createScanningSession({ ...await core.buildDocumentPhotoSettings(), scanningMode: 'automatic' })
     try {
       for (let i = 0; i < photos.length; i++) {
         if (cancelled()) throw new Error('Leitura cancelada.')
@@ -49,7 +49,7 @@ export async function readIdentityDocument(front: File, back: File, licenseKey: 
         const processed = await session.process(photos[i].pixels)
         if ('error' in processed) throw new Error('Não foi possível ler a fotografia. Repita com boa luz e sem reflexos.')
         const state = await session.getScanningStatus()
-        if (state === 'document-scanned') break
+        if (state === 'document-scanned' && i === 0) throw new Error('Não foi possível confirmar a leitura das duas faces do BI. Repita as fotografias.')
         if (state === 'side-scanned') await session.resolveCurrentStep()
       }
       if (await session.getScanningStatus() !== 'document-scanned') throw new Error('Leitura incompleta. Repita as duas fotografias, mostrando o BI por inteiro.')
