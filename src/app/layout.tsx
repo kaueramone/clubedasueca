@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { cookies } from 'next/headers';
+import { AgeGate } from '@/components/age-gate';
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: 'swap' });
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair", display: 'swap' });
 export const metadata: Metadata = {
@@ -23,10 +25,12 @@ export default async function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const ageCookie = (await cookies()).get('sueca_age_v1')?.value;
+    const initialDecision = ageCookie === 'adult-v1' || ageCookie === 'minor-v1' ? ageCookie : '';
     return (
         <html lang="pt-MZ" className="dark">
             <body className={`${inter.variable} ${playfair.variable} font-sans min-h-dvh bg-background text-foreground`}>
-                {children}
+                <AgeGate initialDecision={initialDecision}>{children}</AgeGate>
             </body>
         </html>
     );

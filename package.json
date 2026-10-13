@@ -9,7 +9,8 @@
     "lint": "eslint src",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node tests/game-rules.cjs && node tests/table-state.cjs && node tests/server-clock.cjs && node tests/banner-model.cjs && node tests/password-recovery.cjs && node tests/auth-email.cjs && node tests/login-security.cjs && node tests/community-bot.cjs",
-    "test:db": "node tests/database-security.cjs"
+    "test:db": "node tests/database-security.cjs",
+    "test:identity": "node tests/identity-document.cjs"
   },
   "dependencies": {
     "@microblink/blinkid-core": "8003.0.0",

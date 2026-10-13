@@ -32,15 +32,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             <main className="flex-1">
                 <section className="relative overflow-hidden py-24 sm:py-32 lg:pb-40">
                     <div className="absolute inset-0 z-0 overflow-hidden">
-                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="hidden sm:block object-cover opacity-30" priority />
-                        <Image src="/images/hero-banner.png" alt="Hero Clube da Sueca" fill className="sm:hidden object-cover opacity-30" priority />
+                        <Image src="/images/partida-luso-mocambicana.png" alt="Partida de Sueca entre Portugal e Moçambique" fill sizes="100vw" className="object-cover opacity-65" priority />
 
-                        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/65 to-background" />
                     </div>
                     <div className="container mx-auto px-4 relative z-10">
                         <div className="mx-auto max-w-3xl text-center flex flex-col items-center">
 
-                            <div className="relative w-32 h-32 mb-6 drop-shadow-2xl">
+                            <div className="relative w-52 h-52 sm:w-64 sm:h-64 mb-6 drop-shadow-2xl">
                                 <Image src="/images/clubedasueca-fundoclaro-perfil.png" alt="Logo Clube da Sueca" fill className="object-contain dark:hidden" priority />
                                 <Image src="/images/clubedasueca-fundoescuro-perfil.png" alt="Logo Clube da Sueca" fill className="object-contain hidden dark:block" priority />
                             </div>
@@ -145,7 +144,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             {/* CTA Final */}
             <section className="py-24 bg-card border-t border-border relative overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <Image src="/images/hero-banner.png" alt="Banner CTA" fill className="object-cover opacity-10" />
+                    <Image src="/images/partida-luso-mocambicana.png" alt="Mesa de Sueca luso-moçambicana" fill sizes="100vw" className="object-cover opacity-25" />
                 </div>
                 <div className="container mx-auto px-4 relative z-10 text-center">
                     <h2 className="text-4xl font-serif font-bold text-foreground sm:text-5xl mb-6">

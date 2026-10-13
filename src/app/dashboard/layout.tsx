@@ -67,7 +67,7 @@ export default async function DashboardLayout({
                 {/* Global Dashboard Header */}
                 <header className="relative flex h-16 items-center justify-between border-b border-[#123F33] bg-[#0B1F1A] px-4 md:px-6 shrink-0 shadow-[0_5px_15px_-5px_rgba(0,0,0,0.1)] z-20" style={{ touchAction: 'none' }}>
                     <div className="flex items-center gap-3">
-                        <div className="relative w-32 h-8 md:hidden">
+                        <div className="relative w-40 h-12 md:hidden">
                             <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain" priority />
                         </div>
                         {/* Mobile: counter next to logo. Desktop: centered absolutely */}

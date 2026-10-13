@@ -47,8 +47,8 @@ export function Sidebar({ userEmail, pendingCount = 0, userId, initialChatUnread
 
     return (
         <div className="hidden h-full w-64 flex-col border-r border-[#123F33] bg-[#0B1F1A] md:flex">
-            <div className="flex h-16 items-center justify-center px-6 border-b border-[#123F33] shrink-0">
-                <Link href="/dashboard" className="relative w-full h-8">
+            <div className="flex h-20 items-center justify-center px-3 border-b border-[#123F33] shrink-0">
+                <Link href="/dashboard" className="relative w-full h-16">
                     <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain" priority />
                 </Link>
             </div>

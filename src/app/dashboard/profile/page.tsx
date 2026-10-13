@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { IdentityDocument } from '@/components/dashboard/identity-document'
 
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true)
@@ -92,11 +93,10 @@ export default function ProfilePage() {
                 id: user.id,
                 username: profile.username,
                 full_name: profile.full_name,
-                birth_date: profile.birth_date || null,
                 nationality: profile.nationality,
                 avatar_url: avatarUrl,
                 updated_at: new Date().toISOString(),
-            })
+            }).eq('id', user.id)
 
             if (error) throw error
 
@@ -235,6 +235,7 @@ export default function ProfilePage() {
                     </div>
                 </form>
             </Card>
+            <IdentityDocument />
         </div>
     )
 }

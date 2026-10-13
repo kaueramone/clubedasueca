@@ -48,7 +48,11 @@ export function GlobalFooter({ hideGameLinks = false }: { hideGameLinks?: boolea
                 </div>
                 <div className="mt-12 border-t border-border pt-8 mt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
                     <p>© {new Date().getFullYear()} Clube da Sueca. Todos os direitos reservados.</p>
-                    <p>Plataforma para maiores de 18 anos (+18)</p>
+                    <div className="flex flex-wrap items-center justify-center gap-4">
+                        <span className="inline-flex items-center gap-2"><Image src="/images/flags/pt.svg" alt="Bandeira de Portugal" width={28} height={21} />Portugal</span>
+                        <span className="inline-flex items-center gap-2"><Image src="/images/flags/mz.svg" alt="Bandeira de Moçambique" width={28} height={21} />Moçambique</span>
+                        <span>Plataforma para maiores de 18 anos (+18)</span>
+                    </div>
                 </div>
             </div>
         </footer>

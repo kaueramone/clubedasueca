@@ -11,8 +11,8 @@ export function GlobalHeader({
 }) {
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/" className="relative w-40 h-10">
+            <div className="container mx-auto px-4 h-20 flex items-center justify-between">
+                <Link href="/" className="relative w-56 h-16 sm:w-64 shrink-0">
                     <Image src="/images/clubedasueca-fundoclaro-ext.png" alt="Clube da Sueca" fill className="object-contain dark:hidden" priority />
                     <Image src="/images/clubedasueca-fundoescuro-ext.png" alt="Clube da Sueca" fill className="object-contain hidden dark:block" priority />
                 </Link>

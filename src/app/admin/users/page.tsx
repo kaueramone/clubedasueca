@@ -8,11 +8,13 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { IdentityDocument } from '@/components/dashboard/identity-document'
 
 export default function AdminUsers() {
     const [users, setUsers] = useState<any[]>([])
     const [searchTerm, setSearchTerm] = useState('')
     const [loading, setLoading] = useState(true)
+    const [documentUser, setDocumentUser] = useState<string | null>(null)
 
     const supabase = createClient()
 
@@ -53,6 +55,7 @@ export default function AdminUsers() {
                 </div>
             </div>
 
+            {documentUser ? <div className="space-y-3"><Button variant="outline" onClick={() => setDocumentUser(null)}>Fechar ficha do BI</Button><IdentityDocument key={documentUser} userId={documentUser} /></div> : null}
             <Card className="p-6">
                 <div className="relative mb-6 max-w-md">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -102,6 +105,7 @@ export default function AdminUsers() {
                                             </Badge>
                                         </td>
                                         <td className="px-6 py-4 text-right space-x-2">
+                                            <Button variant="outline" size="sm" onClick={() => setDocumentUser(user.id)}>Ver BI</Button>
                                             {user.role !== 'admin' && (
                                                 <Button
                                                     variant="ghost"
