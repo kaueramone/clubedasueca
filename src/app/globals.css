@@ -3,6 +3,14 @@
 /* Custom variant: telas de baixa altura (telemóvel em landscape) */
 @custom-variant short (@media (max-height: 480px));
 
+@keyframes age-welcome-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .age-welcome { animation: age-welcome-enter 220ms ease-out both; }
+}
+
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
