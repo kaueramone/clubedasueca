@@ -26,7 +26,7 @@ const route = load('src/app/api/profile/identity/route.ts');
 const uid = n => `10000000-0000-0000-0000-${String(n).padStart(12, '0')}`;
 const valid = { full_name: 'UTILIZADOR DE TESTE', document_number: 'TESTE00001', birth_date: '1990-01-01', expiry_date: '2099-12-31', country: 'MOZ', document_type: 'id' };
 function fixture({ anonymous = false, guest = false, banned = false, admin = false, previous = null, uploadFail = -1, writeFail = false } = {}) {
-  const calls = []; let uploads = 0; extracted = valid; extractionError = ''; 
+  const calls = []; let uploads = 0; extracted = valid; extractionError = '';
   client = { auth: { getUser: async () => ({ data: { user: anonymous ? null : { id: uid(1), is_anonymous: guest } } }) }, from(table) {
     return { select: () => ({ eq: () => ({ single: async () => ({ data: { role: admin ? 'admin' : 'user', is_banned: banned } }), maybeSingle: async () => ({ data: table === 'profile_identity_documents' ? previous : null }) }) }) };
   } };

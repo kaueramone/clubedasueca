@@ -34,12 +34,14 @@ export async function extractIdentityDocument(photos: Uint8Array[]) {
     if (response.status >= 500) throw new Error('O Gemini está temporariamente indisponível. Tente novamente dentro de alguns minutos.')
     throw new Error('Não foi possível aceder ao serviço de leitura. Contacte o apoio.')
   }
-  const body = await response.json()
+  let body
+  try { body = await response.json() } catch { throw new Error('O serviço de leitura devolveu uma resposta inválida. Tente novamente.') }
   const candidate = body.candidates?.[0]
   if (candidate?.finishReason !== 'STOP') throw new Error('Não foi possível concluir a leitura. Repita as fotografias com boa luz.')
   const raw = candidate.content?.parts?.filter((part: { text?: string; thought?: boolean }) => part.text && !part.thought).map((part: { text: string }) => part.text).join('')
   let result
   try { result = JSON.parse(raw || '') } catch { throw new Error('Não foi possível ler os campos do BI. Repita as fotografias.') }
+  if (!result || typeof result !== 'object') throw new Error('Não foi possível ler os campos do BI. Repita as fotografias.')
   if (result.front_visible !== true || result.back_visible !== true) throw new Error('Mostre a frente e o verso completos e legíveis do BI.')
   if (result.same_document !== true) throw new Error('Não foi possível associar as duas faces. Use fotografias da frente e do verso do mesmo BI.')
   return validateIdentityFields(result)
