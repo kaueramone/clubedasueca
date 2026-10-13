@@ -16,7 +16,7 @@ export async function extractIdentityDocument(photos: Uint8Array[]) {
   if (!key) throw new Error('Leitura do BI temporariamente indisponível. Contacte o apoio.')
   let response: Response
   try {
-    response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent', {
+    response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent', {
       method: 'POST', headers: { 'x-goog-api-key': key, 'Content-Type': 'application/json' },
       signal: AbortSignal.timeout(45_000), cache: 'no-store',
       body: JSON.stringify({

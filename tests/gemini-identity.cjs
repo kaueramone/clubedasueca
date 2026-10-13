@@ -8,7 +8,7 @@ function moduleAt(path, imports, extras = {}) {
 }
 const model = moduleAt('src/lib/identity-document.ts', {});
 const extractor = moduleAt('src/lib/extract-identity-document.ts', { './identity-document': model }, { fetch: async (url, init) => {
-  assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent');
+  assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent');
   requestBody = JSON.parse(init.body); requestHeaders = init.headers;
   if (provider.throw) throw new Error('network error containing secret');
   return { ok: provider.status === 200, status: provider.status, json: async () => ({ candidates: [{ finishReason: provider.finish || 'STOP', content: { parts: [{ text: provider.raw ?? JSON.stringify(provider.fields ?? valid) }] } }] }) };
