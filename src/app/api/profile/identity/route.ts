@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { BI_CONSENT_VERSION, BI_MAX_BYTES, mozambiqueToday, validateIdentityFields } from '@/lib/identity-document'
+import { extractIdentityDocument } from '@/lib/extract-identity-document'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60
 const bucket = 'identity-documents'
 function json(data: unknown, status = 200) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'private, no-store', 'Vary': 'Cookie', 'X-Content-Type-Options': 'nosniff' } })
@@ -37,10 +39,6 @@ export async function GET(request: Request) {
     const userId = url.searchParams.get('userId') || auth.user.id
     if (userId !== auth.user.id && auth.profile.role !== 'admin') return json({ error: 'Sem permissão.' }, 403)
     if (!/^[0-9a-f-]{36}$/i.test(userId)) return json({ error: 'Utilizador inválido.' }, 400)
-    if (url.searchParams.get('config') === '1') {
-      if (!process.env.BLINKID_LICENSE_KEY) return json({ error: 'Leitura do BI temporariamente indisponível.' }, 503)
-      return json({ licenseKey: process.env.BLINKID_LICENSE_KEY })
-    }
     const { data, error } = await auth.client.from('profile_identity_documents').select('*').eq('user_id', userId).maybeSingle()
     if (error) return json({ error: 'Não foi possível consultar o BI.' }, 503)
     return json({ document: await present(data) })
@@ -54,12 +52,6 @@ export async function POST(request: Request) {
   let form: FormData
   try { form = await request.formData() } catch { return json({ error: 'Envio inválido.' }, 400) }
   if (form.get('consent') !== BI_CONSENT_VERSION) return json({ error: 'Confirme a autorização para guardar o BI.' }, 400)
-  let fields
-  try {
-    const raw = form.get('fields')
-    if (typeof raw !== 'string' || raw.length > 4096) throw new Error('Dados do BI inválidos.')
-    fields = validateIdentityFields(JSON.parse(raw))
-  } catch (error) { return json({ error: error instanceof Error ? error.message : 'Dados inválidos.' }, 400) }
   const photos: Uint8Array[] = []
   for (const side of ['front', 'back']) {
     const file = form.get(side)
@@ -74,6 +66,12 @@ export async function POST(request: Request) {
   if (previousError) return json({ error: 'Não foi possível guardar o BI.' }, 503)
   // Compare-and-swap prevents simultaneous replacements from deleting the active attachments.
   if ((form.get('revision') || null) !== (previous?.revision || null)) return json({ error: 'O BI foi alterado noutra sessão. Atualize a página.' }, 409)
+  const { data: claimed, error: limitError } = await service.rpc('claim_identity_extraction', { p_user_id: auth.user.id })
+  if (limitError) return json({ error: 'Serviço de leitura temporariamente indisponível.' }, 503)
+  if (!claimed) return json({ error: 'Limite de leituras atingido. Aguarde 10 minutos antes de tentar novamente.' }, 429)
+  let fields
+  try { fields = validateIdentityFields(await extractIdentityDocument(photos)) }
+  catch (error) { return json({ error: error instanceof Error ? error.message : 'Não foi possível ler o BI.' }, 422) }
   const revision = crypto.randomUUID()
   const paths = ['front', 'back'].map(side => `${auth.user.id}/${revision}/${side}.jpg`)
   for (let i = 0; i < paths.length; i++) {
@@ -83,7 +81,7 @@ export async function POST(request: Request) {
       return json({ error: 'Não foi possível guardar as fotografias. Tente novamente.' }, 503)
     }
   }
-  const row = { ...fields, user_id: auth.user.id, revision, front_path: paths[0], back_path: paths[1], consent_version: BI_CONSENT_VERSION, submitted_at: new Date().toISOString(), authenticity_verified: false }
+  const row = { ...fields, source: 'gemini_server_extraction', user_id: auth.user.id, revision, front_path: paths[0], back_path: paths[1], consent_version: BI_CONSENT_VERSION, submitted_at: new Date().toISOString(), authenticity_verified: false }
   const write = previous
     ? service.from('profile_identity_documents').update(row).eq('user_id', auth.user.id).eq('revision', previous.revision)
     : service.from('profile_identity_documents').insert(row)

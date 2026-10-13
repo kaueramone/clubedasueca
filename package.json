@@ -4,16 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/prepare-blinkid.cjs && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint src",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "node tests/game-rules.cjs && node tests/table-state.cjs && node tests/server-clock.cjs && node tests/banner-model.cjs && node tests/password-recovery.cjs && node tests/auth-email.cjs && node tests/login-security.cjs && node tests/community-bot.cjs",
     "test:db": "node tests/database-security.cjs",
-    "test:identity": "node tests/identity-document.cjs && node tests/identity-document-ui.cjs"
+    "test:identity": "node tests/identity-document.cjs && node tests/identity-document-ui.cjs && node tests/gemini-identity.cjs"
   },
   "dependencies": {
-    "@microblink/blinkid-core": "8003.0.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
     "next": "16.3.8",

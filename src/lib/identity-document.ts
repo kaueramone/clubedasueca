@@ -1,4 +1,4 @@
-export const BI_CONSENT_VERSION = 'bi-storage-2026-10-13'
+export const BI_CONSENT_VERSION = 'bi-storage-gemini-2026-10-13'
 export const BI_MAX_BYTES = 2 * 1024 * 1024
 export type IdentityFields = {
   full_name: string; document_number: string; birth_date: string; expiry_date: string

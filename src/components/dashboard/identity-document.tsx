@@ -61,16 +61,13 @@ export function IdentityDocument({ userId }: { userId?: string }) {
     if (!consent) { setError('Confirme a autorização para ler e guardar o seu BI.'); return }
     lock.current = true; setBusy(true); setError(''); setMessage('A preparar a leitura…')
     try {
-      const response = await fetch(`${endpoint}?config=1`, { cache: 'no-store' })
-      const config = await response.json()
-      if (!response.ok) throw new Error(config.error)
-      const { readIdentityDocument } = await import('@/lib/read-identity-document')
-      const result = await readIdentityDocument(front, back, config.licenseKey, setMessage, () => !active.current)
+      const { prepareIdentityPhotos } = await import('@/lib/prepare-identity-photos')
+      const photos = await prepareIdentityPhotos(front, back)
       if (!active.current) return
-      setMessage('Leitura concluída. A guardar as fotografias e os dados…')
+      setMessage('A extrair os dados com Gemini e a salvar o BI…')
       const form = new FormData()
-      form.set('front', result.photos[0], 'front.jpg'); form.set('back', result.photos[1], 'back.jpg')
-      form.set('fields', JSON.stringify(result.fields)); form.set('consent', BI_CONSENT_VERSION)
+      form.set('front', photos[0], 'front.jpg'); form.set('back', photos[1], 'back.jpg')
+      form.set('consent', BI_CONSENT_VERSION)
       if (record) form.set('revision', record.revision)
       const savedResponse = await fetch(endpoint, { method: 'POST', body: form })
       const data = await savedResponse.json()
@@ -108,8 +105,8 @@ export function IdentityDocument({ userId }: { userId?: string }) {
         <legend className="font-semibold mb-3">{record ? 'Substituir BI' : 'Importar BI'}</legend>
         <p className="text-sm text-muted-foreground">Fotografe as duas faces por inteiro, com boa luz e sem reflexos. JPG, PNG ou WebP até 20 MB por face. As imagens são ajustadas para guardar até 2 MB por face.</p>
         <div className="grid gap-4 sm:grid-cols-2"><PhotoUpload side="front" file={front} onChange={file => changePhoto('front', file)} /><PhotoUpload side="back" file={back} onChange={file => changePhoto('back', file)} /></div>
-        <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" checked={consent} onChange={e => setConsent(e.target.checked)} /><span>Confirmo que este BI é meu e autorizo a leitura e o armazenamento privado das duas faces e dos dados na minha ficha, acessíveis a mim e aos administradores para gestão da conta.</span></label>
-        <p className="text-xs text-muted-foreground">Ao clicar em Salvar Dados do BI, as fotografias são lidas e guardadas com os dados extraídos, após conferir a validade. A leitura não comprova a autenticidade. O leitor contacta a Microblink para licenciamento.</p>
+        <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" checked={consent} onChange={e => setConsent(e.target.checked)} /><span>Confirmo que este BI é meu e autorizo o envio das duas fotografias ao Google Gemini para extração dos campos e o armazenamento privado das imagens e dos dados na minha ficha, acessíveis a mim e aos administradores para gestão da conta.</span></label>
+        <p className="text-xs text-muted-foreground">Ao clicar em Salvar Dados do BI, o Gemini extrai os campos e a plataforma confere a validade antes de guardar. Confira os dados apresentados após salvar. Esta leitura não comprova a autenticidade do documento.</p>
         <Button type="button" size="lg" className="w-full sm:w-auto" disabled={busy || !front || !back || !consent} onClick={save}>{busy ? 'A ler e salvar…' : 'Salvar Dados do BI'}</Button>
       </fieldset>
     </> : null}
