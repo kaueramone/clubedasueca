@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 import { logAudit } from '@/lib/audit'
 
@@ -178,7 +179,8 @@ export async function registerReferral(userId: string, refCode: string) {
  * Track click num link de afiliado
  */
 export async function trackAffiliateClick(code: string) {
-    const supabase = await createClient()
+    if (typeof code !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(code)) return
+    const supabase = createServiceClient()
 
     const { error } = await supabase.rpc('track_affiliate_click', {
         p_code: code,

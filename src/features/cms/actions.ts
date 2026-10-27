@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { revalidatePath } from 'next/cache'
 
 // ============================================
@@ -42,7 +43,7 @@ export async function getBlogPostBySlug(slug: string) {
     // Increment views async
     if (data) {
         try {
-            await supabase.rpc('increment_blog_views', { p_post_id: data.id })
+            await createServiceClient().rpc('increment_blog_views', { p_post_id: data.id })
         } catch { }
     }
 
