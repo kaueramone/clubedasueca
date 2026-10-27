@@ -15,6 +15,7 @@ function load(file) {
     if (name === '@/lib/extract-identity-document') return {extractIdentityDocument: async () => { if (extractionError) throw new Error(extractionError); return extracted; }};
     if (name === '@/lib/identity-document' || name === './identity-document') return model;
     if (name === '@/lib/supabase/server') return { createClient: async () => client };
+    if (name === '@/lib/admin-mfa') return { hasAdminMfa: async () => false };
     if (name === '@/lib/supabase/service') return { createServiceClient: () => service };
     throw new Error('Unexpected import: ' + name);
   } };

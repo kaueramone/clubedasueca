@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { hasAdminMfa } from '@/lib/admin-mfa'
 import { BI_CONSENT_VERSION, BI_MAX_BYTES, DOCUMENT_TYPES, identityNamesMatch, mozambiqueToday, validateIdentityFields } from '@/lib/identity-document'
 import { extractIdentityDocument } from '@/lib/extract-identity-document'
 
@@ -39,6 +40,7 @@ export async function GET(request: Request) {
     const url = new URL(request.url)
     const userId = url.searchParams.get('userId') || auth.user.id
     if (userId !== auth.user.id && auth.profile.role !== 'admin') return json({ error: 'Sem permissão.' }, 403)
+    if (userId !== auth.user.id && !await hasAdminMfa(auth.client)) return json({ error: 'Confirme o MFA para consultar documentos de outros utilizadores.' }, 403)
     if (!/^[0-9a-f-]{36}$/i.test(userId)) return json({ error: 'Utilizador inválido.' }, 400)
     const { data, error } = await auth.client.from('profile_identity_documents').select('*').eq('user_id', userId).maybeSingle()
     if (error) return json({ error: 'Não foi possível consultar o BI.' }, 503)

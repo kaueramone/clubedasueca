@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User, Camera, Save, Loader2, LogOut, Globe } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -35,6 +36,7 @@ export default function ProfilePage() {
                 const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
                 if (data) {
                     setProfile({
+                        role: data.role,
                         username: data.username || '',
                         full_name: data.full_name || '',
                         birth_date: data.birth_date || '',
@@ -124,6 +126,7 @@ export default function ProfilePage() {
                 </Button>
             </div>
 
+            {profile.role === 'admin' ? <Link href="/dashboard/security" className="block rounded-lg border border-accent/40 bg-accent/10 p-4 font-semibold text-foreground">Segurança administrativa — configurar ou confirmar MFA</Link> : null}
             <Card className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-8">
 

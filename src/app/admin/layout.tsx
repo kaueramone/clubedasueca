@@ -1,6 +1,7 @@
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { hasAdminMfa } from '@/lib/admin-mfa'
 
 export default async function AdminLayout({
     children,
@@ -23,6 +24,8 @@ export default async function AdminLayout({
     if (!profile || profile.role !== 'admin' || profile.is_banned) {
         redirect('/dashboard')
     }
+
+    if (!await hasAdminMfa(supabase)) redirect('/dashboard/security')
 
     return (
         <div className="flex min-h-screen bg-background text-foreground">

@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import { getBotResponse } from "./bot-responses";
 import { supportStatuses, type SupportStatus } from "./status";
+import { hasAdminMfa, requireAdminMfa } from '@/lib/admin-mfa';
 
 async function context(admin = false) {
   const supabase = await createClient();
@@ -18,7 +19,9 @@ async function context(admin = false) {
     .single();
   if (!profile || profile.is_banned || (admin && profile.role !== "admin"))
     throw new Error("Sem permissão");
-  return { supabase, user, isAdmin: profile.role === "admin" };
+  if (admin) await requireAdminMfa(supabase);
+  const isAdmin = profile.role === "admin" && await hasAdminMfa(supabase);
+  return { supabase, user, isAdmin };
 }
 
 export async function getUserConversations() {

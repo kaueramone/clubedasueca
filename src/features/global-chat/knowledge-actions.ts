@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAdminMfa } from '@/lib/admin-mfa'
 import { revalidatePath } from 'next/cache'
 
 export type KnowledgeRow = {
@@ -14,6 +15,7 @@ async function adminClient() {
     if (error || !user) throw new Error('Sessão expirada. Entra novamente.')
     const { data } = await client.from('profiles').select('role, is_banned').eq('id', user.id).single()
     if (data?.role !== 'admin' || data.is_banned) throw new Error('Acesso reservado à administração.')
+    await requireAdminMfa(client)
     return client
 }
 

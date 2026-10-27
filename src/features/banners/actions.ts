@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { logAudit } from '@/lib/audit'
 import { validateBanner } from './model'
+import { requireAdminMfa } from '@/lib/admin-mfa'
 
 async function adminContext() {
   const supabase = await createClient()
@@ -11,6 +12,7 @@ async function adminContext() {
   if (!user) return null
   const { data: profile } = await supabase.from('profiles').select('role,is_banned').eq('id', user.id).single()
   if (!profile || profile.role !== 'admin' || profile.is_banned) return null
+  await requireAdminMfa(supabase)
   return { supabase, user }
 }
 

@@ -402,6 +402,7 @@ async function main() {
   try { await db.exec(resetSQL); } catch { resetDenied=true; await db.exec('ROLLBACK'); }
   check(resetDenied,'one-time reset replay denied');
   await require('./security-review.cjs')({db,check,deny,asUser,owner,uid,root});
+  await require('./admin-mfa-db.cjs')({db,check,deny,asUser,owner,uid,root});
   console.log(`PASS ${assertions} security/game assertions (local PostgreSQL; no deployed Supabase claim)`);
   await db.close();
 }

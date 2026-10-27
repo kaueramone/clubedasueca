@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
+import { requireAdminMfa } from '@/lib/admin-mfa';
 
 async function requireAdmin() {
   const client = await createClient();
@@ -18,6 +19,7 @@ async function requireAdmin() {
     .single();
   if (!profile || profile.role !== "admin" || profile.is_banned)
     throw new Error("Sem permissão");
+  await requireAdminMfa(client);
   return createServiceClient();
 }
 
